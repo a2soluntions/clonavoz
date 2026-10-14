@@ -106,14 +106,14 @@ class DownloadVoiceRequest(BaseModel):
 
 @app.get("/")
 def get_landing():
-    landing_path = os.path.join(STATIC_DIR, "landing.html")
-    if os.path.exists(landing_path):
-        return FileResponse(landing_path)
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 
 @app.get("/studio")
 def get_studio():
+    studio_path = os.path.join(STATIC_DIR, "studio.html")
+    if os.path.exists(studio_path):
+        return FileResponse(studio_path)
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 
