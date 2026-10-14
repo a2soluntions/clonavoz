@@ -5,11 +5,15 @@
   "rewrites": [
     {
       "source": "/studio",
-      "destination": "/index.html"
+      "destination": "/studio.html"
+    },
+    {
+      "source": "/app",
+      "destination": "/studio.html"
     },
     {
       "source": "/",
-      "destination": "/landing.html"
+      "destination": "/index.html"
     }
   ],
   "headers": [
