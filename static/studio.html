@@ -1192,6 +1192,7 @@
           supabaseClient = window.supabase.createClient(sbUrl, sbKey);
           
           supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            console.log('[Auth Event]', event);
             if (event === 'PASSWORD_RECOVERY') {
               openAuthModal('reset');
               return;
@@ -1199,9 +1200,14 @@
             await handleAuthSession(session);
           });
 
-          // Checa se o usuário veio de link de recuperação de senha no hash da URL (#type=recovery)
+          // Detecta links de recuperação de senha (Hash #access_token=...&type=recovery ou PKCE ?code=...)
           const hash = window.location.hash || '';
-          if (hash.includes('type=recovery')) {
+          const searchParams = new URLSearchParams(window.location.search);
+          const isRecoveryHash = hash.includes('type=recovery') || hash.includes('access_token=');
+          const isRecoveryQuery = searchParams.get('type') === 'recovery' || searchParams.get('auth') === 'reset';
+
+          if (isRecoveryHash || isRecoveryQuery) {
+            console.log('[Recovery Detected]');
             openAuthModal('reset');
             return;
           }
