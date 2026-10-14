@@ -1,0 +1,14 @@
+{
+  "custom_1791787815452": {
+    "id": "custom_1791787815452",
+    "name": "marina",
+    "gender": "Feminina",
+    "sample_filename": "custom_1791787815452.wav",
+    "sample_url": "/custom-voices/sample/custom_1791787815452.wav",
+    "duration": 8.06,
+    "pitch_hz": 234.6,
+    "semitones_shift": 1.51,
+    "base_voice": "dii",
+    "created_at": 1791787815.5309806
+  }
+}

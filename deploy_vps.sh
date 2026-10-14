@@ -1,10 +1,10 @@
 #!/bin/bash
 # ========================================================
-# Script de Deploy Automático - VoxStudio AI na Hostinger VPS
+# Script de Deploy Automático - Clonavoz AI na Hostinger VPS
 # ========================================================
 set -e
 
-echo "🚀 Iniciando configuração do VoxStudio AI no Ubuntu..."
+echo "🚀 Iniciando configuração do Clonavoz AI no Ubuntu..."
 
 # 1. Atualiza repositórios do sistema
 sudo apt-get update && sudo apt-get upgrade -y

@@ -1,4 +1,4 @@
-# 🎙️ VoxStudio AI • Gerador & Clonagem de Voz Neural Offline
+# 🎙️ Clonavoz AI • Gerador & Clonagem de Voz Neural Offline
 
 Sistema moderno e ultra-rápido de conversão de texto em fala (Text-to-Speech) em português do Brasil (pt-BR), com **suporte a vozes femininas e masculinas, upload de áudio de referência para clonagem de voz**, visualizador interativo de ondas sonoras (WaveSurfer) e processamento **100% local e offline**.
 

@@ -25,7 +25,7 @@ if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY:
     except Exception as e:
         print(f"[Supabase] Erro ao conectar ao cliente admin: {e}")
 
-app = FastAPI(title="VoxStudio AI - Neural Speech Studio")
+app = FastAPI(title="Clonavoz AI - Neural Speech Studio")
 
 # Habilita CORS para conexão com Vercel e produção
 app.add_middleware(

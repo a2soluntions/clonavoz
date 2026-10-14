@@ -1,7 +1,7 @@
 services:
-  voxstudio-api:
+  clonavoz-api:
     build: .
-    container_name: voxstudio_backend
+    container_name: clonavoz_backend
     restart: always
     ports:
       - "8000:8000"

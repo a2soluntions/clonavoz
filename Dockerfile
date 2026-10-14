@@ -1,4 +1,4 @@
-# VoxStudio AI Backend - Dockerfile para VPS Hostinger
+# Clonavoz AI Backend - Dockerfile para VPS Hostinger
 FROM python:3.11-slim
 
 # Evita buffering no stdout e stderr
