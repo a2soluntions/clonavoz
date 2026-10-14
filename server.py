@@ -1,0 +1,519 @@
+import os
+import glob
+from typing import Optional
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Header, Depends, BackgroundTasks
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import tts_engine
+
+# Carrega variáveis de ambiente do arquivo .env
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "").strip()
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+
+supabase_admin = None
+if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY:
+    try:
+        from supabase import create_client
+        supabase_admin = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+        print(f"[Supabase] Conectado com sucesso ao projeto: {SUPABASE_URL}")
+    except Exception as e:
+        print(f"[Supabase] Erro ao conectar ao cliente admin: {e}")
+
+app = FastAPI(title="VoxStudio AI - Neural Speech Studio")
+
+# Habilita CORS para conexão com Vercel e produção
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+OUTPUTS_DIR = tts_engine.OUTPUTS_DIR
+CUSTOM_VOICES_DIR = tts_engine.CUSTOM_VOICES_DIR
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+def get_current_user_from_header(authorization: Optional[str] = Header(None)) -> Optional[dict]:
+    """Valida o token JWT do Supabase recebido no header Authorization."""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    token = authorization.split(" ")[1].strip()
+    if not token or not supabase_admin:
+        return None
+    try:
+        user_res = supabase_admin.auth.get_user(token)
+        if user_res and user_res.user:
+            return user_res.user
+    except Exception as e:
+        pass
+    return None
+
+
+def get_or_create_profile(user) -> dict:
+    """Busca ou cria o registro do perfil com 1 crédito grátis se ainda não existir."""
+    if not supabase_admin:
+        return {"id": user.id, "credits": 999, "full_name": "Local User"}
+    try:
+        res = supabase_admin.table("profiles").select("*").eq("id", user.id).limit(1).execute()
+        if res.data and len(res.data) > 0:
+            return res.data[0]
+    except Exception as e:
+        print(f"[Profile Query Error] {e}")
+
+    # Cria o profile caso não exista
+    try:
+        full_name = "Criador"
+        if hasattr(user, "user_metadata") and user.user_metadata:
+            full_name = user.user_metadata.get("full_name") or (user.email.split("@")[0] if user.email else "Criador")
+        elif getattr(user, "email", None):
+            full_name = user.email.split("@")[0]
+            
+        new_profile = {
+            "id": user.id,
+            "email": getattr(user, "email", ""),
+            "full_name": full_name,
+            "credits": 1
+        }
+        ins = supabase_admin.table("profiles").insert(new_profile).execute()
+        if ins.data:
+            return ins.data[0]
+    except Exception as e:
+        print(f"[Profile Insert Error] {e}")
+
+    return {"id": user.id, "email": getattr(user, "email", ""), "full_name": "Criador", "credits": 1}
+
+
+class SynthesizeRequest(BaseModel):
+    text: str
+    voice: str = "dii"
+    speed: float = 1.0
+    threads: int = 4
+
+
+class DownloadVoiceRequest(BaseModel):
+    voice: str
+
+
+@app.get("/")
+def get_landing():
+    landing_path = os.path.join(STATIC_DIR, "landing.html")
+    if os.path.exists(landing_path):
+        return FileResponse(landing_path)
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+
+
+@app.get("/studio")
+def get_studio():
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+
+
+@app.get("/api/config")
+def get_config():
+    """Retorna chaves públicas e status de configuração de autenticação para o frontend."""
+    return {
+        "supabase_url": SUPABASE_URL,
+        "supabase_anon_key": SUPABASE_ANON_KEY,
+        "auth_enabled": bool(supabase_admin),
+    }
+
+
+@app.get("/api/me")
+def get_me(authorization: Optional[str] = Header(None)):
+    """Retorna os dados do perfil do usuário logado (saldo de créditos, nome, etc.)."""
+    user = get_current_user_from_header(authorization)
+    if not user:
+        return {"authenticated": False}
+    profile = get_or_create_profile(user)
+    return {
+        "authenticated": True,
+        "user": {
+            "id": user.id,
+            "email": getattr(user, "email", ""),
+            "full_name": profile.get("full_name", "Criador"),
+            "credits": profile.get("credits", 0),
+            "created_at": profile.get("created_at"),
+        }
+    }
+
+
+class SimulateRechargeRequest(BaseModel):
+    package_id: str = "criador"
+    credits: int = 12
+    price: str = "27,90"
+
+
+@app.post("/api/recharge/simulate")
+def simulate_recharge(req: SimulateRechargeRequest, authorization: Optional[str] = Header(None)):
+    """Simula a confirmação de pagamento PIX e credita o saldo diretamente no Supabase."""
+    if not supabase_admin:
+        return {"success": True, "credits": 999, "added": req.credits}
+
+    user = get_current_user_from_header(authorization)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Você precisa estar conectado na sua conta para recarregar créditos.",
+        )
+
+    profile = get_or_create_profile(user)
+    current_credits = profile.get("credits", 0)
+    new_credits = current_credits + max(req.credits, 1)
+
+    # 1. Atualiza créditos na tabela profiles do Supabase
+    try:
+        supabase_admin.table("profiles").update({"credits": new_credits}).eq("id", user.id).execute()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao creditar saldo no banco: {str(e)}")
+
+    # 2. Registra a transação na tabela pix_transactions
+    try:
+        import datetime
+        raw_price = req.price.replace("R$", "").replace(" ", "").replace(",", ".").strip()
+        amount_num = float(raw_price) if raw_price else 0.0
+        supabase_admin.table("pix_transactions").insert({
+            "user_id": user.id,
+            "package_id": req.package_id,
+            "credits_amount": req.credits,
+            "amount_brl": amount_num,
+            "status": "paid",
+            "paid_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        }).execute()
+    except Exception as ex:
+        print(f"[PIX Transaction Warning] {ex}")
+
+    return {"success": True, "credits": new_credits, "added": req.credits}
+
+
+@app.get("/api/voices")
+def get_voices():
+    results = []
+    # 1. Standard voices
+    for key, info in tts_engine.VOICES.items():
+        sample_path = os.path.join(STATIC_DIR, "demos", f"{key}_sample.mp3")
+        sample_url = f"/static/demos/{key}_sample.mp3" if os.path.exists(sample_path) else ""
+        results.append(
+            {
+                "key": key,
+                "label": info["label"],
+                "gender": info["gender"],
+                "quality": info["quality"],
+                "type": "standard",
+                "is_downloaded": tts_engine.is_model_downloaded(key),
+                "sample_url": sample_url,
+            }
+        )
+
+    # 2. Custom uploaded voices
+    custom_list = tts_engine.get_custom_voices()
+    for cv in custom_list:
+        results.append(
+            {
+                "key": cv["id"],
+                "label": f"{cv['name']} (Personalizada)",
+                "gender": cv["gender"],
+                "quality": f"Clone ({cv.get('pitch_hz', 0)} Hz)",
+                "type": "custom",
+                "is_downloaded": True,
+                "sample_url": cv.get("sample_url", ""),
+                "duration": cv.get("duration", 0),
+            }
+        )
+    return results
+
+
+@app.post("/api/download-voice")
+def download_voice(req: DownloadVoiceRequest):
+    if req.voice not in tts_engine.VOICES:
+        raise HTTPException(status_code=404, detail="Voz não encontrada")
+    try:
+        tts_engine.ensure_model_ready(req.voice)
+        return {"success": True, "message": "Modelo pronto para uso"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/upload-voice")
+async def upload_voice(
+    file: UploadFile = File(...),
+    name: str = Form(...),
+    gender: str = Form("Feminina"),
+):
+    if not name.strip():
+        raise HTTPException(status_code=400, detail="O nome da voz é obrigatório.")
+
+    allowed_exts = [".wav", ".mp3", ".ogg", ".m4a", ".flac"]
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in allowed_exts:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Formato de áudio não suportado ({ext}). Use .wav, .mp3, .ogg ou .m4a",
+        )
+
+    audio_bytes = await file.read()
+    if len(audio_bytes) < 1024:
+        raise HTTPException(status_code=400, detail="Arquivo de áudio muito pequeno ou corrompido.")
+
+    try:
+        entry = tts_engine.add_custom_voice(
+            name=name.strip(),
+            gender=gender.strip(),
+            audio_bytes=audio_bytes,
+            filename=file.filename,
+        )
+        return {"success": True, "voice": entry}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao processar áudio: {str(e)}")
+
+
+@app.get("/api/custom-voices")
+def get_custom_voices():
+    return tts_engine.get_custom_voices()
+
+
+@app.delete("/api/custom-voices/{voice_id}")
+def delete_custom_voice(voice_id: str):
+    if tts_engine.delete_custom_voice(voice_id):
+        return {"success": True}
+    raise HTTPException(status_code=404, detail="Voz não encontrada")
+
+
+@app.get("/custom-voices/sample/{filename}")
+def get_sample_file(filename: str):
+    file_path = os.path.join(CUSTOM_VOICES_DIR, filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Amostra de áudio não encontrada")
+    return FileResponse(file_path)
+
+
+def convert_wav_to_mp3(wav_path: str, mp3_path: str):
+    """Converte arquivo WAV para MP3 usando PyAV com qualidade de 192kbps."""
+    import av
+    inp = av.open(wav_path)
+    out = av.open(mp3_path, mode="w", format="mp3")
+    in_stream = inp.streams.audio[0]
+    out_stream = out.add_stream("mp3", rate=in_stream.rate)
+    out_stream.bit_rate = 192000
+    for frame in inp.decode(in_stream):
+        for packet in out_stream.encode(frame):
+            out.mux(packet)
+    for packet in out_stream.encode():
+        out.mux(packet)
+    inp.close()
+    out.close()
+
+
+@app.post("/api/synthesize")
+def synthesize(
+    req: SynthesizeRequest,
+    background_tasks: BackgroundTasks,
+    authorization: Optional[str] = Header(None)
+):
+    if not req.text.strip():
+        raise HTTPException(status_code=400, detail="Texto não pode estar vazio")
+
+    if len(req.text.strip()) > 3000:
+        raise HTTPException(
+            status_code=400,
+            detail="O texto ultrapassou o limite máximo de 3.000 caracteres por áudio.",
+        )
+
+    user = None
+    profile = None
+    if supabase_admin:
+        user = get_current_user_from_header(authorization)
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="Acesso não autorizado. Faça login ou crie sua conta para gerar áudios.",
+            )
+        profile = get_or_create_profile(user)
+        current_credits = profile.get("credits", 0)
+        if current_credits < 1:
+            raise HTTPException(
+                status_code=402,
+                detail="Você utilizou todos os seus créditos. Adquira uma recarga para continuar gerando áudios.",
+            )
+
+    try:
+        result = tts_engine.synthesize_text(
+            text=req.text,
+            voice_key=req.voice,
+            speed=req.speed,
+            num_threads=req.threads,
+        )
+
+        wav_filename = result["filename"]
+        mp3_filename = wav_filename.replace(".wav", ".mp3")
+        wav_path = os.path.join(OUTPUTS_DIR, wav_filename)
+        mp3_path = os.path.join(OUTPUTS_DIR, mp3_filename)
+
+        # Dispara conversão MP3 em background (não bloqueia a resposta para o usuário)
+        if os.path.exists(wav_path):
+            background_tasks.add_task(convert_wav_to_mp3, wav_path, mp3_path)
+
+        remaining_credits = profile.get("credits", 1) if profile else 999
+
+        # Atualiza créditos e salva histórico no Supabase
+        if supabase_admin and user and profile:
+            remaining_credits = max(profile.get("credits", 1) - 1, 0)
+            try:
+                supabase_admin.table("profiles").update({"credits": remaining_credits}).eq("id", user.id).execute()
+            except Exception as ex:
+                print(f"[Supabase Credit Update Error] {ex}")
+
+            try:
+                size_kb = round(os.path.getsize(wav_path) / 1024, 1) if os.path.exists(wav_path) else 0
+                title = req.text.strip().replace("\n", " ")[:60]
+                supabase_admin.table("audio_generations").insert({
+                    "user_id": user.id,
+                    "title": title,
+                    "text_prompt": req.text,
+                    "voice_key": req.voice,
+                    "speed": req.speed,
+                    "duration_seconds": round(result["duration_seconds"], 2),
+                    "audio_url_wav": f"/outputs/{wav_filename}",
+                    "audio_url_mp3": f"/outputs/{mp3_filename}",
+                    "file_size_kb": size_kb
+                }).execute()
+            except Exception as ex:
+                print(f"[Supabase Generation Save Error] {ex}")
+
+        return {
+            "success": True,
+            "filename": wav_filename,
+            "url": f"/outputs/{wav_filename}",
+            "duration": round(result["duration_seconds"], 2),
+            "elapsed": round(result["elapsed_seconds"], 2),
+            "speed_factor": round(result["duration_seconds"] / max(result["elapsed_seconds"], 0.001), 1),
+            "voice": req.voice,
+            "text": req.text,
+            "credits": remaining_credits,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/outputs/{filename}")
+def get_output_file(filename: str):
+    file_path = os.path.join(OUTPUTS_DIR, filename)
+
+    # Se solicitou MP3 e o MP3 ainda não existe, converte do WAV equivalente
+    if filename.endswith(".mp3"):
+        wav_path = os.path.join(OUTPUTS_DIR, filename[:-4] + ".wav")
+        if not os.path.exists(file_path) and os.path.exists(wav_path):
+            try:
+                convert_wav_to_mp3(wav_path, file_path)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Erro na conversão MP3: {str(e)}")
+        if os.path.exists(file_path):
+            return FileResponse(file_path, media_type="audio/mpeg", filename=filename)
+
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Arquivo de áudio não encontrado")
+
+    media_type = "audio/mpeg" if filename.endswith(".mp3") else "audio/wav"
+    return FileResponse(file_path, media_type=media_type, filename=filename)
+
+
+@app.get("/api/history")
+def get_history(authorization: Optional[str] = Header(None)):
+    user = get_current_user_from_header(authorization) if supabase_admin else None
+
+    # Se o usuário está autenticado no Supabase, busca da tabela audio_generations
+    if supabase_admin and user:
+        try:
+            res = (
+                supabase_admin.table("audio_generations")
+                .select("*")
+                .eq("user_id", user.id)
+                .order("created_at", desc=True)
+                .limit(40)
+                .execute()
+            )
+            generations = []
+            for g in res.data:
+                fname = os.path.basename(g.get("audio_url_wav", ""))
+                generations.append({
+                    "id": g.get("id"),
+                    "title": g.get("title") or fname,
+                    "filename": fname,
+                    "url": g.get("audio_url_wav"),
+                    "mp3_url": g.get("audio_url_mp3"),
+                    "voice": g.get("voice_key"),
+                    "duration": g.get("duration_seconds", 0),
+                    "size_kb": g.get("file_size_kb", 0),
+                    "created_at": g.get("created_at"),
+                })
+            return generations
+        except Exception as e:
+            print(f"[History Query Error] {e}")
+
+    # Fallback para histórico local em disco (se deslogado ou local dev)
+    files = glob.glob(os.path.join(OUTPUTS_DIR, "*.wav"))
+    files.sort(key=os.path.getmtime, reverse=True)
+    history = []
+    for f in files[:20]:
+        fname = os.path.basename(f)
+        size_kb = round(os.path.getsize(f) / 1024, 1)
+        history.append({
+            "id": fname,
+            "title": fname,
+            "filename": fname,
+            "url": f"/outputs/{fname}",
+            "mp3_url": f"/outputs/{fname.replace('.wav', '.mp3')}",
+            "voice": "standard",
+            "size_kb": size_kb,
+            "created_at": os.path.getmtime(f),
+        })
+    return history
+
+
+@app.delete("/api/history/{item_id}")
+def delete_history_item(item_id: str, authorization: Optional[str] = Header(None)):
+    user = get_current_user_from_header(authorization) if supabase_admin else None
+
+    # Se autenticado, deleta do Supabase
+    if supabase_admin and user:
+        try:
+            res = (
+                supabase_admin.table("audio_generations")
+                .select("*")
+                .eq("id", item_id)
+                .eq("user_id", user.id)
+                .execute()
+            )
+            if res.data:
+                record = res.data[0]
+                supabase_admin.table("audio_generations").delete().eq("id", item_id).eq("user_id", user.id).execute()
+                if record.get("audio_url_wav"):
+                    fname = os.path.basename(record["audio_url_wav"])
+                    wav_file = os.path.join(OUTPUTS_DIR, fname)
+                    mp3_file = os.path.join(OUTPUTS_DIR, fname.replace(".wav", ".mp3"))
+                    if os.path.exists(wav_file):
+                        os.remove(wav_file)
+                    if os.path.exists(mp3_file):
+                        os.remove(mp3_file)
+                return {"success": True}
+        except Exception as e:
+            print(f"[History Delete Error] {e}")
+
+    # Fallback para exclusão por nome de arquivo em disco
+    wav_path = os.path.join(OUTPUTS_DIR, item_id)
+    mp3_path = os.path.join(OUTPUTS_DIR, item_id.replace(".wav", ".mp3"))
+    if os.path.exists(wav_path):
+        os.remove(wav_path)
+    if os.path.exists(mp3_path):
+        os.remove(mp3_path)
+    return {"success": True}

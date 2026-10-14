@@ -1,0 +1,15 @@
+services:
+  voxstudio-api:
+    build: .
+    container_name: voxstudio_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models
+      - ./custom_voices:/app/custom_voices
+      - ./outputs:/app/outputs
+    environment:
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env

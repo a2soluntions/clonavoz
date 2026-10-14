@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoxStudio AI - Locuções Neurais Ultra-Realistas em Português Brasileiro</title>
+  <meta name="description" content="O melhor gerador de voz com inteligência artificial para criadores de conteúdo, canais Dark, VSLs e anúncios. Crie locuções de estúdio em segundos no PIX sem pagar em dólar.">
+  
+  <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- WaveSurfer.js para Player Interativo ao Vivo -->
+  <script src="https://unpkg.com/wavesurfer.js@7"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              300: '#FF884D',
+              400: '#FF661A',
+              500: '#FF4D00',
+              600: '#E64500',
+              700: '#CC3D00',
+            },
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #050505;
+      color: #EDEDED;
+      overflow-x: hidden;
+    }
+
+    /* Gradient Background Glows */
+    .hero-glow {
+      background: radial-gradient(circle at 50% 20%, rgba(255, 77, 0, 0.15) 0%, rgba(5, 5, 5, 0) 65%);
+    }
+
+    .card-glass {
+      background: rgba(13, 13, 13, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card-glass:hover {
+      border-color: rgba(255, 77, 0, 0.35);
+      box-shadow: 0 10px 30px -10px rgba(255, 77, 0, 0.2);
+    }
+
+    .btn-fire {
+      background: linear-gradient(135deg, #FF5500 0%, #FF3300 100%);
+      box-shadow: 0 4px 20px -2px rgba(255, 77, 0, 0.5);
+      transition: all 0.2s ease;
+    }
+    .btn-fire:hover {
+      background: linear-gradient(135deg, #FF661A 0%, #FF4400 100%);
+      box-shadow: 0 6px 28px 0 rgba(255, 77, 0, 0.7);
+      transform: translateY(-1px);
+    }
+
+    .text-gradient {
+      background: linear-gradient(135deg, #FFFFFF 30%, #A1A1AA 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .text-gradient-fire {
+      background: linear-gradient(135deg, #FFAA66 0%, #FF5500 50%, #FF2200 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Grid pattern background */
+    .bg-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="selection:bg-brand-500 selection:text-white">
+
+  <!-- NAVBAR -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-black/75 backdrop-blur-md border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="/" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-amber-600 flex items-center justify-center shadow-lg shadow-brand-500/30 group-hover:scale-105 transition">
+          <i data-lucide="mic" class="w-5 h-5 text-black stroke-[2.5]"></i>
+        </div>
+        <div>
+          <span class="text-xl font-black tracking-tight text-white uppercase">
+            VOX<span class="text-brand-500">STUDIO</span>
+          </span>
+          <span class="text-[10px] ml-1.5 font-bold px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">AI PRO</span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-zinc-400">
+        <a href="#demonstracoes" class="hover:text-brand-400 transition">Ouvir Vozes</a>
+        <a href="#comparativo" class="hover:text-brand-400 transition">Comparativo</a>
+        <a href="#recursos" class="hover:text-brand-400 transition">Recursos</a>
+        <a href="#precos" class="hover:text-brand-400 transition">Planos & Preços</a>
+        <a href="#faq" class="hover:text-brand-400 transition">Dúvidas</a>
+      </nav>
+
+      <!-- CTA Buttons -->
+      <div class="flex items-center gap-2.5">
+        <a
+          href="/studio?auth=login"
+          class="hidden sm:inline-flex px-4 py-2 rounded-xl text-zinc-300 hover:text-white font-bold text-xs uppercase tracking-wider transition hover:bg-zinc-900 border border-transparent hover:border-zinc-800"
+        >
+          Entrar
+        </a>
+        <a
+          href="/studio?auth=signup"
+          class="btn-fire px-4 sm:px-5 py-2.5 rounded-xl text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-lg"
+        >
+          <span>Criar Conta Grátis</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="relative pt-32 pb-20 md:pt-40 md:pb-28 hero-glow bg-grid overflow-hidden">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 relative z-10">
+      
+      <!-- Announcement Pill -->
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-xs font-bold uppercase tracking-wider shadow-inner">
+        <span class="w-2 h-2 rounded-full bg-brand-500 animate-ping"></span>
+        <span>A IA de Voz nº 1 Especializada em Português Brasileiro</span>
+      </div>
+
+      <!-- Main Headline -->
+      <h1 class="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[1.08] text-gradient">
+        Locuções Humanas de Alto Impacto para Vídeos, <br class="hidden sm:inline"/>
+        <span class="text-gradient-fire">Sem Pagar em Dólar.</span>
+      </h1>
+
+      <!-- Subheadline -->
+      <p class="max-w-3xl mx-auto text-base sm:text-lg md:text-xl text-zinc-400 font-normal leading-relaxed">
+        Chega de esperar dias por locutores tradicionais ou pagar assinaturas abusivas em plataformas gringas. 
+        Gere áudios ultra-realistas para <strong>Canais Dark</strong>, <strong>VSLs</strong>, <strong>Reels</strong> e <strong>Anúncios</strong> em segundos a partir de <strong>R$ 1,71 por narração</strong> no PIX.
+      </p>
+
+      <!-- Hero Actions -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+        <a
+          href="/studio"
+          class="w-full sm:w-auto btn-fire px-8 py-4 rounded-xl text-white font-black text-base uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-2xl cursor-pointer"
+        >
+          <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+          <span>Criar Meu Áudio no Estúdio Agora</span>
+        </a>
+        <a
+          href="#demonstracoes"
+          class="w-full sm:w-auto px-6 py-4 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/10 text-base font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <i data-lucide="play-circle" class="w-5 h-5 text-brand-400"></i>
+          <span>Ouvir Exemplos ao Vivo</span>
+        </a>
+      </div>
+
+      <!-- Trust Elements Row -->
+      <div class="pt-10 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs text-zinc-400">
+        <div class="flex items-center gap-2">
+          <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+          <span>Zero Mensalidade Presa</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+          <span>Geração em Menos de 5 Segundos</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-4 h-4 text-brand-400"></i>
+          <span>100% Legalizado (LGPD & Marco Civil)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="disc" class="w-4 h-4 text-cyan-400"></i>
+          <span>WAV Master + MP3 Leve</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- LIVE VOICE SHOWCASE SECTION (0 API COST INTERACTIVE PLAYER) -->
+  <section id="demonstracoes" class="py-20 border-t border-white/5 bg-zinc-950/60 relative">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      
+      <!-- Section Header -->
+      <div class="text-center space-y-3 max-w-2xl mx-auto">
+        <span class="text-xs font-black uppercase tracking-widest text-brand-500">Demonstração Interativa</span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          Ouça o Realismo Antes de Começar
+        </h2>
+        <p class="text-sm text-zinc-400">
+          Clique nas vozes e nos estilos de roteiro abaixo. Todos os áudios foram gerados com o motor do VoxStudio.
+        </p>
+      </div>
+
+      <!-- Live Voice Interactive Box -->
+      <div class="card-glass p-6 sm:p-8 rounded-3xl max-w-4xl mx-auto border border-brand-500/20 shadow-2xl">
+        
+        <!-- Voice Selector Pills -->
+        <div class="space-y-3 pb-6 border-b border-white/10">
+          <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider block">1. Selecione o Locutor Neural:</span>
+          <div class="flex items-center gap-2 flex-wrap" id="demo-voice-chips">
+            <button onclick="selectDemoVoice('dii')" data-voice="dii" class="demo-voice-btn px-4 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-2 cursor-pointer bg-brand-500/20 text-brand-300 border-brand-500">
+              <span>👩 Dii (Feminina - Alta Definição)</span>
+            </button>
+            <button onclick="selectDemoVoice('faber')" data-voice="faber" class="demo-voice-btn px-4 py-2 rounded-xl text-xs font-semibold border transition flex items-center gap-2 cursor-pointer bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white">
+              <span>👨 Faber (Narrador / Imersivo)</span>
+            </button>
+            <button onclick="selectDemoVoice('miro')" data-voice="miro" class="demo-voice-btn px-4 py-2 rounded-xl text-xs font-semibold border transition flex items-center gap-2 cursor-pointer bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white">
+              <span>👨 Miro (Alta Definição)</span>
+            </button>
+            <button onclick="selectDemoVoice('jeff')" data-voice="jeff" class="demo-voice-btn px-4 py-2 rounded-xl text-xs font-semibold border transition flex items-center gap-2 cursor-pointer bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white">
+              <span>👨 Jeff (Comercial / Expressivo)</span>
+            </button>
+            <button onclick="selectDemoVoice('cadu')" data-voice="cadu" class="demo-voice-btn px-4 py-2 rounded-xl text-xs font-semibold border transition flex items-center gap-2 cursor-pointer bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white">
+              <span>👨 Cadu (Natural / Conversacional)</span>
+            </button>
+            <button onclick="selectDemoVoice('edresson')" data-voice="edresson" class="demo-voice-btn px-4 py-2 rounded-xl text-xs font-semibold border transition flex items-center gap-2 cursor-pointer bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white">
+              <span>👨 Edresson (Rápido / Dinâmico)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Preset Scripts Row -->
+        <div class="py-5 space-y-3">
+          <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider block">2. Selecione o Estilo de Roteiro:</span>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button onclick="selectDemoPreset('welcome')" data-preset="welcome" class="demo-preset-btn px-3.5 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer bg-brand-500/20 text-brand-300 border-brand-500">
+              Boas-vindas Institucional
+            </button>
+            <button onclick="selectDemoPreset('news')" data-preset="news" class="demo-preset-btn px-3.5 py-1.5 rounded-lg text-xs font-medium border transition cursor-pointer bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white">
+              Notícia / Canal Dark
+            </button>
+            <button onclick="selectDemoPreset('vsl')" data-preset="vsl" class="demo-preset-btn px-3.5 py-1.5 rounded-lg text-xs font-medium border transition cursor-pointer bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white">
+              Comercial / VSL de Vendas
+            </button>
+          </div>
+        </div>
+
+        <!-- Script Preview Box -->
+        <div class="bg-zinc-950 p-4 rounded-2xl border border-zinc-800 my-4 text-xs sm:text-sm text-zinc-300 italic font-mono leading-relaxed" id="demo-script-text">
+          "Olá! Seja muito bem-vindo ao VoxStudio. Este áudio foi gerado com rede neural local, 100% no seu computador e com zero latência de servidores."
+        </div>
+
+        <!-- Audio Player Controls -->
+        <div class="bg-black/80 p-4 rounded-2xl border border-zinc-800 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <button
+              id="landing-play-btn"
+              onclick="toggleLandingPlay()"
+              class="w-12 h-12 rounded-xl btn-fire text-white flex items-center justify-center shadow-lg cursor-pointer shrink-0 transition"
+            >
+              <i id="landing-play-icon" data-lucide="play" class="w-5 h-5 fill-current ml-0.5"></i>
+            </button>
+            <div>
+              <span id="landing-audio-label" class="text-xs sm:text-sm font-bold text-white block">Dii - Boas-vindas</span>
+              <span id="landing-time-display" class="text-[11px] font-mono text-zinc-400">00:00 / 00:00</span>
+            </div>
+          </div>
+
+          <!-- Waveform Canvas -->
+          <div class="flex-1 max-w-md hidden sm:block">
+            <div id="landing-waveform" class="w-full"></div>
+          </div>
+
+          <a
+            href="/studio"
+            class="px-4 py-2 rounded-xl bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition shrink-0"
+          >
+            <span>Gerar Meu Roteiro</span>
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- COMPARISON TABLE (VOXSTUDIO VS ELEVENLABS VS LOCUTOR) -->
+  <section id="comparativo" class="py-24 border-t border-white/5 relative">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      
+      <div class="text-center space-y-3 max-w-2xl mx-auto">
+        <span class="text-xs font-black uppercase tracking-widest text-brand-500">Economia Brutal</span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          Por que o VoxStudio é a Escolha Mais Inteligente?
+        </h2>
+        <p class="text-sm text-zinc-400">
+          Compare e veja como você economiza milhares de reais todos os meses na sua operação.
+        </p>
+      </div>
+
+      <!-- Comparison Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Locutor Tradicional -->
+        <div class="card-glass p-6 rounded-3xl border border-white/10 space-y-5">
+          <div class="space-y-1">
+            <span class="text-xs font-bold text-zinc-500 uppercase">Tradicional</span>
+            <h3 class="text-xl font-bold text-zinc-300">Locutor Humano</h3>
+            <div class="text-2xl font-black text-white pt-2">R$ 150 – 400 <span class="text-xs text-zinc-500 font-normal">/ áudio</span></div>
+          </div>
+          <ul class="space-y-3 text-xs text-zinc-400 pt-2 border-t border-white/5">
+            <li class="flex items-center gap-2 text-red-400">
+              <i data-lucide="x" class="w-4 h-4 shrink-0"></i> Espera de 2 a 4 dias úteis
+            </li>
+            <li class="flex items-center gap-2 text-red-400">
+              <i data-lucide="x" class="w-4 h-4 shrink-0"></i> Refações cobradas à parte
+            </li>
+            <li class="flex items-center gap-2 text-red-400">
+              <i data-lucide="x" class="w-4 h-4 shrink-0"></i> Dependência de horários e estúdio
+            </li>
+            <li class="flex items-center gap-2 text-red-400">
+              <i data-lucide="x" class="w-4 h-4 shrink-0"></i> Inviável para escala de canais Dark
+            </li>
+          </ul>
+        </div>
+
+        <!-- Plataformas Gringas (ElevenLabs) -->
+        <div class="card-glass p-6 rounded-3xl border border-white/10 space-y-5">
+          <div class="space-y-1">
+            <span class="text-xs font-bold text-zinc-500 uppercase">Gringas em Dólar</span>
+            <h3 class="text-xl font-bold text-zinc-300">ElevenLabs & Similares</h3>
+            <div class="text-2xl font-black text-white pt-2">$22 – 99 USD <span class="text-xs text-zinc-500 font-normal">/ mês (R$ 130-550)</span></div>
+          </div>
+          <ul class="space-y-3 text-xs text-zinc-400 pt-2 border-t border-white/5">
+            <li class="flex items-center gap-2 text-red-400">
+              <i data-lucide="x" class="w-4 h-4 shrink-0"></i> Cobrança em dólar + IOF de 4.38%
+            </li>
+            <li class="flex items-center gap-2 text-red-400">
+              <i data-lucide="x" class="w-4 h-4 shrink-0"></i> Assinatura mensal fixa mesmo sem usar
+            </li>
+            <li class="flex items-center gap-2 text-red-400">
+              <i data-lucide="x" class="w-4 h-4 shrink-0"></i> Queima créditos por caractere digitado
+            </li>
+            <li class="flex items-center gap-2 text-red-400">
+              <i data-lucide="x" class="w-4 h-4 shrink-0"></i> Suporte internacional sem garantia LGPD
+            </li>
+          </ul>
+        </div>
+
+        <!-- VoxStudio Brasil (Vencedor) -->
+        <div class="card-glass p-6 rounded-3xl border-2 border-brand-500 relative space-y-5 shadow-2xl shadow-brand-500/10">
+          <div class="absolute -top-3.5 right-6 bg-brand-500 text-black font-black text-[10px] uppercase tracking-wider px-3 py-1 rounded-full shadow-md">
+            Melhor Custo-Benefício
+          </div>
+          <div class="space-y-1">
+            <span class="text-xs font-bold text-brand-400 uppercase">Feito para o Brasil</span>
+            <h3 class="text-xl font-bold text-white">VoxStudio AI</h3>
+            <div class="text-2xl font-black text-brand-400 pt-2">R$ 1,71 – 2,32 <span class="text-xs text-zinc-400 font-normal">/ áudio completo</span></div>
+          </div>
+          <ul class="space-y-3 text-xs text-zinc-300 pt-2 border-t border-brand-500/30 font-medium">
+            <li class="flex items-center gap-2 text-emerald-400">
+              <i data-lucide="check" class="w-4 h-4 shrink-0"></i> Geração imediata em menos de 5 segundos
+            </li>
+            <li class="flex items-center gap-2 text-emerald-400">
+              <i data-lucide="check" class="w-4 h-4 shrink-0"></i> Pagamento no PIX sem assinatura presa
+            </li>
+            <li class="flex items-center gap-2 text-emerald-400">
+              <i data-lucide="check" class="w-4 h-4 shrink-0"></i> Demonstrações prontas com Custo Zero
+            </li>
+            <li class="flex items-center gap-2 text-emerald-400">
+              <i data-lucide="check" class="w-4 h-4 shrink-0"></i> Clonagem de Voz + Download WAV e MP3
+            </li>
+            <li class="flex items-center gap-2 text-emerald-400">
+              <i data-lucide="check" class="w-4 h-4 shrink-0"></i> Blindagem jurídica com LGPD e Marco Civil
+            </li>
+          </ul>
+
+          <a
+            href="/studio"
+            class="w-full btn-fire py-3 rounded-xl text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition block text-center"
+          >
+            <span>Experimentar Agora</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FEATURES / PILLARS -->
+  <section id="recursos" class="py-24 border-t border-white/5 bg-zinc-950/40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+      
+      <div class="text-center space-y-3 max-w-2xl mx-auto">
+        <span class="text-xs font-black uppercase tracking-widest text-brand-500">Recursos de Estúdio</span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          Tudo que Você Precisa para Escalar Sua Produção
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- Recurso 1 -->
+        <div class="card-glass p-6 rounded-3xl space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+            <i data-lucide="mic-2" class="w-5 h-5"></i>
+          </div>
+          <h3 class="text-base font-bold text-white">Vozes Neurais Nativas do Brasil</h3>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Sem sotaques robóticos estrangeiros. Modelos treinados com fonética brasileira para cadência, respiração e pausas naturais.
+          </p>
+        </div>
+
+        <!-- Recurso 2 -->
+        <div class="card-glass p-6 rounded-3xl space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+            <i data-lucide="user-plus" class="w-5 h-5"></i>
+          </div>
+          <h3 class="text-base font-bold text-white">Clonagem de Voz Instantânea</h3>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Envie uma amostra de 15 a 60 segundos da sua própria voz ou de um locutor parceiro e gere novos áudios mantendo o mesmo timbre.
+          </p>
+        </div>
+
+        <!-- Recurso 3 -->
+        <div class="card-glass p-6 rounded-3xl space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+            <i data-lucide="layers" class="w-5 h-5"></i>
+          </div>
+          <h3 class="text-base font-bold text-white">Exportação Dupla WAV & MP3</h3>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Baixe o arquivo master sem compressão (WAV 44.1kHz) para edição profissional no Premiere/CapCut ou o arquivo leve (MP3) para WhatsApp e web.
+          </p>
+        </div>
+
+        <!-- Recurso 4 -->
+        <div class="card-glass p-6 rounded-3xl space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+            <i data-lucide="gauge" class="w-5 h-5"></i>
+          </div>
+          <h3 class="text-base font-bold text-white">Controle de Ritmo & Velocidade</h3>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Ajuste a cadência entre 0.85x (pausado e solene), 1.0x (natural) e 1.15x (dinâmico para anúncios e VSLs que prendem a atenção).
+          </p>
+        </div>
+
+        <!-- Recurso 5 -->
+        <div class="card-glass p-6 rounded-3xl space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+            <i data-lucide="shield-alert" class="w-5 h-5"></i>
+          </div>
+          <h3 class="text-base font-bold text-white">Conformidade Jurídica LGPD</h3>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Plataforma 100% blindada de acordo com o Marco Civil da Internet (Art. 19) e LGPD (Lei 13.709/2018), com termos claros e exclusão em 1 clique.
+          </p>
+        </div>
+
+        <!-- Recurso 6 -->
+        <div class="card-glass p-6 rounded-3xl space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+            <i data-lucide="qr-code" class="w-5 h-5"></i>
+          </div>
+          <h3 class="text-base font-bold text-white">Créditos Imediatos via PIX</h3>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Recarregue quando quiser sem precisar vincular cartão de crédito. Escaneou o QR Code, os créditos caem na hora no seu painel.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PRICING PACKAGES -->
+  <section id="precos" class="py-24 border-t border-white/5 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      
+      <div class="text-center space-y-3 max-w-3xl mx-auto">
+        <span class="text-xs font-black uppercase tracking-widest text-brand-500">Planos 100% Pré-Pagos</span>
+        <h2 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight">
+          Recarregue no PIX Apenas Quando Precisar
+        </h2>
+        <p class="text-sm text-zinc-400">
+          Sem mensalidades automáticas, sem cartão de crédito preso e sem surpresas. Seus créditos nunca expiram.
+        </p>
+      </div>
+
+      <!-- Callout Informativo de Transparência de Capacidade -->
+      <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-brand-500/10 via-zinc-900/80 to-brand-500/10 border border-brand-500/30 max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left shadow-xl">
+        <div class="flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-brand-500/20 text-brand-400 border border-brand-500/40 flex items-center justify-center font-black shrink-0">
+            <i data-lucide="info" class="w-5 h-5"></i>
+          </div>
+          <div class="space-y-0.5">
+            <span class="text-xs font-extrabold uppercase text-white tracking-wider flex items-center gap-2 justify-center md:justify-start">
+              <span>Como funcionam os créditos de áudio?</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">100% PRÉ-PAGO</span>
+            </span>
+            <p class="text-xs text-zinc-300 leading-relaxed">
+              Cada <strong>1 crédito = 1 geração completa</strong> de até <strong>3.000 caracteres</strong> (~500 a 600 palavras) com duração de <strong>~2 a 3 minutos</strong> de locução contínua. Perfeito para blocos de canais Dark, VSLs e múltiplos Reels!
+            </p>
+          </div>
+        </div>
+        <div class="shrink-0 flex items-center gap-2 text-xs font-bold text-zinc-400 bg-zinc-950 px-3 py-1.5 rounded-xl border border-zinc-800">
+          <i data-lucide="clock" class="w-4 h-4 text-brand-500"></i>
+          <span>Créditos Vitalícios</span>
+        </div>
+      </div>
+
+      <!-- Grid com os 4 Planos Pré-Pagos -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch pt-4">
+        
+        <!-- Pacote 1: Teste Rápido (R$ 9,90) -->
+        <div class="card-glass p-6 rounded-3xl border border-white/10 flex flex-col justify-between space-y-6">
+          <div class="space-y-4">
+            <div class="inline-block px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[10px] font-bold text-zinc-400 uppercase">
+              Experimentação
+            </div>
+            <h3 class="text-lg font-bold text-white">Teste Rápido</h3>
+            <p class="text-xs text-zinc-400">Ideal para testar a qualidade neural no seu primeiro vídeo ou anúncio.</p>
+            
+            <div class="pt-3 border-t border-white/5">
+              <span class="text-3xl font-black text-white">R$ 9,90</span>
+              <span class="text-[11px] text-zinc-500 block mt-1">R$ 3,30 por áudio</span>
+            </div>
+
+            <ul class="space-y-2 text-xs text-zinc-300 pt-1">
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> <strong>3 Áudios</strong> completos
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> Até <strong>9.000 caracteres</strong> total
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> ~8 a 10 min de locução total
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> Todas as 6 vozes neurais
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> Download WAV Master + MP3
+              </li>
+            </ul>
+          </div>
+
+          <a
+            href="/studio?auth=signup"
+            class="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-wider text-center border border-zinc-700 hover:border-brand-500 transition block cursor-pointer"
+          >
+            Testar por R$ 9,90
+          </a>
+        </div>
+
+        <!-- Pacote 2: Criador Dark (R$ 27,90) -->
+        <div class="card-glass p-6 rounded-3xl border border-white/10 flex flex-col justify-between space-y-6">
+          <div class="space-y-4">
+            <div class="inline-block px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[10px] font-bold text-zinc-400 uppercase">
+              Criador Dark
+            </div>
+            <h3 class="text-lg font-bold text-white">Iniciante Dark</h3>
+            <p class="text-xs text-zinc-400">Excelente para quem publica vídeos semanais ou roda testes de ofertas.</p>
+            
+            <div class="pt-3 border-t border-white/5">
+              <span class="text-3xl font-black text-white">R$ 27,90</span>
+              <span class="text-[11px] text-zinc-500 block mt-1">R$ 2,32 por áudio</span>
+            </div>
+
+            <ul class="space-y-2 text-xs text-zinc-300 pt-1">
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> <strong>12 Áudios</strong> completos
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> Até <strong>36.000 caracteres</strong> total
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> ~30 a 40 min de locução total
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> Todas as vozes liberadas
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> Download WAV Master + MP3
+              </li>
+            </ul>
+          </div>
+
+          <a
+            href="/studio?auth=signup"
+            class="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-wider text-center border border-zinc-700 hover:border-brand-500 transition block cursor-pointer"
+          >
+            Garantir 12 Áudios
+          </a>
+        </div>
+
+        <!-- Pacote 3: Profissional (R$ 57,90 - Destaque) -->
+        <div class="card-glass p-6 sm:p-7 rounded-3xl border-2 border-brand-500 flex flex-col justify-between space-y-6 relative shadow-2xl shadow-brand-500/20 bg-gradient-to-b from-zinc-900/90 to-zinc-950">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-brand-500 text-black font-black text-[9px] uppercase tracking-wider px-3 py-0.5 rounded-full shadow-lg">
+            ⭐ Mais Escolhido
+          </div>
+
+          <div class="space-y-4">
+            <div class="inline-block px-3 py-1 rounded-full bg-brand-500/20 border border-brand-500/40 text-[10px] font-bold text-brand-300 uppercase">
+              Profissional
+            </div>
+            <h3 class="text-xl font-black text-white">Criador Pro</h3>
+            <p class="text-xs text-zinc-400">Para produtores de conteúdo frequentes e gestores de tráfego pago.</p>
+            
+            <div class="pt-3 border-t border-brand-500/20">
+              <span class="text-3xl font-black text-brand-400">R$ 57,90</span>
+              <span class="text-[11px] text-zinc-400 block mt-1">R$ 1,93 por áudio <span class="text-emerald-400 font-bold">(17% OFF)</span></span>
+            </div>
+
+            <ul class="space-y-2 text-xs text-zinc-200 pt-1 font-medium">
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> <strong>30 Áudios</strong> de alta fidelidade
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> Até <strong>90.000 caracteres</strong> total
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> ~1h30 a 2h de locução total
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> Clonagem de Voz por Upload inclusa
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> Prioridade de processamento
+              </li>
+            </ul>
+          </div>
+
+          <a
+            href="/studio?auth=signup"
+            class="w-full btn-fire py-3 rounded-xl text-white font-black text-xs uppercase tracking-wider text-center transition block cursor-pointer shadow-xl"
+          >
+            Garantir 30 Áudios (Pro)
+          </a>
+        </div>
+
+        <!-- Pacote 4: Agência Master (R$ 119,90) -->
+        <div class="card-glass p-6 rounded-3xl border border-white/10 flex flex-col justify-between space-y-6">
+          <div class="space-y-4">
+            <div class="inline-block px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[10px] font-bold text-zinc-400 uppercase">
+              Maior Economia
+            </div>
+            <h3 class="text-lg font-bold text-white">Agência Master</h3>
+            <p class="text-xs text-zinc-400">Para agências com múltiplos clientes e canais Dark em escala máxima.</p>
+            
+            <div class="pt-3 border-t border-white/5">
+              <span class="text-3xl font-black text-white">R$ 119,90</span>
+              <span class="text-[11px] text-zinc-500 block mt-1">R$ 1,71 por áudio <span class="text-emerald-400 font-bold">(Melhor Tarifa)</span></span>
+            </div>
+
+            <ul class="space-y-2 text-xs text-zinc-300 pt-1">
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> <strong>70 Áudios</strong> completos
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> Até <strong>210.000 caracteres</strong> total
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> ~3h30 a 4h de locução total
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> Clonagem de múltiplas vozes
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i> Suporte prioritário via WhatsApp
+              </li>
+            </ul>
+          </div>
+
+          <a
+            href="/studio?auth=signup"
+            class="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-wider text-center border border-zinc-700 hover:border-brand-500 transition block cursor-pointer"
+          >
+            Adquirir 70 Áudios
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SOCIAL PROOF / TESTIMONIALS -->
+  <section class="py-20 border-t border-white/5 bg-zinc-950/30">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      
+      <div class="text-center space-y-2">
+        <span class="text-xs font-black uppercase tracking-widest text-brand-500">Depoimentos Reais</span>
+        <h2 class="text-3xl font-extrabold text-white">Quem Usa, Recomenda</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <div class="card-glass p-6 rounded-2xl space-y-4">
+          <div class="flex text-amber-400 text-sm">★★★★★</div>
+          <p class="text-xs text-zinc-300 leading-relaxed italic">
+            "Eu pagava mais de R$ 600 por mês no ElevenLabs por causa da cobrança em dólar e do IOF. Mudei meus 4 canais Dark para o VoxStudio e a qualidade de áudio do Faber e da Dii é fantástica. Economizei muito."
+          </p>
+          <div class="pt-2 border-t border-white/5">
+            <span class="text-xs font-bold text-white block">Marcos Vinícius</span>
+            <span class="text-[10px] text-zinc-500">Criador de Canais Dark (420k inscritos)</span>
+          </div>
+        </div>
+
+        <div class="card-glass p-6 rounded-2xl space-y-4">
+          <div class="flex text-amber-400 text-sm">★★★★★</div>
+          <p class="text-xs text-zinc-300 leading-relaxed italic">
+            "O ritmo de 1.15x para narrar VSLs de vendas aumentou a retenção dos meus vídeos no tráfego pago. A geração é instantânea e o fato de pagar no PIX sem assinatura fixa é uma mão na roda."
+          </p>
+          <div class="pt-2 border-t border-white/5">
+            <span class="text-xs font-bold text-white block">Carolina Mendes</span>
+            <span class="text-[10px] text-zinc-500">Gestora de Tráfego & Infoprodutora</span>
+          </div>
+        </div>
+
+        <div class="card-glass p-6 rounded-2xl space-y-4">
+          <div class="flex text-amber-400 text-sm">★★★★★</div>
+          <p class="text-xs text-zinc-300 leading-relaxed italic">
+            "Para agência que precisa entregar dezenas de criativos de Reels e TikTok por semana, o VoxStudio é o melhor investimento. O download em WAV Master facilita demais a mixagem no Premiere."
+          </p>
+          <div class="pt-2 border-t border-white/5">
+            <span class="text-xs font-bold text-white block">Lucas Ferraz</span>
+            <span class="text-[10px] text-zinc-500">Diretor de Criação na Pulse Media</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FAQ (PERGUNTAS FREQUENTES COM ACCORDION) -->
+  <section id="faq" class="py-24 border-t border-white/5 relative">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      
+      <div class="text-center space-y-3">
+        <span class="text-xs font-black uppercase tracking-widest text-brand-500">Tire Suas Dúvidas</span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Perguntas Frequentes</h2>
+      </div>
+
+      <div class="space-y-4">
+        
+        <!-- FAQ Item 1 -->
+        <div class="card-glass rounded-2xl p-5 cursor-pointer" onclick="toggleFaq(1)">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Posso monetizar os áudios no YouTube, TikTok e Meta Ads?</h3>
+            <i id="faq-icon-1" data-lucide="chevron-down" class="w-4 h-4 text-brand-500 transition-transform"></i>
+          </div>
+          <p id="faq-ans-1" class="text-xs text-zinc-400 mt-3 hidden leading-relaxed">
+            Sim, 100%! Todos os áudios gerados pelo VoxStudio são livres de royalties e possuem direitos comerciais totais. Você pode utilizar livremente em vídeos monetizados no YouTube, TikTok, campanhas de tráfego pago, podcasts e infoprodutos.
+          </p>
+        </div>
+
+        <!-- FAQ Item 2 -->
+        <div class="card-glass rounded-2xl p-5 cursor-pointer" onclick="toggleFaq(2)">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Como funciona o pagamento via PIX?</h3>
+            <i id="faq-icon-2" data-lucide="chevron-down" class="w-4 h-4 text-brand-500 transition-transform"></i>
+          </div>
+          <p id="faq-ans-2" class="text-xs text-zinc-400 mt-3 hidden leading-relaxed">
+            Ao clicar em recarregar ou selecionar um pacote no estúdio, você recebe um QR Code PIX e o código Copia e Cola. O processamento é instantâneo e os créditos são adicionados automaticamente ao seu saldo assim que o pagamento é aprovado.
+          </p>
+        </div>
+
+        <!-- FAQ Item 3 -->
+        <div class="card-glass rounded-2xl p-5 cursor-pointer" onclick="toggleFaq(3)">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Os créditos comprados têm prazo de validade?</h3>
+            <i id="faq-icon-3" data-lucide="chevron-down" class="w-4 h-4 text-brand-500 transition-transform"></i>
+          </div>
+          <p id="faq-ans-3" class="text-xs text-zinc-400 mt-3 hidden leading-relaxed">
+            Não! Seus créditos não expiram no final do mês. Você pode usá-los no seu próprio ritmo, sem pressão de prazos ou desperdício do seu dinheiro.
+          </p>
+        </div>
+
+        <!-- FAQ Item 4 -->
+        <div class="card-glass rounded-2xl p-5 cursor-pointer" onclick="toggleFaq(4)">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Qual a diferença entre baixar em WAV Master e MP3 Leve?</h3>
+            <i id="faq-icon-4" data-lucide="chevron-down" class="w-4 h-4 text-brand-500 transition-transform"></i>
+          </div>
+          <p id="faq-ans-4" class="text-xs text-zinc-400 mt-3 hidden leading-relaxed">
+            O WAV Master é o formato de estúdio profissional em 44.1kHz sem perda de qualidade, ideal para colocar na timeline de editores de vídeo (Premiere, DaVinci, Final Cut, CapCut). O MP3 Leve é codificado em alta taxa (192kbps) e ocupa até 80% menos espaço, ideal para mensagens, prévias e redes sociais.
+          </p>
+        </div>
+
+        <!-- FAQ Item 5 -->
+        <div class="card-glass rounded-2xl p-5 cursor-pointer" onclick="toggleFaq(5)">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">A plataforma está em conformidade com a LGPD?</h3>
+            <i id="faq-icon-5" data-lucide="chevron-down" class="w-4 h-4 text-brand-500 transition-transform"></i>
+          </div>
+          <p id="faq-ans-5" class="text-xs text-zinc-400 mt-3 hidden leading-relaxed">
+            Com certeza. Nós seguimos rigorosamente as diretrizes da Lei Geral de Proteção de Dados (Lei 13.709/2018) e do Marco Civil da Internet (Lei 12.965/2014). Seus arquivos de áudio e vozes clonadas são privados e podem ser excluídos permanentemente por você a qualquer momento com apenas 1 clique.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FINAL CTA BANNER -->
+  <section class="py-20 relative bg-grid">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="p-8 sm:p-14 rounded-3xl bg-gradient-to-r from-brand-600 via-brand-500 to-amber-600 text-center space-y-6 shadow-2xl shadow-brand-500/30 relative overflow-hidden">
+        <div class="relative z-10 space-y-4">
+          <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+            Pronto para Criar Locuções Profissionais em Segundos?
+          </h2>
+          <p class="text-black/80 font-bold max-w-2xl mx-auto text-sm sm:text-base">
+            Junte-se a criadores e agências que já economizam tempo e dinheiro todos os dias com o VoxStudio.
+          </p>
+          <div class="pt-4">
+            <a
+              href="/studio"
+              class="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl bg-black hover:bg-zinc-900 text-white font-black text-sm sm:text-base uppercase tracking-wider transition shadow-2xl transform hover:scale-105 cursor-pointer"
+            >
+              <span>Acessar o Estúdio Gratuitamente</span>
+              <i data-lucide="arrow-right" class="w-5 h-5 text-brand-400"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER INSTITUCIONAL & CONFORMIDADE LGPD -->
+  <footer class="py-12 border-t border-white/10 bg-black text-xs text-zinc-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+            <i data-lucide="mic" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <span class="font-bold text-white uppercase tracking-wider block">VOXSTUDIO AI</span>
+            <span class="text-[11px] text-zinc-500">Plataforma em conformidade com a Lei nº 13.709/2018 (LGPD) e Marco Civil da Internet.</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4 flex-wrap justify-center font-medium text-[11px] sm:text-xs text-zinc-400">
+          <button onclick="openTermsModal()" class="hover:text-brand-400 transition cursor-pointer">Termos de Uso & Ética de IA</button>
+          <span>•</span>
+          <button onclick="openPrivacyModal()" class="hover:text-brand-400 transition cursor-pointer">Política de Privacidade (LGPD)</button>
+          <span>•</span>
+          <button onclick="openCookieBanner()" class="hover:text-brand-400 transition cursor-pointer">Preferências de Cookies</button>
+          <span>•</span>
+          <a href="/studio" class="text-brand-400 hover:text-brand-300 font-bold transition">Acessar Estúdio ➔</a>
+        </div>
+
+      </div>
+
+      <div class="text-center md:text-left text-[11px] text-zinc-600 border-t border-white/5 pt-4">
+        © 2026 VoxStudio AI • Todos os direitos reservados.
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL JURÍDICO 1: TERMOS DE USO & DIRETRIZES ÉTICAS DE IA -->
+  <div id="terms-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="card-glass border border-brand-500/30 rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-2xl relative max-h-[85vh] flex flex-col">
+      
+      <div class="flex items-center justify-between border-b border-white/10 pb-3 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30 shrink-0">
+            <i data-lucide="scale" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white uppercase tracking-wider">Termos de Uso & IA Ética</h3>
+            <p class="text-[11px] text-zinc-400">Diretrizes Legais de Uso e Isenção de Responsabilidade</p>
+          </div>
+        </div>
+        <button onclick="closeTermsModal()" class="text-zinc-400 hover:text-white transition p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto pr-2 space-y-4 text-xs text-zinc-300 leading-relaxed font-normal">
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-brand-400">1. Objeto e Aceitação</h4>
+          <p>Ao acessar, cadastrar-se ou utilizar o <strong>VoxStudio AI</strong> ("Plataforma"), você concorda expressamente em cumprir integralmente estes Termos de Uso. Caso não concorde com qualquer disposição aqui estabelecida, você não deve utilizar os serviços.</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-brand-400">2. Titularidade e Autorização Obrigatória de Vozes</h4>
+          <p>O usuário declara, sob as penas da lei (especialmente o Art. 299 do Código Penal Brasileiro - Falsidade Ideológica), que <strong>possui autorização prévia, expressa e por escrito do titular da voz</strong> submetida para clonagem vocal, ou que o áudio submetido pertence com exclusividade ao próprio usuário.</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-brand-400">3. Usos Estritamente Proibidos (Tolerância Zero)</h4>
+          <p>É expressamente vedado o uso da Plataforma para quaisquer das seguintes finalidades:</p>
+          <ul class="list-disc pl-5 space-y-1 mt-1 text-zinc-300">
+            <li>Prática de fraudes, estelionato, golpes telefônicos (engenharia social) ou extorsão;</li>
+            <li>Simulação não autorizada da voz de autoridades públicas, juízes, policiais, políticos ou figuras públicas;</li>
+            <li>Criação de desinformação deliberada (Fake News), difamação, calúnia ou injúria contra terceiros;</li>
+            <li>Produção de conteúdo ofensivo, discriminatório, pornográfico ou ilegal.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-brand-400">4. Isenção e Blindagem Jurídica da Plataforma</h4>
+          <p>Nos termos do <strong>Artigo 19 da Lei Federal nº 12.965/2014 (Marco Civil da Internet)</strong>, o VoxStudio AI atua exclusivamente como mero provedor de infraestrutura e aplicação tecnológica de síntese de fala. <strong>O usuário é o único e exclusivo responsável civil e penal pelo conteúdo gerado, divulgado ou compartilhado</strong>.</p>
+          <p class="mt-1 text-zinc-400">O usuário concorda em defender, indenizar e manter indene a Plataforma, seus proprietários e operadores contra quaisquer reivindicações, perdas, danos, custos e despesas decorrentes do uso indevido de suas credenciais ou áudios gerados.</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-brand-400">5. Cooperação Policial e Bloqueio de Contas</h4>
+          <p>O VoxStudio AI reserva-se o direito irrestrito de suspender ou banir imediatamente qualquer usuário suspeito de atividades ilícitas, sem direito a qualquer reembolso de créditos, colaborando integralmente com autoridades policiais, judiciais e o Ministério Público.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end border-t border-white/10 pt-3 shrink-0">
+        <button
+          onclick="closeTermsModal()"
+          class="px-5 py-2 rounded-xl btn-fire text-white text-xs font-bold transition cursor-pointer"
+        >
+          Li e Concordo com os Termos
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL JURÍDICO 2: POLÍTICA DE PRIVACIDADE & PROTEÇÃO DE DADOS (LGPD) -->
+  <div id="privacy-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="card-glass border border-brand-500/30 rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-2xl relative max-h-[85vh] flex flex-col">
+      
+      <div class="flex items-center justify-between border-b border-white/10 pb-3 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shrink-0">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white uppercase tracking-wider">Política de Privacidade & Proteção de Dados</h3>
+            <p class="text-[11px] text-zinc-400">Em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 - LGPD)</p>
+          </div>
+        </div>
+        <button onclick="closePrivacyModal()" class="text-zinc-400 hover:text-white transition p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto pr-2 space-y-4 text-xs text-zinc-300 leading-relaxed font-normal">
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-emerald-400">1. Compromisso com a Privacidade</h4>
+          <p>O <strong>VoxStudio AI</strong> está comprometido com a proteção dos seus dados pessoais e atua em estrita conformidade com a <strong>Lei Federal nº 13.709/2018 (LGPD)</strong>, aplicando rigorosas medidas técnicas e organizacionais de segurança.</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-emerald-400">2. Dados Pessoais Coletados e Tratados</h4>
+          <p>Coletamos exclusivamente os dados necessários para a prestação do serviço contratado:</p>
+          <ul class="list-disc pl-5 space-y-1 mt-1 text-zinc-300">
+            <li><strong>Dados de Pagamento:</strong> Identificadores de transação de recarga PIX;</li>
+            <li><strong>Dados de Áudio e Voz:</strong> Gravações de áudio enviadas voluntariamente pelo usuário para fins específicos de clonagem ou síntese;</li>
+            <li><strong>Registros de Conexão:</strong> Endereço IP, data e hora de acesso, mantidos pelo prazo legal de 6 meses (Art. 15 do Marco Civil da Internet).</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-emerald-400">3. Segurança e Não Comercialização de Dados</h4>
+          <p><strong>Nós NUNCA vendemos, alugamos ou comercializamos dados pessoais ou amostras de voz a terceiros.</strong> Todos os dados trafegam sob criptografia TLS/HTTPS e são armazenados em infraestrutura segura com controles estritos de acesso.</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-emerald-400">4. Seus Direitos como Titular de Dados (Art. 18 da LGPD)</h4>
+          <p>A qualquer momento, você pode exercer seus direitos legais diretamente na Plataforma:</p>
+          <ul class="list-disc pl-5 space-y-1 mt-1 text-zinc-300">
+            <li><strong>Exclusão com 1 Clique:</strong> Você pode excluir qualquer modelo de voz clonada ou áudio gerado diretamente no estúdio;</li>
+            <li><strong>Acesso e Revogação:</strong> Revogar sua autorização e solicitar exclusão completa de conta e arquivos.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end border-t border-white/10 pt-3 shrink-0">
+        <button
+          onclick="closePrivacyModal()"
+          class="px-5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold transition cursor-pointer border border-zinc-700"
+        >
+          Entendido & Fechar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BANNER DE COOKIES ATIVO (LGPD / PRIVACIDADE) -->
+  <div id="cookie-banner" class="fixed bottom-5 right-5 max-w-sm w-full card-glass p-4 rounded-2xl border border-brand-500/30 shadow-2xl z-50 space-y-3 hidden">
+    <div class="flex items-start gap-3">
+      <div class="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/30 mt-0.5">
+        <i data-lucide="cookie" class="w-4 h-4"></i>
+      </div>
+      <div>
+        <h4 class="text-xs font-bold text-white">Privacidade e Uso de Cookies</h4>
+        <p class="text-[11px] text-zinc-400 mt-0.5 leading-relaxed">
+          Utilizamos cookies essenciais para autenticação, memorização de créditos e conformidade com a <strong>LGPD (Lei 13.709/2018)</strong>.
+        </p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-2 pt-1 border-t border-white/10">
+      <button
+        onclick="acceptCookies('necessary')"
+        class="flex-1 py-1.5 px-2.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 text-[11px] font-semibold transition cursor-pointer border border-zinc-800 text-center"
+      >
+        Apenas Essenciais
+      </button>
+      <button
+        onclick="acceptCookies('all')"
+        class="flex-1 py-1.5 px-3 rounded-lg btn-fire text-white text-[11px] font-black uppercase tracking-wider transition cursor-pointer text-center shadow-md"
+      >
+        Aceitar Todos
+      </button>
+    </div>
+  </div>
+
+  <!-- SCRIPT INTERATIVO DA LANDING PAGE -->
+  <script>
+    lucide.createIcons();
+
+    // Estado do Player de Demonstração
+    let selectedDemoVoice = 'dii';
+    let selectedDemoPreset = 'welcome';
+    let demoWaveSurfer = null;
+    let isDemoPlaying = false;
+
+    const demoScripts = {
+      welcome: "Olá! Seja muito bem-vindo ao VoxStudio. Este áudio foi gerado com rede neural local, 100% no seu computador e com zero latência de servidores.",
+      news: "A tecnologia de inteligência artificial aplicada à clonagem de voz atingiu um patamar de maturidade impressionante. Hoje é viável gerar locuções ultra-realistas em segundos.",
+      vsl: "Atenção: se você cria vídeos de vendas ou canais no YouTube, pare de gastar centenas de reais com locutores tradicionais. Conheça a voz humana que converte em segundos."
+    };
+
+    const voiceLabels = {
+      dii: "Dii (Feminina)",
+      faber: "Faber (Narrador)",
+      miro: "Miro (Alta Definição)",
+      jeff: "Jeff (Comercial)",
+      cadu: "Cadu (Natural)",
+      edresson: "Edresson (Dinâmico)"
+    };
+
+    function initLandingWaveSurfer() {
+      if (demoWaveSurfer) demoWaveSurfer.destroy();
+      demoWaveSurfer = WaveSurfer.create({
+        container: '#landing-waveform',
+        waveColor: '#3F3F46',
+        progressColor: '#FF5500',
+        cursorColor: '#FFAA66',
+        cursorWidth: 2,
+        height: 36,
+        barWidth: 2,
+        barGap: 2,
+        barRadius: 2,
+        responsive: true,
+      });
+
+      demoWaveSurfer.on('play', () => {
+        isDemoPlaying = true;
+        updateLandingPlayButton();
+      });
+
+      demoWaveSurfer.on('pause', () => {
+        isDemoPlaying = false;
+        updateLandingPlayButton();
+      });
+
+      demoWaveSurfer.on('finish', () => {
+        isDemoPlaying = false;
+        updateLandingPlayButton();
+      });
+
+      demoWaveSurfer.on('timeupdate', (currentTime) => {
+        const total = demoWaveSurfer.getDuration() || 0;
+        document.getElementById('landing-time-display').innerText = `${formatTime(currentTime)} / ${formatTime(total)}`;
+      });
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateLandingPlayButton() {
+      const icon = document.getElementById('landing-play-icon');
+      if (isDemoPlaying) {
+        icon.setAttribute('data-lucide', 'pause');
+      } else {
+        icon.setAttribute('data-lucide', 'play');
+      }
+      lucide.createIcons();
+    }
+
+    function toggleLandingPlay() {
+      if (demoWaveSurfer) {
+        demoWaveSurfer.playPause();
+      } else {
+        loadAndPlayCurrentDemo();
+      }
+    }
+
+    function loadAndPlayCurrentDemo(autoPlay = true) {
+      if (!demoWaveSurfer) initLandingWaveSurfer();
+      const demoUrl = `./demos/${selectedDemoVoice}_${selectedDemoPreset}.mp3`;
+      
+      const vName = voiceLabels[selectedDemoVoice] || selectedDemoVoice;
+      const pName = selectedDemoPreset.toUpperCase();
+      document.getElementById('landing-audio-label').innerText = `${vName} • ${pName}`;
+
+      demoWaveSurfer.load(demoUrl);
+      demoWaveSurfer.once('ready', () => {
+        if (autoPlay) demoWaveSurfer.play();
+      });
+    }
+
+    function selectDemoVoice(vKey) {
+      selectedDemoVoice = vKey;
+      document.querySelectorAll('.demo-voice-btn').forEach(b => {
+        if (b.getAttribute('data-voice') === vKey) {
+          b.className = 'demo-voice-btn px-4 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-2 cursor-pointer bg-brand-500/20 text-brand-300 border-brand-500 shadow-sm';
+        } else {
+          b.className = 'demo-voice-btn px-4 py-2 rounded-xl text-xs font-semibold border transition flex items-center gap-2 cursor-pointer bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white';
+        }
+      });
+      loadAndPlayCurrentDemo(true);
+    }
+
+    function selectDemoPreset(pKey) {
+      selectedDemoPreset = pKey;
+      document.getElementById('demo-script-text').innerText = `"${demoScripts[pKey]}"`;
+      document.querySelectorAll('.demo-preset-btn').forEach(b => {
+        if (b.getAttribute('data-preset') === pKey) {
+          b.className = 'demo-preset-btn px-3.5 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer bg-brand-500/20 text-brand-300 border-brand-500 shadow-sm';
+        } else {
+          b.className = 'demo-preset-btn px-3.5 py-1.5 rounded-lg text-xs font-medium border transition cursor-pointer bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white';
+        }
+      });
+      loadAndPlayCurrentDemo(true);
+    }
+
+    // FAQ Accordion Toggle
+    function toggleFaq(id) {
+      const ans = document.getElementById(`faq-ans-${id}`);
+      const icon = document.getElementById(`faq-icon-${id}`);
+      if (ans.classList.contains('hidden')) {
+        ans.classList.remove('hidden');
+        icon.classList.add('rotate-180');
+      } else {
+        ans.classList.add('hidden');
+        icon.classList.remove('rotate-180');
+      }
+    }
+
+    // Modais Jurídicos
+    function openTermsModal() {
+      document.getElementById('terms-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeTermsModal() {
+      document.getElementById('terms-modal').classList.add('hidden');
+    }
+
+    function openPrivacyModal() {
+      document.getElementById('privacy-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closePrivacyModal() {
+      document.getElementById('privacy-modal').classList.add('hidden');
+    }
+
+    // Banner de Cookies LGPD
+    function openCookieBanner() {
+      document.getElementById('cookie-banner').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function acceptCookies(preference) {
+      localStorage.setItem('vox_cookies_accepted', preference);
+      document.getElementById('cookie-banner').classList.add('hidden');
+    }
+
+    // Inicialização ao carregar
+    window.addEventListener('DOMContentLoaded', () => {
+      initLandingWaveSurfer();
+      loadAndPlayCurrentDemo(false);
+
+      // Auto-exibir banner de cookies se ainda não aceito
+      if (!localStorage.getItem('vox_cookies_accepted')) {
+        setTimeout(() => {
+          document.getElementById('cookie-banner').classList.remove('hidden');
+          lucide.createIcons();
+        }, 1000);
+      }
+    });
+  </script>
+</body>
+</html>

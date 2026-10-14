@@ -1,0 +1,34 @@
+# Environment variables (Credentials & Secrets)
+.env
+.env.local
+.env.*.local
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Output audios & downloads
+outputs/*.wav
+outputs/*.mp3
+!outputs/.gitkeep
+
+# Models (ONNX binaries - downloaded on VPS)
+models/
+
+# Custom voices uploads
+custom_voices/*.wav
+custom_voices/*.mp3
+custom_voices/*.ogg
+custom_voices/*.m4a
+
+# Operating System files
+.DS_Store
+Thumbs.db

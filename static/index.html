@@ -1,0 +1,2416 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoxStudio AI • Plataforma de Síntese & Clonagem de Voz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              400: '#FF6A00',
+              500: '#FF4D00',
+              600: '#E63E00',
+              700: '#CC3300',
+              glow: 'rgba(255, 77, 0, 0.4)',
+            },
+            dark: {
+              bg: '#050505',
+              surface: '#0F0F12',
+              card: '#141418',
+              border: '#24242C',
+              hover: '#1B1B22',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #050505;
+      color: #F4F4F5;
+      background-image: 
+        radial-gradient(at 10% 10%, rgba(255, 77, 0, 0.15) 0px, transparent 45%),
+        radial-gradient(at 90% 90%, rgba(255, 106, 0, 0.08) 0px, transparent 45%);
+      background-attachment: fixed;
+    }
+    .panel-glass {
+      background: rgba(18, 18, 22, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .btn-fire {
+      background: linear-gradient(135deg, #FF5500 0%, #E63900 100%);
+      box-shadow: 0 4px 20px rgba(255, 77, 0, 0.35);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-fire:hover {
+      background: linear-gradient(135deg, #FF6611 0%, #F54000 100%);
+      box-shadow: 0 6px 25px rgba(255, 77, 0, 0.55);
+      transform: translateY(-1px);
+    }
+    .btn-fire:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 10px rgba(255, 77, 0, 0.3);
+    }
+    .badge-fire {
+      background: rgba(255, 77, 0, 0.12);
+      border: 1px solid rgba(255, 77, 0, 0.35);
+      color: #FF7722;
+    }
+    select option, select optgroup {
+      background-color: #121216;
+      color: #FFFFFF;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #050505;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #27272A;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3F3F46;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(18, 18, 22, 0.5);
+      border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #27272A;
+      border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #FF5500;
+    }
+    .custom-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: #27272A rgba(18, 18, 22, 0.5);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-brand-500 selection:text-white">
+
+  <!-- Top Navbar -->
+  <header class="sticky top-0 z-40 panel-glass border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+      
+      <!-- Brand Logo (Pure Black & Vibrant Fire Orange) -->
+      <div class="flex items-center space-x-3.5">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
+          <i data-lucide="waveform" class="w-6 h-6 text-white stroke-[2.5]"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xl font-extrabold tracking-tight text-white uppercase tracking-wider">
+              VOX<span class="text-brand-500">STUDIO</span>
+            </span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">AI PRO</span>
+          </div>
+          <p class="text-[11px] text-zinc-400 -mt-0.5 font-medium">Estúdio de Síntese & Clonagem de Voz</p>
+        </div>
+      </div>
+
+      <!-- Action Area: Auth & Credit Balance & Buttons -->
+      <div class="flex items-center space-x-2.5 sm:space-x-3">
+        
+        <!-- Estado DESLOGADO: Botões de Login e Cadastro Grátis -->
+        <div id="nav-auth-logged-out" class="flex items-center gap-2">
+          <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-500/10 border border-brand-500/20 text-[11px] text-brand-300 font-bold">
+            <i data-lucide="gift" class="w-3.5 h-3.5 text-brand-400"></i>
+            <span>Ganhe 1 Áudio Grátis</span>
+          </div>
+          <button
+            onclick="openAuthModal('login')"
+            class="px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-xs font-bold transition cursor-pointer"
+          >
+            Entrar
+          </button>
+          <button
+            onclick="openAuthModal('signup')"
+            class="px-3.5 py-1.5 rounded-xl btn-fire text-white text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5"
+          >
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>Criar Conta</span>
+          </button>
+        </div>
+
+        <!-- Estado LOGADO: Usuário, Saldo Real e Sair -->
+        <div id="nav-auth-logged-in" class="hidden flex items-center gap-2 sm:gap-3">
+          <!-- User Profile Capsule -->
+          <div class="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-zinc-900/90 border border-zinc-800">
+            <div id="user-avatar-initial" class="w-6 h-6 rounded-lg bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center font-black text-xs">
+              U
+            </div>
+            <span id="user-display-name" class="text-xs font-bold text-zinc-200 max-w-[100px] sm:max-w-[130px] truncate">
+              Usuário
+            </span>
+          </div>
+
+          <!-- Credit Balance Badge -->
+          <div class="flex items-center bg-zinc-900/90 border border-brand-500/30 px-3 py-1.5 rounded-xl shadow-inner">
+            <div class="flex items-center gap-2 text-xs">
+              <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+              <span class="text-zinc-300">Saldo:</span>
+              <span id="user-credits-badge" class="font-extrabold text-white font-mono text-sm">1</span>
+              <span class="text-zinc-400 text-[11px] hidden sm:inline">áudios</span>
+            </div>
+            <button
+              onclick="openRechargeModal()"
+              class="ml-2.5 px-2.5 py-1 rounded-lg bg-brand-500 hover:bg-brand-400 text-black font-extrabold text-[11px] uppercase tracking-wider transition cursor-pointer"
+            >
+              + Recarregar
+            </button>
+          </div>
+
+          <!-- Botão Sair -->
+          <button
+            onclick="handleSignOut()"
+            class="p-2 rounded-xl bg-zinc-900/80 hover:bg-red-950/60 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-500/30 transition cursor-pointer"
+            title="Sair da Conta"
+          >
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Link para a Página Inicial / Planos -->
+        <a
+          href="/"
+          class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 text-xs font-semibold transition cursor-pointer"
+          title="Ver apresentação completa e planos de recarga"
+        >
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-brand-400"></i>
+          <span>Planos</span>
+        </a>
+
+        <!-- Upload Voice Button -->
+        <button
+          onclick="openUploadModal()"
+          class="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white border border-white/10 hover:border-brand-500/40 text-xs font-semibold transition cursor-pointer"
+        >
+          <i data-lucide="user-plus" class="w-4 h-4 text-brand-500"></i>
+          <span>+ Upload de Voz</span>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container (Sem barra de rolagem externa, 100% contido na tela) -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4 space-y-3.5">
+
+    <!-- 1. Voice Selector Control Bar (Black & Neon Orange) -->
+    <section class="panel-glass px-4 py-2.5 rounded-2xl border border-white/10 shadow-2xl">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        
+        <!-- Left: Label + Botões de Gênero + Dropdown com Nome do Locutor -->
+        <div class="flex-1 flex flex-col sm:flex-row sm:items-center gap-2.5">
+          <label for="voice-select" class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 shrink-0">
+            <i data-lucide="mic" class="w-4 h-4 text-brand-500"></i> Escolha a Voz:
+          </label>
+
+          <!-- Botões de escolha do Gênero (Feminino / Masculino) ao lado do campo -->
+          <div class="flex items-center bg-zinc-950 p-1 rounded-xl border border-zinc-800 shrink-0 gap-1">
+            <button
+              id="filter-gender-fem"
+              type="button"
+              onclick="setGenderFilter('Feminina')"
+              class="px-3 py-1.5 rounded-lg text-xs font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/40 shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>👩 Feminino</span>
+            </button>
+            <button
+              id="filter-gender-masc"
+              type="button"
+              onclick="setGenderFilter('Masculina')"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>👨 Masculino</span>
+            </button>
+          </div>
+
+          <!-- Seletor da Voz com SOMENTE o nome do Locutor -->
+          <div class="relative flex-1">
+            <select
+              id="voice-select"
+              onchange="onVoiceSelectChange(this.value)"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm font-bold text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 cursor-pointer appearance-none pr-10"
+            >
+              <option value="">Carregando vozes...</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-400">
+              <i data-lucide="chevron-down" class="w-4 h-4 text-brand-500"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Status Badges & Quick Action Buttons -->
+        <div class="flex items-center gap-2 flex-wrap shrink-0">
+          <span id="voice-status-badge" class="text-xs px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 font-medium">
+            Pronta
+          </span>
+          <button
+            id="voice-sample-btn"
+            onclick="playCurrentVoiceSample()"
+            class="text-xs px-3 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-brand-400 border border-brand-500/30 transition hidden items-center gap-1.5 cursor-pointer font-bold shadow-sm"
+            title="Ouvir amostra pré-gravada desta voz (Custo Zero de créditos)"
+          >
+            <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
+            <span>Ouvir Amostra (0 Créditos)</span>
+          </button>
+          <button
+            id="voice-delete-btn"
+            onclick="deleteCurrentCustomVoice()"
+            class="text-xs px-2 py-1 rounded-lg bg-red-950/40 hover:bg-red-900/40 text-red-400 border border-red-500/20 transition hidden items-center gap-1 cursor-pointer"
+            title="Excluir voz clonada"
+          >
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+          <button
+            id="voice-download-btn"
+            onclick="downloadCurrentModel()"
+            class="text-xs px-3 py-1 rounded-lg bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/30 transition hidden items-center gap-1.5 cursor-pointer font-bold"
+          >
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Baixar Modelo (64MB)
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 2. Studio Workspace Grid (Zero Rolagem: Editor na Esquerda + Menu Lateral Completo na Direita) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:items-stretch">
+      
+      <!-- Left: Editor de Texto Principal -->
+      <section class="lg:col-span-7 flex flex-col">
+        <div class="panel-glass p-5 rounded-2xl border border-white/10 shadow-2xl flex flex-col justify-between h-full">
+          
+          <!-- Quick Preset Chips -->
+          <div class="flex items-center justify-between flex-wrap gap-2 shrink-0">
+            <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-brand-500"></i> Exemplos Prontos:
+            </span>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button onclick="setSample('welcome')" class="text-xs px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition font-medium cursor-pointer">Boas-vindas</button>
+              <button onclick="setSample('news')" class="text-xs px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition font-medium cursor-pointer">Notícia / Dark</button>
+              <button onclick="setSample('vsl')" class="text-xs px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition font-medium cursor-pointer">Comercial / VSL</button>
+              
+              <!-- Botão de Prévia Rápida Grátis em Cache -->
+              <button
+                id="btn-play-demo"
+                onclick="playCurrentPresetDemo()"
+                class="text-xs px-2.5 py-1 rounded-lg bg-brand-500/20 hover:bg-brand-500/30 text-brand-300 border border-brand-500/40 transition flex items-center gap-1.5 font-bold cursor-pointer shadow-sm"
+                title="Ouvir este exemplo pré-gravado sem consumir créditos ou API"
+              >
+                <i data-lucide="play-circle" class="w-3.5 h-3.5 text-brand-400"></i>
+                <span>Ouvir Exemplo (0 Créditos)</span>
+              </button>
+
+              <button onclick="clearText()" class="text-xs px-2 py-1 rounded-lg bg-red-950/30 hover:bg-red-900/40 text-red-400 border border-red-500/20 transition flex items-center gap-1 font-medium cursor-pointer">
+                <i data-lucide="trash-2" class="w-3 h-3"></i> Limpar
+              </button>
+            </div>
+          </div>
+
+          <!-- Textarea (Travado em 3.000 caracteres conforme política de créditos) -->
+          <div class="relative flex-1 flex flex-col my-3">
+            <textarea
+              id="text-input"
+              maxlength="3000"
+              class="w-full flex-1 min-h-[420px] bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-white placeholder-zinc-500 text-sm leading-relaxed focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition resize-none font-normal"
+              placeholder="Digite ou cole aqui o roteiro para converter em áudio de alta fidelidade (máximo de 3.000 caracteres por áudio)..."
+            ></textarea>
+            
+            <!-- Drag & Drop overlay -->
+            <div id="drop-zone" class="absolute inset-0 bg-zinc-950/90 border-2 border-dashed border-brand-500 rounded-xl hidden flex-col items-center justify-center pointer-events-none backdrop-blur-sm">
+              <i data-lucide="file-up" class="w-8 h-8 text-brand-500 animate-bounce mb-2"></i>
+              <p class="text-sm font-bold text-white">Solte o arquivo de texto (.txt) aqui</p>
+            </div>
+          </div>
+
+          <!-- Stats Bar -->
+          <div class="flex items-center justify-between text-xs text-zinc-400 pt-2 border-t border-zinc-800/80 shrink-0">
+            <div class="flex items-center gap-3 text-[11px] sm:text-xs">
+              <span><strong id="char-count" class="text-white font-mono font-bold">0</strong>/3000 caracteres</span>
+              <span><strong id="word-count" class="text-white font-mono font-bold">0</strong> palavras</span>
+              <span>Duração estimada: <strong id="est-time" class="text-brand-400 font-mono font-bold">~0s</strong></span>
+            </div>
+            <div>
+              <label for="file-upload" class="cursor-pointer text-brand-400 hover:text-brand-300 flex items-center gap-1 font-bold text-xs">
+                <i data-lucide="upload" class="w-3.5 h-3.5"></i> .txt
+              </label>
+              <input id="file-upload" type="file" accept=".txt" class="hidden" onchange="handleFileUpload(event)">
+            </div>
+          </div>
+
+          <!-- Master Action Button (Pílula Laranja Vibrante) -->
+          <button
+            id="btn-generate"
+            onclick="generateVoice()"
+            class="w-full mt-3 py-3.5 px-6 rounded-xl font-black text-white uppercase tracking-wider text-sm btn-fire flex items-center justify-center gap-2 group cursor-pointer shrink-0"
+          >
+            <i data-lucide="play" class="w-4 h-4 fill-current transition group-hover:scale-110"></i>
+            <span id="btn-text">GERAR ÁUDIO AGORA</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Right: Menu Lateral Integrado (Preferências + Player & Download + Histórico com 6 Áudios) -->
+      <section class="lg:col-span-5 flex flex-col justify-between space-y-3 h-full">
+        
+        <!-- Card 1: Ritmo da Locução (Configuração de Fala da IA) -->
+        <div class="panel-glass p-3.5 rounded-2xl border border-white/10 shadow-xl space-y-2 shrink-0">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="gauge" class="w-4 h-4 text-brand-500"></i> Ritmo da Locução
+            </h3>
+            <span id="pace-label" class="font-mono text-brand-400 font-bold text-[11px]">1.0x (Natural)</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <button
+              id="pace-slow"
+              type="button"
+              onclick="setSpeechPace(0.85)"
+              class="py-1.5 px-2 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold transition cursor-pointer text-center"
+            >
+              0.85x Pausado
+            </button>
+            <button
+              id="pace-normal"
+              type="button"
+              onclick="setSpeechPace(1.0)"
+              class="py-1.5 px-2 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-xs font-bold transition cursor-pointer text-center shadow-sm"
+            >
+              1.0x Natural
+            </button>
+            <button
+              id="pace-fast"
+              type="button"
+              onclick="setSpeechPace(1.15)"
+              class="py-1.5 px-2 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold transition cursor-pointer text-center"
+            >
+              1.15x Dinâmico
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 2: Áudio Pronto para Reprodução & Download (Altura Fixa e Estável - Zero Oscilação Visual) -->
+        <div id="player-container" class="panel-glass p-4 rounded-2xl border border-white/10 shadow-xl h-[208px] min-h-[208px] max-h-[208px] flex flex-col justify-between shrink-0">
+          <div class="flex items-center justify-between shrink-0">
+            <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="waveform" class="w-4 h-4 text-brand-500"></i> Áudio Sintetizado
+            </h3>
+            <span id="player-status-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-bold border border-zinc-700">
+              Aguardando
+            </span>
+          </div>
+
+          <!-- Placeholder inicial (antes de sintetizar) - Preenche a área fixa com elegância -->
+          <div id="player-placeholder" class="flex-1 flex flex-col items-center justify-center p-3 text-center border border-dashed border-zinc-800/80 rounded-xl bg-zinc-950/40 my-1 transition-all">
+            <div class="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-1.5 text-zinc-500 shadow-inner">
+              <i data-lucide="headphones" class="w-4 h-4"></i>
+            </div>
+            <p class="text-[11px] text-zinc-300 font-semibold">Aguardando geração de áudio</p>
+            <p class="text-[10px] text-zinc-500 mt-0.5">O player com waveform e download surgirá aqui</p>
+          </div>
+
+          <!-- Player ativo com Download nos 2 formatos: WAV Master ou MP3 Leve -->
+          <div id="player-active" class="flex-1 flex flex-col justify-between hidden my-1">
+            
+            <!-- File Info Header -->
+            <div class="flex items-center justify-between text-xs">
+              <div class="truncate mr-2">
+                <span id="audio-title" class="font-bold text-white text-xs truncate block">audio_output.wav</span>
+                <span id="time-display" class="font-mono text-zinc-400 text-[11px]">00:00 / 00:00</span>
+              </div>
+              <span id="metric-duration-badge" class="px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 font-mono text-[11px] font-bold shrink-0">
+                0.0s
+              </span>
+            </div>
+
+            <!-- Mini Waveform Canvas -->
+            <div class="bg-zinc-950 p-2 rounded-xl border border-zinc-800 my-0.5">
+              <div id="waveform" class="w-full"></div>
+            </div>
+
+            <!-- Control Buttons: Play + Baixar WAV + Baixar MP3 -->
+            <div class="flex items-center gap-2 pt-0.5">
+              <button
+                id="btn-play-pause"
+                onclick="togglePlay()"
+                class="w-9 h-9 rounded-xl btn-fire text-white flex items-center justify-center shadow-lg transition transform hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+                title="Tocar / Pausar"
+              >
+                <i id="play-icon" data-lucide="play" class="w-4 h-4 fill-current ml-0.5"></i>
+              </button>
+
+              <!-- Botão Baixar WAV Master -->
+              <a
+                id="btn-download-wav"
+                href="#"
+                download
+                class="flex-1 py-1.5 px-2 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 hover:from-brand-400 hover:to-amber-400 text-black font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg shadow-brand-500/20 transition cursor-pointer"
+                title="Baixar em áudio sem compressão (Alta Fidelidade)"
+              >
+                <i data-lucide="disc" class="w-3.5 h-3.5 stroke-[2.5]"></i>
+                <span>WAV Master</span>
+              </a>
+
+              <!-- Botão Baixar MP3 Leve -->
+              <a
+                id="btn-download-mp3"
+                href="#"
+                download
+                class="flex-1 py-1.5 px-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 border border-zinc-700 hover:border-brand-500 transition cursor-pointer"
+                title="Baixar em formato comprimido para web e redes sociais"
+              >
+                <i data-lucide="file-audio" class="w-3.5 h-3.5 text-brand-400"></i>
+                <span>MP3 Leve</span>
+              </a>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Card 3: Histórico de Áudios (Comporta exatamente 5 áudios completos e limpos sem corte) -->
+        <div class="panel-glass p-4 rounded-2xl border border-white/10 shadow-xl flex flex-col flex-1 justify-between">
+          <div class="flex items-center justify-between shrink-0 mb-2.5">
+            <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="clock" class="w-4 h-4 text-brand-500"></i> Histórico Recente
+            </h3>
+            <button onclick="loadHistory()" class="text-xs text-zinc-400 hover:text-white transition cursor-pointer" title="Recarregar histórico">
+              <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+          
+          <!-- Lista dimensionada com precisão milimétrica para 5 áudios completos sem nenhum corte -->
+          <div id="history-list" class="space-y-2 flex-1 overflow-y-auto pr-1.5 max-h-[288px] h-[288px] custom-scrollbar">
+            <p class="text-xs text-zinc-500 py-3 text-center">Nenhum áudio gerado ainda.</p>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Rodapé Institucional & Conformidade Jurídica LGPD -->
+  <footer class="border-t border-white/5 py-4 px-4 sm:px-6 lg:px-8 mt-auto text-zinc-500 text-xs panel-glass">
+    <div class="max-w-7xl w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-zinc-400 font-medium">Plataforma em conformidade com a <strong>LGPD (Lei nº 13.709/2018)</strong> e Marco Civil da Internet.</span>
+      </div>
+      <div class="flex items-center gap-4 flex-wrap justify-center font-medium text-[11px] sm:text-xs">
+        <button onclick="openTermsModal()" class="hover:text-brand-400 transition cursor-pointer">Termos de Uso & Ética de IA</button>
+        <span>•</span>
+        <button onclick="openPrivacyModal()" class="hover:text-brand-400 transition cursor-pointer">Política de Privacidade (LGPD)</button>
+        <span>•</span>
+        <button onclick="openCookieBanner()" class="hover:text-brand-400 transition cursor-pointer">Preferências de Cookies</button>
+      </div>
+      <div class="text-[11px] text-zinc-600 font-medium">
+        © 2026 VoxStudio AI • Todos os direitos reservados.
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL DE AUTENTICAÇÃO SUPABASE (LOGIN / CADASTRO) -->
+  <div id="auth-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="panel-glass border border-brand-500/30 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative bg-zinc-950">
+      
+      <!-- Header do Modal -->
+      <div class="flex items-center justify-between border-b border-white/10 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
+            <i data-lucide="lock" class="w-5 h-5 text-white"></i>
+          </div>
+          <div>
+            <h3 id="auth-modal-title" class="text-base font-black text-white uppercase tracking-wider">Acessar Minha Conta</h3>
+            <p id="auth-modal-subtitle" class="text-xs text-zinc-400">Gere áudios neurais e salve seu histórico</p>
+          </div>
+        </div>
+        <button onclick="closeAuthModal()" class="text-zinc-400 hover:text-white transition p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Tabs de Troca: Entrar vs Criar Conta (Ocultado em modo de recuperação) -->
+      <div id="auth-tabs-container" class="grid grid-cols-2 p-1 bg-zinc-900/90 rounded-xl border border-zinc-800 gap-1">
+        <button
+          id="auth-tab-login"
+          type="button"
+          onclick="switchAuthTab('login')"
+          class="py-2 text-xs font-bold rounded-lg transition bg-brand-500 text-black shadow-md cursor-pointer"
+        >
+          Fazer Login
+        </button>
+        <button
+          id="auth-tab-signup"
+          type="button"
+          onclick="switchAuthTab('signup')"
+          class="py-2 text-xs font-semibold rounded-lg transition text-zinc-400 hover:text-white cursor-pointer"
+        >
+          Criar Conta Grátis
+        </button>
+      </div>
+
+      <!-- Banner de Boas-vindas (Exibido no cadastro) -->
+      <div id="auth-signup-banner" class="hidden p-3 rounded-xl bg-brand-500/10 border border-brand-500/30 flex items-center gap-2.5 text-xs text-brand-300">
+        <i data-lucide="gift" class="w-5 h-5 text-brand-400 shrink-0"></i>
+        <span><strong>Presente de Boas-Vindas:</strong> Crie sua conta e receba <strong>1 áudio grátis</strong> de até 3.000 caracteres instantaneamente!</span>
+      </div>
+
+      <!-- Alerta de Erro ou Sucesso -->
+      <div id="auth-alert" class="hidden p-3 rounded-xl text-xs flex items-center gap-2"></div>
+
+      <!-- Formulário de Auth -->
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-3.5">
+        <!-- Nome Completo (Apenas no Cadastro) -->
+        <div id="auth-field-name" class="hidden space-y-1">
+          <label class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">Seu Nome</label>
+          <div class="relative">
+            <input
+              type="text"
+              id="auth-input-name"
+              placeholder="Ex: Carlos Oliveira"
+              class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 pl-10"
+            />
+            <i data-lucide="user" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-3"></i>
+          </div>
+        </div>
+
+        <!-- E-mail (Exibido no login, cadastro e esqueci minha senha) -->
+        <div id="auth-field-email" class="space-y-1">
+          <label class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">E-mail</label>
+          <div class="relative">
+            <input
+              type="email"
+              id="auth-input-email"
+              placeholder="seu@email.com"
+              class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 pl-10"
+            />
+            <i data-lucide="mail" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-3"></i>
+          </div>
+        </div>
+
+        <!-- Senha Principal com botão de Olho (Exibir/Ocultar Senha) -->
+        <div id="auth-field-password" class="space-y-1">
+          <div class="flex items-center justify-between">
+            <label id="auth-label-password" class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">Senha</label>
+            <button
+              type="button"
+              id="auth-btn-forgot"
+              onclick="switchAuthTab('forgot')"
+              class="text-[11px] text-brand-400 hover:text-brand-300 cursor-pointer font-medium"
+            >
+              Esqueceu a senha?
+            </button>
+          </div>
+          <div class="relative">
+            <input
+              type="password"
+              id="auth-input-password"
+              minlength="6"
+              placeholder="Mínimo de 6 caracteres"
+              class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 pl-10 pr-10"
+            />
+            <i data-lucide="key" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-3"></i>
+            <button
+              type="button"
+              onclick="togglePasswordVisibility('auth-input-password', 'password-toggle-icon')"
+              class="absolute right-3.5 top-2.5 text-zinc-400 hover:text-zinc-200 transition p-0.5 cursor-pointer"
+              title="Mostrar ou ocultar senha"
+            >
+              <i id="password-toggle-icon" data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Confirmar Nova Senha (Apenas em modo de Redefinição) -->
+        <div id="auth-field-confirm-password" class="hidden space-y-1">
+          <label class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">Confirmar Nova Senha</label>
+          <div class="relative">
+            <input
+              type="password"
+              id="auth-input-confirm-password"
+              minlength="6"
+              placeholder="Repita a nova senha"
+              class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 pl-10 pr-10"
+            />
+            <i data-lucide="shield-check" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-3"></i>
+            <button
+              type="button"
+              onclick="togglePasswordVisibility('auth-input-confirm-password', 'confirm-password-toggle-icon')"
+              class="absolute right-3.5 top-2.5 text-zinc-400 hover:text-zinc-200 transition p-0.5 cursor-pointer"
+              title="Mostrar ou ocultar senha"
+            >
+              <i id="confirm-password-toggle-icon" data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Botão de Ação -->
+        <button
+          type="submit"
+          id="auth-btn-submit"
+          class="w-full py-3 rounded-xl btn-fire text-white text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25 mt-2"
+        >
+          <span id="auth-btn-submit-text">Entrar no VoxStudio</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Link Voltar ao Login (Exibido em Esqueci Senha / Redefinição) -->
+        <div id="auth-back-to-login" class="hidden text-center pt-1">
+          <button
+            type="button"
+            onclick="switchAuthTab('login')"
+            class="text-xs text-zinc-400 hover:text-brand-400 font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 mx-auto"
+          >
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            <span>Voltar ao Login</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Rodapé do Modal com Informação LGPD -->
+      <div class="text-center pt-2 border-t border-white/5">
+        <p class="text-[10px] text-zinc-500">
+          Seus dados e senhas são criptografados com segurança de ponta a ponta (AES-256) em conformidade com a LGPD.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL DE RECARGA PIX (NOVO & INTEGRADO AO PLANO DE NEGÓCIOS) -->
+  <div id="recharge-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="panel-glass border border-brand-500/30 rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl relative">
+      
+      <div class="flex items-center justify-between border-b border-white/10 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+            <i data-lucide="zap" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-black text-white uppercase tracking-wider">Recarregar Créditos via PIX</h3>
+            <p class="text-xs text-zinc-400">Escolha um pacote e libere seus créditos instantaneamente</p>
+          </div>
+        </div>
+        <button onclick="closeRechargeModal()" class="text-zinc-400 hover:text-white transition p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Callout Informativo de Transparência -->
+      <div class="p-2.5 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-between text-xs text-zinc-300">
+        <div class="flex items-center gap-2">
+          <i data-lucide="info" class="w-4 h-4 text-brand-400 shrink-0"></i>
+          <span><strong>1 crédito = 1 áudio</strong> de até <strong>3.000 caracteres</strong> (~2 a 3 min de fala). 100% pré-pago sem mensalidade.</span>
+        </div>
+        <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 shrink-0">Vitalício</span>
+      </div>
+
+      <!-- Packages Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-left">
+        
+        <!-- Pacote 1 -->
+        <div onclick="selectPackage('basico', '9,90', 3)" class="p-3.5 rounded-xl border border-zinc-800 bg-zinc-900/50 hover:border-brand-500 cursor-pointer transition package-card">
+          <span class="text-[10px] font-bold text-zinc-400 uppercase block">Teste Rápido</span>
+          <div class="text-xl font-black text-white mt-0.5">R$ 9,90</div>
+          <span class="text-xs text-brand-400 font-bold block mt-1">3 Áudios</span>
+          <span class="text-[10px] text-zinc-500 block mt-0.5">R$ 3,30 por áudio</span>
+        </div>
+
+        <!-- Pacote 2 (Recomendado) -->
+        <div onclick="selectPackage('criador', '27,90', 12)" class="p-3.5 rounded-xl border-2 border-brand-500 bg-brand-500/10 cursor-pointer transition package-card relative">
+          <span class="absolute -top-2.5 right-2 px-2 py-0.5 bg-brand-500 text-black text-[9px] font-black uppercase rounded-full">Popular</span>
+          <span class="text-[10px] font-bold text-brand-300 uppercase block">Criador Dark</span>
+          <div class="text-xl font-black text-white mt-0.5">R$ 27,90</div>
+          <span class="text-xs text-brand-400 font-bold block mt-1">12 Áudios</span>
+          <span class="text-[10px] text-zinc-400 block mt-0.5">R$ 2,32 por áudio</span>
+        </div>
+
+        <!-- Pacote 3 -->
+        <div onclick="selectPackage('pro', '57,90', 30)" class="p-3.5 rounded-xl border border-zinc-800 bg-zinc-900/50 hover:border-brand-500 cursor-pointer transition package-card">
+          <span class="text-[10px] font-bold text-zinc-400 uppercase block">Profissional</span>
+          <div class="text-xl font-black text-white mt-0.5">R$ 57,90</div>
+          <span class="text-xs text-brand-400 font-bold block mt-1">30 Áudios</span>
+          <span class="text-[10px] text-zinc-500 block mt-0.5">R$ 1,93 por áudio</span>
+        </div>
+
+        <!-- Pacote 4 -->
+        <div onclick="selectPackage('agencia', '119,90', 70)" class="p-3.5 rounded-xl border border-zinc-800 bg-zinc-900/50 hover:border-brand-500 cursor-pointer transition package-card">
+          <span class="text-[10px] font-bold text-zinc-400 uppercase block">Agência Master</span>
+          <div class="text-xl font-black text-white mt-0.5">R$ 119,90</div>
+          <span class="text-xs text-brand-400 font-bold block mt-1">70 Áudios</span>
+          <span class="text-[10px] text-zinc-500 block mt-0.5">R$ 1,71 por áudio</span>
+        </div>
+
+      </div>
+
+      <!-- PIX Payment Screen (Simulated Webhook Confirmation) -->
+      <div id="pix-payment-box" class="bg-zinc-950 p-4 rounded-xl border border-zinc-800 space-y-3 text-center">
+        <div class="flex items-center justify-between text-xs px-2">
+          <span class="text-zinc-400">Pacote Selecionado: <strong id="pix-package-name" class="text-white">Criador Dark</strong></span>
+          <span class="text-zinc-400">Total a Pagar: <strong id="pix-package-price" class="text-brand-400 font-mono text-sm">R$ 27,90</strong></span>
+        </div>
+        
+        <!-- QR Code Display -->
+        <div class="flex flex-col items-center justify-center p-3 bg-white rounded-xl inline-block mx-auto">
+          <!-- Real SVG QR code placeholder -->
+          <svg class="w-32 h-32" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="#fff" />
+            <path d="M10,10 h30 v30 h-30 z M15,15 v20 h20 v-20 z M22,22 h6 v6 h-6 z" fill="#000" />
+            <path d="M60,10 h30 v30 h-30 z M65,15 v20 h20 v-20 z M72,22 h6 v6 h-6 z" fill="#000" />
+            <path d="M10,60 h30 v30 h-30 z M15,65 v20 h20 v-20 z M22,72 h6 v6 h-6 z" fill="#000" />
+            <path d="M45,15 h10 v10 h-10 z M45,35 h10 v10 h-10 z M60,60 h10 v10 h-10 z M75,75 h15 v15 h-15 z" fill="#000" />
+          </svg>
+        </div>
+
+        <p class="text-[11px] text-zinc-400">Escaneie o QR Code no app do seu banco ou use a chave Copia e Cola:</p>
+        
+        <div class="flex items-center gap-2 max-w-md mx-auto">
+          <input
+            id="pix-copy-input"
+            type="text"
+            readonly
+            value="00020126580014br.gov.bcb.pix0136voxstudio-recarga-pix-992384729105204000053039865802BR"
+            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-[11px] font-mono text-zinc-300 focus:outline-none"
+          >
+          <button
+            onclick="copyPixKey()"
+            class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold transition shrink-0"
+          >
+            Copiar
+          </button>
+        </div>
+
+        <!-- Simulate Payment Confirmation -->
+        <button
+          onclick="simulatePixPayment()"
+          class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider transition cursor-pointer mt-2"
+        >
+          ✅ Simular Confirmação do PIX (Liberar Créditos)
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL DE UPLOAD DE VOZ (PALETA BLACK & FIRE ORANGE) -->
+  <div id="upload-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="panel-glass border border-brand-500/30 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
+      <div class="flex items-center justify-between border-b border-white/10 pb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+            <i data-lucide="user-plus" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-white uppercase tracking-wider">Upload de Voz para Clonagem</h3>
+            <p class="text-xs text-zinc-400">Envie um áudio limpo de 10 a 60 segundos</p>
+          </div>
+        </div>
+        <button onclick="closeUploadModal()" class="text-zinc-400 hover:text-white transition p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block text-zinc-300 font-bold mb-1">Nome da Voz / Pessoa:</label>
+          <input
+            id="modal-voice-name"
+            type="text"
+            placeholder="Ex: Minha Voz, Ana Locutora, Pedro Apresentador..."
+            class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-brand-500"
+          >
+        </div>
+
+        <div>
+          <label class="block text-zinc-300 font-bold mb-1">Gênero Vocal:</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              id="gender-btn-fem"
+              onclick="setModalGender('Feminina')"
+              class="py-2.5 rounded-xl border border-brand-500 bg-brand-500/20 text-brand-300 font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+            >
+              👩 Feminina
+            </button>
+            <button
+              type="button"
+              id="gender-btn-masc"
+              onclick="setModalGender('Masculina')"
+              class="py-2.5 rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-400 font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+            >
+              👨 Masculina
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-zinc-300 font-bold mb-1">Arquivo de Áudio (.wav, .mp3, .m4a):</label>
+          <div
+            id="modal-drop-zone"
+            class="border-2 border-dashed border-zinc-800 hover:border-brand-500/50 rounded-xl p-4 text-center cursor-pointer bg-zinc-950 transition"
+            onclick="document.getElementById('modal-audio-file').click()"
+          >
+            <i data-lucide="music" class="w-6 h-6 text-brand-500 mx-auto mb-1"></i>
+            <p id="modal-file-label" class="text-zinc-300 font-medium">Clique para escolher o áudio ou arraste aqui</p>
+            <span class="text-[10px] text-zinc-500 block mt-0.5">Voz clara sem música ou ruídos intensos</span>
+          </div>
+          <input
+            id="modal-audio-file"
+            type="file"
+            accept=".wav,.mp3,.ogg,.m4a"
+            class="hidden"
+            onchange="handleModalFileSelect(event)"
+          >
+        </div>
+
+        <!-- Preview player -->
+        <div id="modal-preview-box" class="hidden bg-zinc-900 p-3 rounded-xl border border-zinc-800 space-y-1.5">
+          <span class="text-[10px] text-zinc-400 font-medium">Pré-escuta do arquivo selecionado:</span>
+          <audio id="modal-audio-preview" controls class="w-full h-8"></audio>
+        </div>
+
+        <!-- Termo de Consentimento LGPD & Titularidade -->
+        <div class="flex items-start gap-2.5 pt-1 text-[11px] text-zinc-400 bg-zinc-950/70 p-2.5 rounded-xl border border-zinc-800">
+          <input id="modal-consent" type="checkbox" class="mt-0.5 accent-brand-500 cursor-pointer shrink-0" checked>
+          <label for="modal-consent" class="cursor-pointer leading-tight">
+            Declaro, sob as penas da lei (Art. 299 do Código Penal), que sou titular desta voz ou possuo autorização expressa e por escrito do titular, assumindo integral responsabilidade civil e criminal e concordando com os <button type="button" onclick="openTermsModal()" class="text-brand-400 hover:underline font-bold inline">Termos de Uso</button> e a <button type="button" onclick="openPrivacyModal()" class="text-brand-400 hover:underline font-bold inline">LGPD</button>.
+          </label>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
+        <button
+          onclick="closeUploadModal()"
+          class="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold transition cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          id="btn-save-voice"
+          onclick="submitVoiceUpload()"
+          class="px-5 py-2 rounded-xl btn-fire text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+        >
+          <i data-lucide="check" class="w-4 h-4"></i>
+          <span>Processar & Salvar Voz</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL JURÍDICO 1: TERMOS DE USO & DIRETRIZES ÉTICAS DE IA -->
+  <div id="terms-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="panel-glass border border-brand-500/30 rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-2xl relative max-h-[85vh] flex flex-col">
+      
+      <div class="flex items-center justify-between border-b border-white/10 pb-3 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30 shrink-0">
+            <i data-lucide="scale" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white uppercase tracking-wider">Termos de Uso & Isenção de Responsabilidade</h3>
+            <p class="text-[11px] text-zinc-400">Diretrizes Legais de Uso e Proteção Contra Fraudes (IA de Voz)</p>
+          </div>
+        </div>
+        <button onclick="closeTermsModal()" class="text-zinc-400 hover:text-white transition p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Texto Jurídico com Scroll Suave -->
+      <div class="flex-1 overflow-y-auto pr-2 space-y-4 text-xs text-zinc-300 leading-relaxed custom-scrollbar font-normal">
+        
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-brand-400">1. Objeto e Aceitação</h4>
+          <p>Ao acessar, cadastrar-se ou utilizar o <strong>VoxStudio AI</strong> ("Plataforma"), você concorda expressamente em cumprir integralmente estes Termos de Uso. Caso não concorde com qualquer disposição aqui estabelecida, você não deve utilizar os serviços.</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-brand-400">2. Titularidade e Autorização Obrigatória de Vozes</h4>
+          <p>O usuário declara, sob as penas da lei (especialmente o Art. 299 do Código Penal Brasileiro - Falsidade Ideológica), que <strong>possui autorização prévia, expressa e por escrito do titular da voz</strong> submetida para clonagem vocal, ou que o áudio submetido pertence com exclusividade ao próprio usuário.</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-brand-400">3. Usos Estritamente Proibidos (Tolerância Zero)</h4>
+          <p>É expressamente vedado o uso da Plataforma para quaisquer das seguintes finalidades:</p>
+          <ul class="list-disc pl-5 space-y-1 mt-1 text-zinc-300">
+            <li>Prática de fraudes, estelionato, golpes telefônicos (engenharia social) ou extorsão;</li>
+            <li>Simulação não autorizada da voz de autoridades públicas, juízes, policiais, políticos ou figuras públicas;</li>
+            <li>Criação de desinformação deliberada (Fake News), difamação, calúnia ou injúria contra terceiros;</li>
+            <li>Produção de conteúdo ofensivo, discriminatório, pornográfico ou ilegal.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-brand-400">4. Isenção e Blindagem Jurídica da Plataforma</h4>
+          <p>Nos termos do <strong>Artigo 19 da Lei Federal nº 12.965/2014 (Marco Civil da Internet)</strong>, o VoxStudio AI atua exclusivamente como mero provedor de infraestrutura e aplicação tecnológica de síntese de fala. <strong>O usuário é o único e exclusivo responsável civil e penal pelo conteúdo gerado, divulgado ou compartilhado</strong>.</p>
+          <p class="mt-1 text-zinc-400">O usuário concorda em defender, indenizar e manter indene a Plataforma, seus proprietários e operadores contra quaisquer reivindicações, perdas, danos, custos e despesas decorrentes do uso indevido de suas credenciais ou áudios gerados.</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-brand-400">5. Cooperação Policial e Bloqueio de Contas</h4>
+          <p>O VoxStudio AI reserva-se o direito irrestrito de <strong>suspender ou banir imediatamente qualquer conta</strong> suspeita de atividades ilícitas, sem direito a qualquer reembolso de créditos, colaborando integralmente com autoridades policiais, judiciais e o Ministério Público, inclusive mediante o fornecimento de registros de acesso (IPs, datas e horários).</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-brand-400">6. Foro e Legislação Aplicável</h4>
+          <p>Estes Termos são regidos e interpretados em conformidade com a legislação da República Federativa do Brasil, elegendo-se o foro do domicílio do operador da Plataforma para dirimir quaisquer controvérsias.</p>
+        </div>
+
+      </div>
+
+      <div class="flex items-center justify-end border-t border-white/10 pt-3 shrink-0">
+        <button
+          onclick="closeTermsModal()"
+          class="px-5 py-2 rounded-xl btn-fire text-white text-xs font-bold transition cursor-pointer"
+        >
+          Li e Concordo com os Termos
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL JURÍDICO 2: POLÍTICA DE PRIVACIDADE & PROTEÇÃO DE DADOS (LGPD) -->
+  <div id="privacy-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="panel-glass border border-brand-500/30 rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-2xl relative max-h-[85vh] flex flex-col">
+      
+      <div class="flex items-center justify-between border-b border-white/10 pb-3 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shrink-0">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white uppercase tracking-wider">Política de Privacidade & Proteção de Dados</h3>
+            <p class="text-[11px] text-zinc-400">Em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 - LGPD)</p>
+          </div>
+        </div>
+        <button onclick="closePrivacyModal()" class="text-zinc-400 hover:text-white transition p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Conteúdo LGPD com Scroll Suave -->
+      <div class="flex-1 overflow-y-auto pr-2 space-y-4 text-xs text-zinc-300 leading-relaxed custom-scrollbar font-normal">
+        
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-emerald-400">1. Compromisso com a Privacidade</h4>
+          <p>O <strong>VoxStudio AI</strong> está comprometido com a proteção dos seus dados pessoais e atua em estrita conformidade com a <strong>Lei Federal nº 13.709/2018 (LGPD)</strong>, aplicando rigorosas medidas técnicas e organizacionais de segurança.</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-emerald-400">2. Dados Pessoais Coletados e Tratados</h4>
+          <p>Coletamos exclusivamente os dados necessários para a prestação do serviço contratado:</p>
+          <ul class="list-disc pl-5 space-y-1 mt-1 text-zinc-300">
+            <li><strong>Dados Cadastrais e de Pagamento:</strong> E-mail e identificadores de transação de recarga PIX;</li>
+            <li><strong>Dados de Áudio e Voz (Biometria):</strong> Gravações de áudio enviadas voluntariamente pelo usuário para fins específicos de clonagem ou síntese;</li>
+            <li><strong>Registros de Conexão:</strong> Endereço IP, data e hora de acesso, mantidos obrigatoriamente pelo prazo legal de 6 meses em cumprimento ao Art. 15 do Marco Civil da Internet.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-emerald-400">3. Finalidade e Base Legal do Tratamento</h4>
+          <p>O tratamento de dados é realizado fundamentado nas seguintes bases legais da LGPD:</p>
+          <ul class="list-disc pl-5 space-y-1 mt-1 text-zinc-300">
+            <li><strong>Execução de Contrato (Art. 7º, V):</strong> Para sintetizar os áudios e gerenciar seus créditos;</li>
+            <li><strong>Consentimento Expresso (Art. 7º, I):</strong> Para processar perfis acústicos de voz cadastrados pelo usuário;</li>
+            <li><strong>Cumprimento de Obrigação Legal (Art. 7º, II):</strong> Para guarda de logs de conexão.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-emerald-400">4. Segurança e Não Comercialização de Dados</h4>
+          <p><strong>Nós NUNCA vendemos, alugamos ou comercializamos dados pessoais ou amostras de voz a terceiros.</strong> Todos os dados trafegam sob criptografia TLS/HTTPS e são armazenados em infraestrutura segura com controles estritos de acesso.</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-emerald-400">5. Seus Direitos como Titular de Dados (Art. 18 da LGPD)</h4>
+          <p>A qualquer momento, você pode exercer seus direitos legais diretamente na Plataforma ou pelo nosso suporte:</p>
+          <ul class="list-disc pl-5 space-y-1 mt-1 text-zinc-300">
+            <li><strong>Exclusão com 1 Clique:</strong> Você pode excluir qualquer modelo de voz clonada ou áudio gerado diretamente no estúdio;</li>
+            <li><strong>Acesso e Confirmação:</strong> Obter confirmação da existência de tratamento de seus dados;</li>
+            <li><strong>Revogação do Consentimento:</strong> Revogar sua autorização e solicitar exclusão completa de conta.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white text-sm mb-1 text-emerald-400">6. Contato do Encarregado de Proteção de Dados (DPO)</h4>
+          <p>Para dúvidas sobre privacidade ou para solicitar o exercício de seus direitos previstos na LGPD, entre em contato com nosso Encarregado pelo e-mail: <strong class="text-white">privacidade@clonavoz.com.br</strong> / <strong class="text-white">dpo@voxstudio.ai</strong>.</p>
+        </div>
+
+      </div>
+
+      <div class="flex items-center justify-end border-t border-white/10 pt-3 shrink-0">
+        <button
+          onclick="closePrivacyModal()"
+          class="px-5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold transition cursor-pointer border border-zinc-700"
+        >
+          Entendido & Fechar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BANNER DE CONSENTIMENTO DE COOKIES (FLUTUANTE NO CANTO DA TELA) -->
+  <div id="cookie-banner" class="fixed bottom-4 right-4 sm:right-6 max-w-md w-[calc(100%-2rem)] panel-glass p-4 rounded-2xl border border-brand-500/40 shadow-2xl z-50 transform translate-y-32 opacity-0 transition-all duration-300 space-y-3">
+    <div class="flex items-start gap-3">
+      <div class="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/30">
+        <i data-lucide="cookie" class="w-4 h-4"></i>
+      </div>
+      <div class="text-xs text-zinc-300 leading-relaxed">
+        <p class="font-bold text-white mb-0.5">Controle de Privacidade & Cookies</p>
+        <p class="text-zinc-400 text-[11px]">Utilizamos cookies essenciais para salvar suas preferências de áudio e garantir segurança de sessão, em conformidade com a <strong>LGPD</strong>.</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-2 pt-1 border-t border-white/10">
+      <button
+        onclick="acceptCookies('necessary')"
+        class="flex-1 py-1.5 px-2.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 text-[11px] font-semibold transition cursor-pointer border border-zinc-800 text-center"
+      >
+        Apenas Essenciais
+      </button>
+      <button
+        onclick="acceptCookies('all')"
+        class="flex-1 py-1.5 px-3 rounded-lg btn-fire text-white text-[11px] font-black uppercase tracking-wider transition cursor-pointer text-center shadow-md"
+      >
+        Aceitar Todos
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 panel-glass px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-brand-500/30 transform translate-y-24 opacity-0 transition-all duration-300 z-50">
+    <div id="toast-icon"></div>
+    <span id="toast-msg" class="text-xs text-white font-medium"></span>
+  </div>
+
+  <script>
+    // Supabase Auth State
+    let supabaseClient = null;
+    let currentSession = null;
+    let currentUser = null;
+    let authMode = 'login'; // 'login' | 'signup'
+
+    // Studio State
+    let voices = [];
+    let selectedVoiceKey = 'dii';
+    let selectedGenderFilter = 'Feminina';
+    let currentPreset = 'welcome';
+    let userCredits = 1;
+    let wavesurfer = null;
+    let isPlaying = false;
+    let selectedSpeed = 1.0;
+    let selectedFormat = 'wav';
+    let modalSelectedGender = 'Feminina';
+    let modalSelectedFile = null;
+    let selectedPkg = { id: 'criador', price: '27,90', credits: 12 };
+
+    const sampleTexts = {
+      welcome: "Olá! Seja muito bem-vindo ao VoxStudio. Este áudio foi gerado com rede neural local, 100% no seu computador e com zero latência de servidores.",
+      news: "A tecnologia de inteligência artificial aplicada à clonagem de voz atingiu um patamar de maturidade impressionante. Hoje é viável gerar locuções ultra-realistas em segundos.",
+      vsl: "Atenção: se você cria vídeos de vendas ou canais no YouTube, pare de gastar centenas de reais com locutores tradicionais. Conheça a voz humana que converte em segundos."
+    };
+
+    function updateCreditUI() {
+      const badge = document.getElementById('user-credits-badge');
+      if (badge) badge.innerText = userCredits;
+    }
+
+    // ==========================================
+    // INTEGRAÇÃO SUPABASE AUTH & PERFIL DE USUÁRIO
+    // ==========================================
+    function togglePasswordVisibility(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (!input || !icon) return;
+
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        input.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    }
+
+    // Base URL da API (Quando o frontend estiver na Vercel e o backend na VPS)
+    const API_BASE = window.VOXSTUDIO_API_URL || localStorage.getItem('VOXSTUDIO_API_URL') || '';
+    const SUPABASE_FALLBACK_URL = "https://ekncpoggwgmbmzmfmfvb.supabase.co";
+    const SUPABASE_FALLBACK_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrbmNwb2dnd2dtYm16bWZtZnZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4NDk5MjcsImV4cCI6MjEwNzQyNTkyN30.5shXkcVllbGYyOZCXmxISQ1qm7RtDHnsqFsH4BtHZ2c";
+
+    async function initSupabaseAuth() {
+      try {
+        let sbUrl = SUPABASE_FALLBACK_URL;
+        let sbKey = SUPABASE_FALLBACK_ANON_KEY;
+
+        try {
+          const res = await fetch(`${API_BASE}/api/config`);
+          if (res.ok) {
+            const config = await res.json();
+            if (config.supabase_url && config.supabase_anon_key) {
+              sbUrl = config.supabase_url;
+              sbKey = config.supabase_anon_key;
+            }
+          }
+        } catch (_) {
+          // Em caso de frontend hospedado isoladamente (Vercel) antes do backend conectar
+        }
+
+        if (window.supabase && sbUrl && sbKey) {
+          supabaseClient = window.supabase.createClient(sbUrl, sbKey);
+          
+          supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+              openAuthModal('reset');
+              return;
+            }
+            await handleAuthSession(session);
+          });
+
+          // Checa se o usuário veio de link de recuperação de senha no hash da URL (#type=recovery)
+          const hash = window.location.hash || '';
+          if (hash.includes('type=recovery')) {
+            openAuthModal('reset');
+            return;
+          }
+
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          await handleAuthSession(session);
+        }
+      } catch (err) {
+        console.warn('[Supabase Init Warning]', err);
+      }
+
+      // Se a URL tiver parâmetro ?auth=signup, login, forgot ou reset, abre na aba correta
+      const urlParams = new URLSearchParams(window.location.search);
+      const authParam = urlParams.get('auth');
+      if (authParam && ['signup', 'login', 'forgot', 'reset'].includes(authParam)) {
+        if (!currentSession || authParam === 'reset') {
+          openAuthModal(authParam);
+        }
+      }
+    }
+
+    async function handleAuthSession(session) {
+      currentSession = session;
+      const loggedOutNav = document.getElementById('nav-auth-logged-out');
+      const loggedInNav = document.getElementById('nav-auth-logged-in');
+
+      if (session && session.user) {
+        try {
+          const res = await fetch(`${API_BASE}/api/me`, {
+            headers: { 'Authorization': `Bearer ${session.access_token}` }
+          });
+          const data = await res.json();
+          if (data.authenticated && data.user) {
+            currentUser = data.user;
+            userCredits = data.user.credits;
+            updateCreditUI();
+
+            const displayName = data.user.full_name || data.user.email.split('@')[0];
+            document.getElementById('user-display-name').innerText = displayName;
+            document.getElementById('user-avatar-initial').innerText = displayName[0].toUpperCase();
+
+            loggedOutNav.classList.add('hidden');
+            loggedOutNav.classList.remove('flex');
+            loggedInNav.classList.remove('hidden');
+            loggedInNav.classList.add('flex');
+            lucide.createIcons();
+            loadHistory();
+            return;
+          }
+        } catch (err) {
+          console.error('[Auth Profile Error]', err);
+        }
+      }
+
+      // Se deslogado:
+      currentUser = null;
+      loggedOutNav.classList.remove('hidden');
+      loggedOutNav.classList.add('flex');
+      loggedInNav.classList.add('hidden');
+      loggedInNav.classList.remove('flex');
+      lucide.createIcons();
+      loadHistory();
+    }
+
+    function openAuthModal(mode = 'login') {
+      authMode = mode;
+      switchAuthTab(mode);
+      clearAuthAlert();
+      document.getElementById('auth-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+      clearAuthAlert();
+    }
+
+    function switchAuthTab(mode) {
+      authMode = mode;
+      clearAuthAlert();
+
+      const tabsContainer = document.getElementById('auth-tabs-container');
+      const tabLogin = document.getElementById('auth-tab-login');
+      const tabSignup = document.getElementById('auth-tab-signup');
+      const fieldName = document.getElementById('auth-field-name');
+      const fieldEmail = document.getElementById('auth-field-email');
+      const fieldPassword = document.getElementById('auth-field-password');
+      const fieldConfirmPassword = document.getElementById('auth-field-confirm-password');
+      const banner = document.getElementById('auth-signup-banner');
+      const btnForgot = document.getElementById('auth-btn-forgot');
+      const backToLogin = document.getElementById('auth-back-to-login');
+      const submitText = document.getElementById('auth-btn-submit-text');
+      const modalTitle = document.getElementById('auth-modal-title');
+      const modalSubtitle = document.getElementById('auth-modal-subtitle');
+      const labelPassword = document.getElementById('auth-label-password');
+
+      // Reseta tipo de senha para oculto
+      const passInput = document.getElementById('auth-input-password');
+      const passIcon = document.getElementById('password-toggle-icon');
+      if (passInput) passInput.type = 'password';
+      if (passIcon) passIcon.setAttribute('data-lucide', 'eye');
+
+      if (mode === 'signup') {
+        tabsContainer.classList.remove('hidden');
+        tabSignup.className = 'py-2 text-xs font-bold rounded-lg transition bg-brand-500 text-black shadow-md cursor-pointer';
+        tabLogin.className = 'py-2 text-xs font-semibold rounded-lg transition text-zinc-400 hover:text-white cursor-pointer';
+        fieldName.classList.remove('hidden');
+        fieldEmail.classList.remove('hidden');
+        fieldPassword.classList.remove('hidden');
+        fieldConfirmPassword.classList.add('hidden');
+        banner.classList.remove('hidden');
+        btnForgot.classList.add('hidden');
+        backToLogin.classList.add('hidden');
+        labelPassword.innerText = 'Senha';
+        submitText.innerText = 'Criar Conta e Ganhar 1 Áudio';
+        modalTitle.innerText = 'Criar Conta Gratuita';
+        modalSubtitle.innerText = 'Ganhe 1 áudio grátis e sintetize agora';
+      } else if (mode === 'login') {
+        tabsContainer.classList.remove('hidden');
+        tabLogin.className = 'py-2 text-xs font-bold rounded-lg transition bg-brand-500 text-black shadow-md cursor-pointer';
+        tabSignup.className = 'py-2 text-xs font-semibold rounded-lg transition text-zinc-400 hover:text-white cursor-pointer';
+        fieldName.classList.add('hidden');
+        fieldEmail.classList.remove('hidden');
+        fieldPassword.classList.remove('hidden');
+        fieldConfirmPassword.classList.add('hidden');
+        banner.classList.add('hidden');
+        btnForgot.classList.remove('hidden');
+        backToLogin.classList.add('hidden');
+        labelPassword.innerText = 'Senha';
+        submitText.innerText = 'Entrar no VoxStudio';
+        modalTitle.innerText = 'Acessar Minha Conta';
+        modalSubtitle.innerText = 'Gere áudios neurais e salve seu histórico';
+      } else if (mode === 'forgot') {
+        tabsContainer.classList.add('hidden');
+        fieldName.classList.add('hidden');
+        fieldEmail.classList.remove('hidden');
+        fieldPassword.classList.add('hidden');
+        fieldConfirmPassword.classList.add('hidden');
+        banner.classList.add('hidden');
+        btnForgot.classList.add('hidden');
+        backToLogin.classList.remove('hidden');
+        submitText.innerText = 'Enviar Link de Recuperação';
+        modalTitle.innerText = 'Recuperar Minha Senha';
+        modalSubtitle.innerText = 'Informe seu e-mail cadastrado para receber o link';
+      } else if (mode === 'reset') {
+        tabsContainer.classList.add('hidden');
+        fieldName.classList.add('hidden');
+        fieldEmail.classList.add('hidden');
+        fieldPassword.classList.remove('hidden');
+        fieldConfirmPassword.classList.remove('hidden');
+        banner.classList.add('hidden');
+        btnForgot.classList.add('hidden');
+        backToLogin.classList.add('hidden');
+        labelPassword.innerText = 'Nova Senha';
+        submitText.innerText = 'Salvar e Atualizar Nova Senha';
+        modalTitle.innerText = 'Definir Nova Senha';
+        modalSubtitle.innerText = 'Crie uma nova senha segura para sua conta';
+      }
+      lucide.createIcons();
+    }
+
+    function showAuthAlert(msg, type = 'error') {
+      const alert = document.getElementById('auth-alert');
+      alert.classList.remove('hidden');
+      if (type === 'error') {
+        alert.className = 'p-3 rounded-xl text-xs flex items-center gap-2 bg-red-950/50 border border-red-500/40 text-red-300';
+        alert.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4 text-red-400 shrink-0"></i> <span>${msg}</span>`;
+      } else {
+        alert.className = 'p-3 rounded-xl text-xs flex items-center gap-2 bg-emerald-950/50 border border-emerald-500/40 text-emerald-300';
+        alert.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-400 shrink-0"></i> <span>${msg}</span>`;
+      }
+      lucide.createIcons();
+    }
+
+    function clearAuthAlert() {
+      const alert = document.getElementById('auth-alert');
+      alert.classList.add('hidden');
+      alert.innerHTML = '';
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      if (!supabaseClient) {
+        showAuthAlert('Autenticação indisponível no momento. Tente novamente mais tarde.', 'error');
+        return;
+      }
+
+      const email = document.getElementById('auth-input-email').value.trim();
+      const password = document.getElementById('auth-input-password').value;
+      const name = document.getElementById('auth-input-name').value.trim();
+      const submitBtn = document.getElementById('auth-btn-submit');
+      const submitText = document.getElementById('auth-btn-submit-text');
+
+      // Modo 1: Esqueceu a Senha (Envia link para o e-mail)
+      if (authMode === 'forgot') {
+        if (!email) {
+          showAuthAlert('Por favor, informe seu e-mail cadastrado.', 'error');
+          return;
+        }
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75');
+        const orig = submitText.innerText;
+        submitText.innerText = 'Enviando...';
+
+        try {
+          const redirectUrl = window.location.origin + '/studio';
+          const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+            redirectTo: redirectUrl
+          });
+          if (error) throw error;
+          showAuthAlert('✅ Link enviado com sucesso! Verifique sua caixa de entrada e spam, e clique no link para atualizar sua senha.', 'success');
+        } catch (err) {
+          let msg = err.message || 'Erro ao enviar link de recuperação.';
+          if (msg.toLowerCase().includes('rate limit')) {
+            msg = 'Limite temporário de envio de e-mails atingido. Por segurança, aguarde alguns minutos antes de solicitar um novo link.';
+          }
+          showAuthAlert(msg, 'error');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-75');
+          submitText.innerText = orig;
+        }
+        return;
+      }
+
+      // Modo 2: Atualização / Redefinição de Nova Senha
+      if (authMode === 'reset') {
+        const confirmPassword = document.getElementById('auth-input-confirm-password').value;
+        if (!password || password.length < 6) {
+          showAuthAlert('A nova senha deve ter no mínimo 6 caracteres.', 'error');
+          return;
+        }
+        if (password !== confirmPassword) {
+          showAuthAlert('A nova senha e a confirmação não coincidem.', 'error');
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75');
+        const orig = submitText.innerText;
+        submitText.innerText = 'Atualizando senha...';
+
+        try {
+          const { data, error } = await supabaseClient.auth.updateUser({
+            password: password
+          });
+          if (error) throw error;
+
+          showToast('🎉 Senha atualizada com sucesso! Você já está conectado.', 'success');
+          closeAuthModal();
+
+          // Limpa hash da url
+          if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.pathname);
+          }
+
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          await handleAuthSession(session);
+        } catch (err) {
+          showAuthAlert(err.message || 'Erro ao atualizar senha.', 'error');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-75');
+          submitText.innerText = orig;
+        }
+        return;
+      }
+
+      // Modo 3: Cadastro de Novo Usuário
+      if (authMode === 'signup') {
+        if (!email || !password) {
+          showAuthAlert('Preencha seu e-mail e senha.', 'error');
+          return;
+        }
+        if (password.length < 6) {
+          showAuthAlert('A senha deve ter no mínimo 6 caracteres.', 'error');
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75');
+        const orig = submitText.innerText;
+        submitText.innerText = 'Criando conta...';
+
+        try {
+          const { data, error } = await supabaseClient.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+              data: { full_name: name || email.split('@')[0] }
+            }
+          });
+
+          if (error) throw error;
+
+          if (data.session) {
+            showToast('🎉 Conta criada com sucesso! 1 crédito grátis ativado!', 'success');
+            closeAuthModal();
+            await handleAuthSession(data.session);
+          } else if (data.user) {
+            showAuthAlert('Conta criada! Verifique seu e-mail para confirmar seu cadastro e liberar o estúdio.', 'success');
+          }
+        } catch (err) {
+          showAuthAlert(err.message || 'Erro ao criar conta.', 'error');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-75');
+          submitText.innerText = orig;
+        }
+        return;
+      }
+
+      // Modo 4: Login Convencional
+      if (authMode === 'login') {
+        if (!email || !password) {
+          showAuthAlert('Informe seu e-mail e sua senha.', 'error');
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75');
+        const orig = submitText.innerText;
+        submitText.innerText = 'Acessando...';
+
+        try {
+          const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+          });
+
+          if (error) {
+            if (error.message.includes('Invalid login credentials')) {
+              throw new Error('E-mail ou senha incorretos.');
+            }
+            throw error;
+          }
+
+          showToast('Login realizado com sucesso!', 'success');
+          closeAuthModal();
+          await handleAuthSession(data.session);
+        } catch (err) {
+          showAuthAlert(err.message || 'Erro ao fazer login.', 'error');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-75');
+          submitText.innerText = orig;
+        }
+        return;
+      }
+    }
+
+    async function handleSignOut() {
+      if (confirm('Deseja realmente sair da sua conta?')) {
+        if (supabaseClient) {
+          await supabaseClient.auth.signOut();
+        }
+        currentSession = null;
+        currentUser = null;
+        await handleAuthSession(null);
+        showToast('Você saiu da sua conta.', 'info');
+      }
+    }
+
+    // Toggle Speech Pace (0.85x, 1.0x, 1.15x)
+    function setSpeechPace(speed) {
+      selectedSpeed = speed;
+      const btnSlow = document.getElementById('pace-slow');
+      const btnNormal = document.getElementById('pace-normal');
+      const btnFast = document.getElementById('pace-fast');
+      const label = document.getElementById('pace-label');
+
+      [btnSlow, btnNormal, btnFast].forEach(b => {
+        b.className = 'py-1.5 px-2 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold transition cursor-pointer text-center';
+      });
+
+      if (speed <= 0.85) {
+        btnSlow.className = 'py-1.5 px-2 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-xs font-bold transition cursor-pointer text-center shadow-sm';
+        label.innerText = '0.85x (Pausado)';
+      } else if (speed >= 1.15) {
+        btnFast.className = 'py-1.5 px-2 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-xs font-bold transition cursor-pointer text-center shadow-sm';
+        label.innerText = '1.15x (Dinâmico / VSL)';
+      } else {
+        btnNormal.className = 'py-1.5 px-2 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-xs font-bold transition cursor-pointer text-center shadow-sm';
+        label.innerText = '1.0x (Natural)';
+      }
+    }
+
+    // Toggle Output Format (WAV / MP3)
+    function setAudioFormat(fmt) {
+      selectedFormat = fmt;
+      const btnWav = document.getElementById('fmt-wav');
+      const btnMp3 = document.getElementById('fmt-mp3');
+      if (fmt === 'wav') {
+        btnWav.className = 'py-1.5 px-3 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-xs font-bold transition cursor-pointer text-center flex items-center justify-center gap-1.5';
+        btnMp3.className = 'py-1.5 px-3 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold transition cursor-pointer text-center flex items-center justify-center gap-1.5';
+      } else {
+        btnMp3.className = 'py-1.5 px-3 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-xs font-bold transition cursor-pointer text-center flex items-center justify-center gap-1.5';
+        btnWav.className = 'py-1.5 px-3 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold transition cursor-pointer text-center flex items-center justify-center gap-1.5';
+      }
+    }
+
+    // Initialize WaveSurfer with Compact Sizing for Sidebar
+    function initWaveSurfer() {
+      if (wavesurfer) {
+        wavesurfer.destroy();
+      }
+      wavesurfer = WaveSurfer.create({
+        container: '#waveform',
+        waveColor: '#3F3F46',
+        progressColor: '#FF5500',
+        cursorColor: '#FFAA66',
+        cursorWidth: 2,
+        height: 34,
+        barWidth: 2,
+        barGap: 2,
+        barRadius: 2,
+        responsive: true,
+      });
+
+      wavesurfer.on('play', () => {
+        isPlaying = true;
+        updatePlayButton();
+      });
+
+      wavesurfer.on('pause', () => {
+        isPlaying = false;
+        updatePlayButton();
+      });
+
+      wavesurfer.on('finish', () => {
+        isPlaying = false;
+        updatePlayButton();
+      });
+
+      wavesurfer.on('timeupdate', (currentTime) => {
+        const total = wavesurfer.getDuration() || 0;
+        document.getElementById('time-display').innerText = `${formatTime(currentTime)} / ${formatTime(total)}`;
+      });
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updatePlayButton() {
+      const icon = document.getElementById('play-icon');
+      if (isPlaying) {
+        icon.setAttribute('data-lucide', 'pause');
+      } else {
+        icon.setAttribute('data-lucide', 'play');
+      }
+      lucide.createIcons();
+    }
+
+    function togglePlay() {
+      if (wavesurfer) wavesurfer.playPause();
+    }
+
+    // Load Voices
+    async function loadVoices() {
+      try {
+        const res = await fetch(`${API_BASE}/api/voices`);
+        voices = await res.json();
+        const current = voices.find(v => v.key === selectedVoiceKey);
+        if (current) selectedGenderFilter = current.gender;
+        updateGenderButtonsUI();
+        renderVoiceDropdown();
+        updateVoiceStatusPills();
+      } catch (err) {
+        showToast('Erro ao carregar catálogo de vozes', 'error');
+      }
+    }
+
+    function getCleanVoiceName(v) {
+      if (v.type === 'custom') {
+        return v.label.replace(' (Personalizada)', '').trim();
+      }
+      return v.label.split(' (')[0].trim();
+    }
+
+    function setGenderFilter(gender) {
+      selectedGenderFilter = gender;
+      updateGenderButtonsUI();
+
+      const filtered = voices.filter(v => v.gender === gender);
+      if (filtered.length > 0) {
+        if (!filtered.some(v => v.key === selectedVoiceKey)) {
+          selectedVoiceKey = filtered[0].key;
+        }
+      }
+
+      renderVoiceDropdown();
+      updateVoiceStatusPills();
+      const current = voices.find(v => v.key === selectedVoiceKey);
+      if (current) {
+        showToast(`Locutor ativo: ${getCleanVoiceName(current)} (${gender})`, 'info');
+      }
+    }
+
+    function updateGenderButtonsUI() {
+      const btnFem = document.getElementById('filter-gender-fem');
+      const btnMasc = document.getElementById('filter-gender-masc');
+      if (!btnFem || !btnMasc) return;
+
+      if (selectedGenderFilter === 'Feminina') {
+        btnFem.className = 'px-3 py-1.5 rounded-lg text-xs font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/40 shadow-sm transition flex items-center gap-1.5 cursor-pointer';
+        btnMasc.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1.5 cursor-pointer';
+      } else {
+        btnMasc.className = 'px-3 py-1.5 rounded-lg text-xs font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/40 shadow-sm transition flex items-center gap-1.5 cursor-pointer';
+        btnFem.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1.5 cursor-pointer';
+      }
+    }
+
+    function renderVoiceDropdown() {
+      const select = document.getElementById('voice-select');
+      select.innerHTML = '';
+
+      const filtered = voices.filter(v => v.gender === selectedGenderFilter);
+
+      filtered.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.key;
+        opt.innerText = getCleanVoiceName(v);
+        if (v.key === selectedVoiceKey) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      if (!filtered.some(v => v.key === selectedVoiceKey) && filtered.length > 0) {
+        selectedVoiceKey = filtered[0].key;
+      }
+      select.value = selectedVoiceKey;
+      lucide.createIcons();
+    }
+
+    function onVoiceSelectChange(val) {
+      selectedVoiceKey = val;
+      const v = voices.find(item => item.key === val);
+      if (v) {
+        if (v.gender !== selectedGenderFilter) {
+          selectedGenderFilter = v.gender;
+          updateGenderButtonsUI();
+        }
+        showToast(`Locutor selecionado: ${getCleanVoiceName(v)}`, 'info');
+      }
+      updateVoiceStatusPills();
+    }
+
+    function updateVoiceStatusPills() {
+      const v = voices.find(item => item.key === selectedVoiceKey);
+      if (!v) return;
+
+      updateGenderButtonsUI();
+
+      const statusBadge = document.getElementById('voice-status-badge');
+      const dlBtn = document.getElementById('voice-download-btn');
+      const sampleBtn = document.getElementById('voice-sample-btn');
+      const deleteBtn = document.getElementById('voice-delete-btn');
+
+      // Amostra gratuita disponível para todas as vozes com sample_url
+      if (v.sample_url) {
+        sampleBtn.classList.remove('hidden');
+        sampleBtn.classList.add('flex');
+      } else {
+        sampleBtn.classList.add('hidden');
+        sampleBtn.classList.remove('flex');
+      }
+
+      if (v.type === 'custom') {
+        statusBadge.innerText = '⭐ Voz Clonada';
+        statusBadge.className = 'text-xs px-2.5 py-1 rounded-lg badge-fire font-bold';
+        dlBtn.classList.add('hidden');
+        dlBtn.classList.remove('flex');
+
+        deleteBtn.classList.remove('hidden');
+        deleteBtn.classList.add('flex');
+      } else {
+        deleteBtn.classList.add('hidden');
+        deleteBtn.classList.remove('flex');
+
+        if (v.is_downloaded) {
+          statusBadge.innerText = '✅ Pronta';
+          statusBadge.className = 'text-xs px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 font-medium';
+          dlBtn.classList.add('hidden');
+          dlBtn.classList.remove('flex');
+        } else {
+          statusBadge.innerText = '⚠️ Não Baixada';
+          statusBadge.className = 'text-xs px-2.5 py-1 rounded-lg bg-brand-500/20 text-brand-300 border border-brand-500/30 font-bold';
+          dlBtn.classList.remove('hidden');
+          dlBtn.classList.add('flex');
+        }
+      }
+      lucide.createIcons();
+    }
+
+    function playCurrentVoiceSample() {
+      const v = voices.find(item => item.key === selectedVoiceKey);
+      if (v && v.sample_url) {
+        displayAudioResult({
+          filename: `amostra_${v.key}.mp3`,
+          url: v.sample_url,
+          duration: 3.5
+        });
+        showToast(`Reproduzindo amostra da voz "${getCleanVoiceName(v)}" (0 créditos consumidos)...`, 'info');
+      } else {
+        showToast('Nenhuma amostra em cache disponível para esta voz.', 'info');
+      }
+    }
+
+    async function deleteCurrentCustomVoice() {
+      const v = voices.find(item => item.key === selectedVoiceKey);
+      if (!v) return;
+      if (!confirm(`Deseja excluir a voz "${v.label.replace(' (Personalizada)', '')}"?`)) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/custom-voices/${selectedVoiceKey}`, { method: 'DELETE' });
+        if (res.ok) {
+          showToast('Voz removida com sucesso.', 'info');
+          selectedVoiceKey = 'dii';
+          await loadVoices();
+        }
+      } catch (err) {
+        showToast('Erro ao excluir voz', 'error');
+      }
+    }
+
+    async function downloadCurrentModel() {
+      const dlBtn = document.getElementById('voice-download-btn');
+      dlBtn.disabled = true;
+      dlBtn.innerHTML = '<span class="animate-spin">⏳</span> Baixando modelo...';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/download-voice`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ voice: selectedVoiceKey })
+        });
+        if (res.ok) {
+          showToast('Modelo instalado com sucesso!', 'success');
+          await loadVoices();
+        }
+      } catch (err) {
+        showToast('Erro ao baixar modelo', 'error');
+      } finally {
+        dlBtn.disabled = false;
+      }
+    }
+
+    // Modals
+    function openRechargeModal() {
+      document.getElementById('recharge-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeRechargeModal() {
+      document.getElementById('recharge-modal').classList.add('hidden');
+    }
+
+    function selectPackage(id, price, credits) {
+      selectedPkg = { id, price, credits };
+      document.getElementById('pix-package-name').innerText = id.toUpperCase();
+      document.getElementById('pix-package-price').innerText = `R$ ${price}`;
+      showToast(`Pacote selecionado: ${credits} áudios por R$ ${price}`, 'info');
+    }
+
+    function copyPixKey() {
+      const input = document.getElementById('pix-copy-input');
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      showToast('Código PIX Copia e Cola copiado com sucesso!', 'success');
+    }
+
+    async function simulatePixPayment() {
+      if (supabaseClient && !currentSession) {
+        showToast('Faça login ou crie sua conta para receber seus créditos!', 'info');
+        closeRechargeModal();
+        openAuthModal('signup');
+        return;
+      }
+
+      const btn = document.querySelector('#recharge-modal button[onclick="simulatePixPayment()"]');
+      const origText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="animate-spin inline-block">⏳</span> Confirmando no Banco...';
+      }
+
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (currentSession && currentSession.access_token) {
+          headers['Authorization'] = `Bearer ${currentSession.access_token}`;
+        }
+
+        const res = await fetch(`${API_BASE}/api/recharge/simulate`, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({
+            package_id: selectedPkg.id,
+            credits: selectedPkg.credits,
+            price: selectedPkg.price
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Erro ao processar recarga no servidor');
+
+        userCredits = data.credits;
+        updateCreditUI();
+        closeRechargeModal();
+        showToast(`🎉 Pagamento confirmado! +${data.added || selectedPkg.credits} áudios creditados com sucesso na sua conta! Saldo: ${userCredits}`, 'success');
+      } catch (err) {
+        showToast(`Erro na recarga: ${err.message}`, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origText || '⚡ Simular Confirmação do PIX (Liberar Créditos)';
+        }
+      }
+    }
+
+    function openUploadModal() {
+      document.getElementById('upload-modal').classList.remove('hidden');
+      document.getElementById('modal-voice-name').value = '';
+      document.getElementById('modal-audio-file').value = '';
+      document.getElementById('modal-preview-box').classList.add('hidden');
+      document.getElementById('modal-file-label').innerText = 'Clique para escolher o áudio ou arraste aqui';
+      modalSelectedFile = null;
+      setModalGender('Feminina');
+      lucide.createIcons();
+    }
+
+    function closeUploadModal() {
+      document.getElementById('upload-modal').classList.add('hidden');
+      const preview = document.getElementById('modal-audio-preview');
+      preview.pause();
+      preview.src = '';
+    }
+
+    function setModalGender(gender) {
+      modalSelectedGender = gender;
+      const btnFem = document.getElementById('gender-btn-fem');
+      const btnMasc = document.getElementById('gender-btn-masc');
+      if (gender === 'Feminina') {
+        btnFem.className = 'py-2.5 rounded-xl border border-brand-500 bg-brand-500/20 text-brand-300 font-bold flex items-center justify-center gap-1.5 transition cursor-pointer';
+        btnMasc.className = 'py-2.5 rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-400 font-bold flex items-center justify-center gap-1.5 transition cursor-pointer';
+      } else {
+        btnMasc.className = 'py-2.5 rounded-xl border border-brand-500 bg-brand-500/20 text-brand-300 font-bold flex items-center justify-center gap-1.5 transition cursor-pointer';
+        btnFem.className = 'py-2.5 rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-400 font-bold flex items-center justify-center gap-1.5 transition cursor-pointer';
+      }
+    }
+
+    function handleModalFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        modalSelectedFile = file;
+        document.getElementById('modal-file-label').innerText = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        const preview = document.getElementById('modal-audio-preview');
+        preview.src = URL.createObjectURL(file);
+        document.getElementById('modal-preview-box').classList.remove('hidden');
+      }
+    }
+
+    async function submitVoiceUpload() {
+      const name = document.getElementById('modal-voice-name').value.trim();
+      if (!name) {
+        showToast('Digite um nome para a voz.', 'error');
+        document.getElementById('modal-voice-name').focus();
+        return;
+      }
+      if (!modalSelectedFile) {
+        showToast('Selecione um arquivo de áudio de referência.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-save-voice');
+      btn.disabled = true;
+      btn.innerHTML = '<span>Analisando perfil acústico com IA...</span>';
+
+      try {
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('gender', modalSelectedGender);
+        formData.append('file', modalSelectedFile);
+
+        const res = await fetch(`${API_BASE}/api/upload-voice`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Falha no processamento');
+
+        showToast(`Voz "${name}" cadastrada com sucesso!`, 'success');
+        closeUploadModal();
+        selectedVoiceKey = data.voice.id;
+        await loadVoices();
+      } catch (err) {
+        showToast(`Erro: ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i><span>Processar & Salvar Voz</span>';
+        lucide.createIcons();
+      }
+    }
+
+    // Text & Stats
+    const textInput = document.getElementById('text-input');
+    textInput.addEventListener('input', updateTextStats);
+
+    function updateTextStats() {
+      const text = textInput.value.trim();
+      const charCount = text.length;
+      const wordCount = text ? text.split(/\s+/).length : 0;
+      const estSeconds = Math.max(1, Math.round(wordCount / 2.6));
+
+      document.getElementById('char-count').innerText = charCount;
+      document.getElementById('word-count').innerText = wordCount;
+      document.getElementById('est-time').innerText = wordCount > 0 ? `~${estSeconds}s` : '~0s';
+    }
+
+    function setSample(type) {
+      currentPreset = type;
+      if (sampleTexts[type]) {
+        textInput.value = sampleTexts[type];
+        updateTextStats();
+      }
+    }
+
+    function playCurrentPresetDemo() {
+      const demoKey = selectedVoiceKey;
+      const demoUrl = `/static/demos/${demoKey}_${currentPreset}.mp3`;
+
+      fetch(demoUrl, { method: 'HEAD' })
+        .then(res => {
+          const v = voices.find(item => item.key === selectedVoiceKey);
+          const vName = v ? getCleanVoiceName(v) : demoKey.toUpperCase();
+          if (res.ok) {
+            displayAudioResult({
+              filename: `demo_${demoKey}_${currentPreset}.mp3`,
+              url: demoUrl,
+              duration: 4.2
+            });
+            showToast(`🎉 Demonstração de "${vName}" (${currentPreset}) reproduzida (0 créditos consumidos)!`, 'success');
+          } else {
+            if (v && v.sample_url) {
+              displayAudioResult({
+                filename: `amostra_${demoKey}.mp3`,
+                url: v.sample_url,
+                duration: 3.5
+              });
+              showToast(`Reproduzindo amostra da voz "${vName}" em cache (0 créditos)!`, 'info');
+            } else {
+              showToast('Esta voz personalizada ainda não possui demonstração em cache.', 'warning');
+            }
+          }
+        })
+        .catch(() => {
+          playCurrentVoiceSample();
+        });
+    }
+
+    function clearText() {
+      textInput.value = '';
+      updateTextStats();
+    }
+
+    // Drag and Drop
+    const dropZone = document.getElementById('drop-zone');
+    ['dragenter', 'dragover'].forEach(eventName => {
+      textInput.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('hidden');
+        dropZone.classList.add('flex');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropZone.classList.add('hidden');
+        dropZone.classList.remove('flex');
+      });
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && files[0].name.endsWith('.txt')) {
+        readFile(files[0]);
+      } else {
+        showToast('Por favor solte um arquivo .txt válido', 'error');
+      }
+    });
+
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (file) readFile(file);
+    }
+
+    function readFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        textInput.value = e.target.result;
+        updateTextStats();
+        showToast(`Arquivo "${file.name}" carregado!`, 'success');
+      };
+      reader.readAsText(file);
+    }
+
+    // Generate Voice with Credit Validation & Supabase Integration
+    async function generateVoice() {
+      const text = textInput.value.trim();
+      if (!text) {
+        showToast('Digite algum texto para sintetizar.', 'error');
+        textInput.focus();
+        return;
+      }
+
+      if (supabaseClient && !currentSession) {
+        showToast('Crie sua conta ou faça login para sintetizar seus áudios!', 'info');
+        openAuthModal('signup');
+        return;
+      }
+
+      if (userCredits <= 0) {
+        showToast('Seus créditos acabaram! Recarregue no PIX para continuar.', 'error');
+        openRechargeModal();
+        return;
+      }
+
+      const speed = selectedSpeed;
+      const threads = 4;
+
+      const wordCount = text.split(/\s+/).filter(Boolean).length;
+      const charCount = text.length;
+      const estMinutes = Math.max((wordCount / 145), 0.1).toFixed(1);
+
+      const btn = document.getElementById('btn-generate');
+      const btnText = document.getElementById('btn-text');
+      btn.disabled = true;
+      btn.classList.add('opacity-85');
+
+      let elapsedSeconds = 0;
+      btnText.innerText = `SINTETIZANDO ${wordCount} PALAVRAS (0s)...`;
+
+      const synthTimer = setInterval(() => {
+        elapsedSeconds += 1;
+        btnText.innerText = `SINTETIZANDO ${wordCount} PALAVRAS (${elapsedSeconds}s)...`;
+      }, 1000);
+
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (currentSession && currentSession.access_token) {
+          headers['Authorization'] = `Bearer ${currentSession.access_token}`;
+        }
+
+        const res = await fetch(`${API_BASE}/api/synthesize`, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({
+            text: text,
+            voice: selectedVoiceKey,
+            speed: speed,
+            threads: threads
+          })
+        });
+
+        const data = await res.json();
+        
+        if (res.status === 401) {
+          showToast('Sessão expirada. Faça login para continuar.', 'error');
+          openAuthModal('login');
+          return;
+        }
+
+        if (res.status === 402) {
+          showToast(data.detail || 'Créditos esgotados! Faça uma recarga.', 'error');
+          openRechargeModal();
+          return;
+        }
+
+        if (!res.ok) throw new Error(data.detail || 'Falha na síntese');
+
+        if (typeof data.credits !== 'undefined') {
+          userCredits = data.credits;
+        } else {
+          userCredits = Math.max(userCredits - 1, 0);
+        }
+        updateCreditUI();
+
+        showToast(`🎉 Áudio de ${data.duration}s (~${estMinutes} min) gerado com sucesso em ${data.elapsed}s (${data.speed_factor}x tempo real)!`, 'success');
+        displayAudioResult(data);
+        loadHistory();
+      } catch (err) {
+        showToast(`Erro: ${err.message}`, 'error');
+      } finally {
+        clearInterval(synthTimer);
+        btn.disabled = false;
+        btn.classList.remove('opacity-85');
+        btnText.innerText = 'GERAR ÁUDIO AGORA';
+      }
+    }
+
+    function displayAudioResult(data) {
+      const placeholder = document.getElementById('player-placeholder');
+      const activePlayer = document.getElementById('player-active');
+      placeholder.classList.add('hidden');
+      placeholder.classList.remove('flex');
+      activePlayer.classList.remove('hidden');
+      activePlayer.classList.add('flex');
+      
+      const statusBadge = document.getElementById('player-status-badge');
+      statusBadge.innerText = '✅ Pronto';
+      statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 font-bold border border-brand-500/30';
+
+      document.getElementById('audio-title').innerText = data.filename;
+      document.getElementById('metric-duration-badge').innerText = `${data.duration}s`;
+
+      const wavUrl = data.url;
+      const mp3Url = data.url.replace(/\.wav$/i, '.mp3');
+      const wavName = data.filename;
+      const mp3Name = data.filename.replace(/\.wav$/i, '.mp3');
+
+      const btnWav = document.getElementById('btn-download-wav');
+      btnWav.href = wavUrl;
+      btnWav.download = wavName;
+
+      const btnMp3 = document.getElementById('btn-download-mp3');
+      btnMp3.href = mp3Url;
+      btnMp3.download = mp3Name;
+
+      initWaveSurfer();
+      wavesurfer.load(wavUrl);
+      wavesurfer.once('ready', () => {
+        wavesurfer.play();
+      });
+      lucide.createIcons();
+    }
+
+    // History
+    async function loadHistory() {
+      try {
+        const headers = {};
+        if (currentSession && currentSession.access_token) {
+          headers['Authorization'] = `Bearer ${currentSession.access_token}`;
+        }
+        const res = await fetch(`${API_BASE}/api/history`, { headers });
+        const items = await res.json();
+        const list = document.getElementById('history-list');
+
+        if (!items || items.length === 0) {
+          list.innerHTML = '<p class="text-xs text-zinc-500 py-3 text-center">Nenhum áudio gerado ainda.</p>';
+          return;
+        }
+
+        list.innerHTML = items.map(item => `
+          <div class="h-[51px] shrink-0 p-2.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800/80 border border-zinc-800 flex items-center justify-between text-xs transition">
+            <div class="truncate mr-2 cursor-pointer flex-1 min-w-0" onclick="playHistoryItem('${item.url}', '${item.filename || item.title}')">
+              <p class="font-bold text-zinc-200 truncate text-[11px]">${item.title || item.filename}</p>
+              <span class="text-[9px] text-zinc-400 font-mono">${item.size_kb} KB</span>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="playHistoryItem('${item.url}', '${item.filename || item.title}')" class="p-1.5 rounded-lg bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 cursor-pointer" title="Tocar">
+                <i data-lucide="play" class="w-3 h-3 fill-current"></i>
+              </button>
+              <a href="${item.url}" download="${item.filename}" class="px-2 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold" title="Baixar WAV Master">
+                WAV
+              </a>
+              <a href="${item.mp3_url || item.url.replace(/\.wav$/i, '.mp3')}" download="${item.filename.replace(/\.wav$/i, '.mp3')}" class="px-2 py-1 rounded-md bg-brand-500/20 hover:bg-brand-500/30 text-brand-400 text-[10px] font-bold" title="Baixar MP3 Leve">
+                MP3
+              </a>
+              <button onclick="deleteHistoryItem('${item.id || item.filename}')" class="p-1.5 rounded-lg bg-red-950/40 text-red-400 hover:bg-red-900/40 cursor-pointer" title="Excluir">
+                <i data-lucide="trash" class="w-3 h-3"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+        lucide.createIcons();
+      } catch (err) {
+        console.error('History error', err);
+      }
+    }
+
+    function playHistoryItem(url, filename) {
+      document.getElementById('player-placeholder').classList.add('hidden');
+      document.getElementById('player-active').classList.remove('hidden');
+      
+      const statusBadge = document.getElementById('player-status-badge');
+      statusBadge.innerText = '▶️ Tocando';
+      statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 font-bold border border-brand-500/30';
+
+      document.getElementById('audio-title').innerText = filename;
+      
+      const wavUrl = url.endsWith('.mp3') ? url.replace(/\.mp3$/i, '.wav') : url;
+      const mp3Url = url.endsWith('.wav') ? url.replace(/\.wav$/i, '.mp3') : url;
+      const wavName = filename.endsWith('.mp3') ? filename.replace(/\.mp3$/i, '.wav') : filename;
+      const mp3Name = filename.endsWith('.wav') ? filename.replace(/\.wav$/i, '.mp3') : filename;
+
+      const btnWav = document.getElementById('btn-download-wav');
+      btnWav.href = wavUrl;
+      btnWav.download = wavName;
+
+      const btnMp3 = document.getElementById('btn-download-mp3');
+      btnMp3.href = mp3Url;
+      btnMp3.download = mp3Name;
+
+      initWaveSurfer();
+      wavesurfer.load(wavUrl);
+      wavesurfer.once('ready', () => {
+        wavesurfer.play();
+      });
+      lucide.createIcons();
+    }
+
+    async function deleteHistoryItem(itemRef) {
+      if (!confirm('Deseja excluir este áudio do histórico?')) return;
+      try {
+        const headers = {};
+        if (currentSession && currentSession.access_token) {
+          headers['Authorization'] = `Bearer ${currentSession.access_token}`;
+        }
+        await fetch(`${API_BASE}/api/history/${itemRef}`, { method: 'DELETE', headers });
+        loadHistory();
+        showToast('Áudio removido do histórico', 'info');
+      } catch (err) {
+        showToast('Erro ao excluir', 'error');
+      }
+    }
+
+    // Toast
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      const msg = document.getElementById('toast-msg');
+      const icon = document.getElementById('toast-icon');
+
+      msg.innerText = message;
+      if (type === 'success') {
+        icon.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>';
+      } else if (type === 'error') {
+        icon.innerHTML = '<i data-lucide="alert-circle" class="w-4 h-4 text-red-400"></i>';
+      } else {
+        icon.innerHTML = '<i data-lucide="info" class="w-4 h-4 text-brand-400"></i>';
+      }
+      lucide.createIcons();
+
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 3500);
+    }
+
+    // Legal & LGPD Modals
+    function openTermsModal() {
+      document.getElementById('terms-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeTermsModal() {
+      document.getElementById('terms-modal').classList.add('hidden');
+    }
+
+    function openPrivacyModal() {
+      document.getElementById('privacy-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closePrivacyModal() {
+      document.getElementById('privacy-modal').classList.add('hidden');
+    }
+
+    // Cookie Consent Banner
+    function checkCookieConsent() {
+      const consent = localStorage.getItem('vox_cookie_consent');
+      if (!consent) {
+        setTimeout(() => {
+          openCookieBanner();
+        }, 1200);
+      }
+    }
+
+    function openCookieBanner() {
+      const banner = document.getElementById('cookie-banner');
+      banner.classList.remove('translate-y-32', 'opacity-0');
+      lucide.createIcons();
+    }
+
+    function closeCookieBanner() {
+      const banner = document.getElementById('cookie-banner');
+      banner.classList.add('translate-y-32', 'opacity-0');
+    }
+
+    function acceptCookies(choice) {
+      localStorage.setItem('vox_cookie_consent', choice);
+      closeCookieBanner();
+      showToast(choice === 'all' ? 'Preferências de cookies salvas com sucesso!' : 'Apenas cookies essenciais ativados.', 'success');
+    }
+
+    // Init
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      initSupabaseAuth();
+      updateCreditUI();
+      loadVoices();
+      loadHistory();
+      setSample('welcome');
+      checkCookieConsent();
+    });
+  </script>
+</body>
+</html>
