@@ -1668,19 +1668,32 @@
       if (wavesurfer) wavesurfer.playPause();
     }
 
+    // Catálogo padrão de vozes (Garante que a interface funcione perfeitamente mesmo se a VPS estiver iniciando)
+    const DEFAULT_VOICES = [
+      { key: "dii", label: "Dii (Feminina Suave)", gender: "Feminina", quality: "Neural VITS (PT-BR)", type: "standard", is_downloaded: true, sample_url: "/demos/dii_sample.mp3" },
+      { key: "faber", label: "Faber (Feminina Padrão)", gender: "Feminina", quality: "Neural VITS (PT-BR)", type: "standard", is_downloaded: true, sample_url: "/demos/faber_sample.mp3" },
+      { key: "thalita", label: "Thalita (Feminina Expressiva)", gender: "Feminina", quality: "Neural VITS (PT-BR)", type: "standard", is_downloaded: true, sample_url: "/demos/thalita_sample.mp3" },
+      { key: "jeff", label: "Jeff (Masculina Jovem)", gender: "Masculino", quality: "Neural VITS (PT-BR)", type: "standard", is_downloaded: true, sample_url: "/demos/jeff_sample.mp3" },
+      { key: "cadu", label: "Cadu (Masculina Dinâmica)", gender: "Masculino", quality: "Neural VITS (PT-BR)", type: "standard", is_downloaded: true, sample_url: "/demos/cadu_sample.mp3" },
+      { key: "miro", label: "Miro (Masculina Profunda)", gender: "Masculino", quality: "Neural VITS (PT-BR)", type: "standard", is_downloaded: true, sample_url: "/demos/miro_sample.mp3" },
+      { key: "edresson", label: "Edresson (Masculina Neutra)", gender: "Masculino", quality: "Neural VITS (PT-BR)", type: "standard", is_downloaded: true, sample_url: "/demos/edresson_sample.mp3" }
+    ];
+
     // Load Voices
     async function loadVoices() {
       try {
         const res = await fetch(`${API_BASE}/api/voices`);
+        if (!res.ok) throw new Error('API indisponível');
         voices = await res.json();
-        const current = voices.find(v => v.key === selectedVoiceKey);
-        if (current) selectedGenderFilter = current.gender;
-        updateGenderButtonsUI();
-        renderVoiceDropdown();
-        updateVoiceStatusPills();
       } catch (err) {
-        showToast('Erro ao carregar catálogo de vozes', 'error');
+        console.warn('[Vozes] Usando catálogo padrão pré-instalado:', err);
+        voices = DEFAULT_VOICES;
       }
+      const current = voices.find(v => v.key === selectedVoiceKey);
+      if (current) selectedGenderFilter = current.gender;
+      updateGenderButtonsUI();
+      renderVoiceDropdown();
+      updateVoiceStatusPills();
     }
 
     function getCleanVoiceName(v) {
