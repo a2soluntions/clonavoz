@@ -4,7 +4,8 @@ import time
 import json
 import tarfile
 import urllib.request
-import av
+import subprocess
+import tempfile
 import numpy as np
 from scipy import signal
 import soundfile as sf
@@ -160,27 +161,35 @@ def ensure_model_ready(voice_key: str, progress_callback=None):
 # -------------------------------------------------------------
 
 def decode_audio_to_wav(audio_bytes: bytes, output_path: str, target_sr: int = 22050) -> tuple:
-    """Decodes any audio file format (MP3, AAC, M4A, WAV, OGG, FLAC) to normalized mono WAV."""
-    buffer = io.BytesIO(audio_bytes)
-    container = av.open(buffer)
-    audio_stream = next((s for s in container.streams if s.type == "audio"), None)
-    if not audio_stream:
-        raise ValueError("Nenhuma faixa de áudio válida foi encontrada no arquivo.")
+    """Decodes any audio file format (MP3, AAC, M4A, WAV, OGG, FLAC) to normalized mono WAV using native FFmpeg or SoundFile."""
+    try:
+        # Try direct read with SoundFile (for WAV, FLAC, OGG)
+        audio_data, orig_sr = sf.read(io.BytesIO(audio_bytes), dtype='float32')
+        if len(audio_data.shape) > 1:
+            audio_data = np.mean(audio_data, axis=1)
+        if orig_sr != target_sr:
+            num_samples = int(len(audio_data) * target_sr / orig_sr)
+            audio_data = signal.resample(audio_data, num_samples).astype(np.float32)
+    except Exception:
+        # Fallback to FFmpeg subprocess (installed in Linux Docker container and Windows system)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".raw") as tmp_in:
+            tmp_in.write(audio_bytes)
+            tmp_in_path = tmp_in.name
 
-    frames = [frame.to_ndarray() for frame in container.decode(audio_stream)]
-    if not frames:
-        raise ValueError("Não foi possível decodificar amostras de áudio.")
+        try:
+            cmd = [
+                "ffmpeg", "-y", "-i", tmp_in_path,
+                "-vn", "-ac", "1", "-ar", str(target_sr),
+                "-f", "wav", output_path
+            ]
+            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            audio_data, _ = sf.read(output_path, dtype='float32')
+        finally:
+            if os.path.exists(tmp_in_path):
+                os.remove(tmp_in_path)
 
-    audio_data = np.concatenate(frames, axis=1)
-    if audio_data.shape[0] > 1:
-        audio_data = np.mean(audio_data, axis=0)
-    else:
-        audio_data = audio_data[0]
-
-    orig_sr = audio_stream.rate
-    if orig_sr != target_sr:
-        num_samples = int(len(audio_data) * target_sr / orig_sr)
-        audio_data = signal.resample(audio_data, num_samples).astype(np.float32)
+    if len(audio_data) == 0:
+        raise ValueError("O arquivo de áudio decodificado está vazio.")
 
     # Normalize volume
     peak = np.max(np.abs(audio_data))
