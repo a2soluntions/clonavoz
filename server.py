@@ -41,6 +41,7 @@ OUTPUTS_DIR = tts_engine.OUTPUTS_DIR
 CUSTOM_VOICES_DIR = tts_engine.CUSTOM_VOICES_DIR
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/outputs", StaticFiles(directory=OUTPUTS_DIR), name="outputs")
 
 
 def get_current_user_from_header(authorization: Optional[str] = Header(None)) -> Optional[dict]:

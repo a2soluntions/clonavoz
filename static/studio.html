@@ -2268,8 +2268,14 @@
       document.getElementById('audio-title').innerText = data.filename;
       document.getElementById('metric-duration-badge').innerText = `${data.duration}s`;
 
-      const wavUrl = data.url;
-      const mp3Url = data.url.replace(/\.wav$/i, '.mp3');
+      const getFullAudioUrl = (u) => {
+        if (!u) return '';
+        if (u.startsWith('http://') || u.startsWith('https://')) return u;
+        return `${API_BASE}${u.startsWith('/') ? '' : '/'}${u}`;
+      };
+
+      const wavUrl = getFullAudioUrl(data.url);
+      const mp3Url = getFullAudioUrl(data.url.replace(/\.wav$/i, '.mp3'));
       const wavName = data.filename;
       const mp3Name = data.filename.replace(/\.wav$/i, '.mp3');
 
@@ -2305,28 +2311,32 @@
           return;
         }
 
-        list.innerHTML = items.map(item => `
+        list.innerHTML = items.map(item => {
+          const itemWav = getFullAudioUrl(item.url);
+          const itemMp3 = getFullAudioUrl(item.mp3_url || item.url.replace(/\.wav$/i, '.mp3'));
+          return `
           <div class="h-[51px] shrink-0 p-2.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800/80 border border-zinc-800 flex items-center justify-between text-xs transition">
-            <div class="truncate mr-2 cursor-pointer flex-1 min-w-0" onclick="playHistoryItem('${item.url}', '${item.filename || item.title}')">
+            <div class="truncate mr-2 cursor-pointer flex-1 min-w-0" onclick="playHistoryItem('${itemWav}', '${item.filename || item.title}')">
               <p class="font-bold text-zinc-200 truncate text-[11px]">${item.title || item.filename}</p>
               <span class="text-[9px] text-zinc-400 font-mono">${item.size_kb} KB</span>
             </div>
             <div class="flex items-center gap-1 shrink-0">
-              <button onclick="playHistoryItem('${item.url}', '${item.filename || item.title}')" class="p-1.5 rounded-lg bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 cursor-pointer" title="Tocar">
+              <button onclick="playHistoryItem('${itemWav}', '${item.filename || item.title}')" class="p-1.5 rounded-lg bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 cursor-pointer" title="Tocar">
                 <i data-lucide="play" class="w-3 h-3 fill-current"></i>
               </button>
-              <a href="${item.url}" download="${item.filename}" class="px-2 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold" title="Baixar WAV Master">
+              <a href="${itemWav}" download="${item.filename}" class="px-2 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold" title="Baixar WAV Master">
                 WAV
               </a>
-              <a href="${item.mp3_url || item.url.replace(/\.wav$/i, '.mp3')}" download="${item.filename.replace(/\.wav$/i, '.mp3')}" class="px-2 py-1 rounded-md bg-brand-500/20 hover:bg-brand-500/30 text-brand-400 text-[10px] font-bold" title="Baixar MP3 Leve">
+              <a href="${itemMp3}" download="${item.filename.replace(/\.wav$/i, '.mp3')}" class="px-2 py-1 rounded-md bg-brand-500/20 hover:bg-brand-500/30 text-brand-400 text-[10px] font-bold" title="Baixar MP3 Leve">
                 MP3
               </a>
               <button onclick="deleteHistoryItem('${item.id || item.filename}')" class="p-1.5 rounded-lg bg-red-950/40 text-red-400 hover:bg-red-900/40 cursor-pointer" title="Excluir">
-                <i data-lucide="trash" class="w-3 h-3"></i>
+                <i data-lucide="trash-2" class="w-3 h-3"></i>
               </button>
             </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
 
         lucide.createIcons();
       } catch (err) {
