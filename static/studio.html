@@ -1761,7 +1761,11 @@
       filtered.forEach(v => {
         const opt = document.createElement('option');
         opt.value = v.key;
-        opt.innerText = getCleanVoiceName(v);
+        if (v.type === 'vip_elevenlabs') {
+          opt.innerText = `⭐ ${getCleanVoiceName(v)} [Ultra-HD VIP]`;
+        } else {
+          opt.innerText = getCleanVoiceName(v);
+        }
         if (v.key === selectedVoiceKey) opt.selected = true;
         select.appendChild(opt);
       });

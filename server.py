@@ -15,6 +15,40 @@ load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "").strip()
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "").strip()
+
+# Vozes VIP da ElevenLabs mapeadas
+ELEVENLABS_VOICES = {
+    "el_rachel": {"voice_id": "21m00Tcm4TlvDq8ikWAM", "label": "Rachel (Ultra-HD Narrativa)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2"},
+    "el_adam": {"voice_id": "pNInz6obpgDQGcFmaJgB", "label": "Adam (Ultra-HD Locutor VSL)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2"},
+    "el_sarah": {"voice_id": "EXAVITQu4vr4xnSDxMaL", "label": "Sarah (Ultra-HD Expressiva)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2"},
+    "el_charlie": {"voice_id": "IKne3meq5aSn9XLyUdCD", "label": "Charlie (Ultra-HD Jovem)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2"},
+    "el_george": {"voice_id": "JBFqnCBsd6RMkjVDRZzb", "label": "George (Ultra-HD Storyteller)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2"},
+}
+
+def synthesize_elevenlabs(voice_id: str, text: str, output_path: str):
+    """Gera áudio de ultra-fidelidade usando a API oficial da ElevenLabs com suporte a Português."""
+    import urllib.request
+    import json
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+    headers = {
+        "xi-api-key": ELEVENLABS_API_KEY,
+        "Content-Type": "application/json",
+        "Accept": "audio/mpeg"
+    }
+    payload = {
+        "text": text,
+        "model_id": "eleven_multilingual_v2",
+        "voice_settings": {
+            "stability": 0.5,
+            "similarity_boost": 0.75
+        }
+    }
+    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        audio_content = resp.read()
+    with open(output_path, "wb") as f:
+        f.write(audio_content)
 
 supabase_admin = None
 if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY:
@@ -214,7 +248,20 @@ def get_voices():
             }
         )
 
-    # 2. Custom uploaded voices
+    # 2. ElevenLabs VIP Ultra-HD Voices
+    if ELEVENLABS_API_KEY:
+        for el_key, el_info in ELEVENLABS_VOICES.items():
+            results.append({
+                "key": el_key,
+                "label": el_info["label"],
+                "gender": el_info["gender"],
+                "quality": el_info["quality"],
+                "type": "vip_elevenlabs",
+                "is_downloaded": True,
+                "sample_url": f"/demos/{el_key}_sample.mp3"
+            })
+
+    # 3. Custom uploaded voices
     custom_list = tts_engine.get_custom_voices()
     for cv in custom_list:
         results.append(
@@ -346,21 +393,50 @@ def synthesize(
             )
 
     try:
-        result = tts_engine.synthesize_text(
-            text=req.text,
-            voice_key=req.voice,
-            speed=req.speed,
-            num_threads=req.threads,
-        )
+        import time
+        start_time = time.time()
+        
+        if req.voice.startswith("el_") and req.voice in ELEVENLABS_VOICES and ELEVENLABS_API_KEY:
+            el_voice = ELEVENLABS_VOICES[req.voice]
+            voice_id = el_voice["voice_id"]
+            timestamp = int(time.time() * 1000)
+            mp3_filename = f"synth_{req.voice}_{timestamp}.mp3"
+            wav_filename = f"synth_{req.voice}_{timestamp}.wav"
+            mp3_path = os.path.join(OUTPUTS_DIR, mp3_filename)
+            wav_path = os.path.join(OUTPUTS_DIR, wav_filename)
 
-        wav_filename = result["filename"]
-        mp3_filename = wav_filename.replace(".wav", ".mp3")
-        wav_path = os.path.join(OUTPUTS_DIR, wav_filename)
-        mp3_path = os.path.join(OUTPUTS_DIR, mp3_filename)
+            synthesize_elevenlabs(voice_id, req.text, mp3_path)
+            
+            # Converte para WAV também para waveform visual
+            try:
+                cmd = ["ffmpeg", "-y", "-i", mp3_path, "-f", "wav", wav_path]
+                subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            except Exception:
+                pass
 
-        # Dispara conversão MP3 em background (não bloqueia a resposta para o usuário)
-        if os.path.exists(wav_path):
-            background_tasks.add_task(convert_wav_to_mp3, wav_path, mp3_path)
+            elapsed = round(time.time() - start_time, 2)
+            word_count = len(req.text.split())
+            est_duration = max(round(word_count / 2.6, 1), 1.5)
+            result = {
+                "filename": wav_filename if os.path.exists(wav_path) else mp3_filename,
+                "duration_seconds": est_duration,
+                "elapsed_seconds": elapsed,
+            }
+        else:
+            result = tts_engine.synthesize_text(
+                text=req.text,
+                voice_key=req.voice,
+                speed=req.speed,
+                num_threads=req.threads,
+            )
+            wav_filename = result["filename"]
+            mp3_filename = wav_filename.replace(".wav", ".mp3")
+            wav_path = os.path.join(OUTPUTS_DIR, wav_filename)
+            mp3_path = os.path.join(OUTPUTS_DIR, mp3_filename)
+
+            # Dispara conversão MP3 em background (não bloqueia a resposta para o usuário)
+            if os.path.exists(wav_path):
+                background_tasks.add_task(convert_wav_to_mp3, wav_path, mp3_path)
 
         remaining_credits = profile.get("credits", 1) if profile else 999
 
