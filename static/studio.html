@@ -2067,35 +2067,40 @@
     }
 
     function playCurrentPresetDemo() {
-      const demoKey = selectedVoiceKey;
-      const demoUrl = `/static/demos/${demoKey}_${currentPreset}.mp3`;
+      const demoKey = selectedVoiceKey || 'dii';
+      const presetKey = currentPreset || 'welcome';
+      // Mapeamento correto: no frontend da Vercel, a pasta static é a raiz, então os demos ficam em /demos/
+      const presetUrl = `/demos/${demoKey}_${presetKey}.mp3`;
+      const fallbackSampleUrl = `/demos/${demoKey}_sample.mp3`;
 
-      fetch(demoUrl, { method: 'HEAD' })
+      const v = voices.find(item => item.key === selectedVoiceKey);
+      const vName = v ? getCleanVoiceName(v) : demoKey.toUpperCase();
+
+      fetch(presetUrl, { method: 'HEAD' })
         .then(res => {
-          const v = voices.find(item => item.key === selectedVoiceKey);
-          const vName = v ? getCleanVoiceName(v) : demoKey.toUpperCase();
           if (res.ok) {
             displayAudioResult({
-              filename: `demo_${demoKey}_${currentPreset}.mp3`,
-              url: demoUrl,
+              filename: `demo_${demoKey}_${presetKey}.mp3`,
+              url: presetUrl,
               duration: 4.2
             });
-            showToast(`🎉 Demonstração de "${vName}" (${currentPreset}) reproduzida (0 créditos consumidos)!`, 'success');
+            showToast(`🎉 Demonstração de "${vName}" (${presetKey}) reproduzida (0 créditos consumidos)!`, 'success');
           } else {
-            if (v && v.sample_url) {
-              displayAudioResult({
-                filename: `amostra_${demoKey}.mp3`,
-                url: v.sample_url,
-                duration: 3.5
-              });
-              showToast(`Reproduzindo amostra da voz "${vName}" em cache (0 créditos)!`, 'info');
-            } else {
-              showToast('Esta voz personalizada ainda não possui demonstração em cache.', 'warning');
-            }
+            displayAudioResult({
+              filename: `amostra_${demoKey}.mp3`,
+              url: fallbackSampleUrl,
+              duration: 3.5
+            });
+            showToast(`Reproduzindo amostra da voz "${vName}" (0 créditos)!`, 'info');
           }
         })
         .catch(() => {
-          playCurrentVoiceSample();
+          displayAudioResult({
+            filename: `amostra_${demoKey}.mp3`,
+            url: fallbackSampleUrl,
+            duration: 3.5
+          });
+          showToast(`Reproduzindo amostra da voz "${vName}" (0 créditos)!`, 'info');
         });
     }
 
