@@ -2299,11 +2299,19 @@
       btnMp3.href = mp3Url;
       btnMp3.download = mp3Name;
 
-      initWaveSurfer();
-      wavesurfer.load(wavUrl);
-      wavesurfer.once('ready', () => {
-        wavesurfer.play();
-      });
+      try {
+        initWaveSurfer();
+        wavesurfer.load(wavUrl);
+        wavesurfer.once('ready', () => {
+          wavesurfer.play();
+        });
+        wavesurfer.once('error', (err) => {
+          console.warn('[WaveSurfer Error, tentando MP3]', err);
+          wavesurfer.load(mp3Url);
+        });
+      } catch (e) {
+        console.error('[Player Load Error]', e);
+      }
       lucide.createIcons();
     }
 
