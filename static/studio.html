@@ -1165,8 +1165,8 @@
       lucide.createIcons();
     }
 
-    // Base URL da API (Quando o frontend estiver na Vercel e o backend na VPS)
-    const API_BASE = window.CLONAVOZ_API_URL || localStorage.getItem('CLONAVOZ_API_URL') || '';
+    // Base URL da API (Backend VPS na Hostinger)
+    const API_BASE = window.CLONAVOZ_API_URL || localStorage.getItem('CLONAVOZ_API_URL') || (window.location.hostname.includes('localhost') ? '' : 'http://187.127.255.137:8000');
     const SUPABASE_FALLBACK_URL = "https://ekncpoggwgmbmzmfmfvb.supabase.co";
     const SUPABASE_FALLBACK_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrbmNwb2dnd2dtYm16bWZtZnZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4NDk5MjcsImV4cCI6MjEwNzQyNTkyN30.5shXkcVllbGYyOZCXmxISQ1qm7RtDHnsqFsH4BtHZ2c";
 
@@ -1235,34 +1235,50 @@
       const loggedInNav = document.getElementById('nav-auth-logged-in');
 
       if (session && session.user) {
+        let profileLoaded = false;
         try {
           const res = await fetch(`${API_BASE}/api/me`, {
             headers: { 'Authorization': `Bearer ${session.access_token}` }
           });
-          const data = await res.json();
-          if (data.authenticated && data.user) {
-            currentUser = data.user;
-            userCredits = data.user.credits;
-            updateCreditUI();
-
-            const displayName = data.user.full_name || data.user.email.split('@')[0];
-            document.getElementById('user-display-name').innerText = displayName;
-            document.getElementById('user-avatar-initial').innerText = displayName[0].toUpperCase();
-
-            loggedOutNav.classList.add('hidden');
-            loggedOutNav.classList.remove('flex');
-            loggedInNav.classList.remove('hidden');
-            loggedInNav.classList.add('flex');
-            lucide.createIcons();
-            loadHistory();
-            return;
+          if (res.ok) {
+            const data = await res.json();
+            if (data.authenticated && data.user) {
+              currentUser = data.user;
+              userCredits = data.user.credits;
+              profileLoaded = true;
+            }
           }
         } catch (err) {
-          console.error('[Auth Profile Error]', err);
+          console.warn('[Auth Profile Fallback]', err);
         }
+
+        // Se não conseguiu carregar da API (ex: Vercel estático ou backend iniciando), usa dados do Supabase
+        if (!profileLoaded) {
+          currentUser = {
+            id: session.user.id,
+            email: session.user.email,
+            full_name: (session.user.user_metadata && session.user.user_metadata.full_name) || session.user.email.split('@')[0],
+            credits: userCredits || 1
+          };
+        }
+
+        updateCreditUI();
+        const displayName = currentUser.full_name || currentUser.email.split('@')[0];
+        const userDisplayElem = document.getElementById('user-display-name');
+        const userAvatarElem = document.getElementById('user-avatar-initial');
+        if (userDisplayElem) userDisplayElem.innerText = displayName;
+        if (userAvatarElem) userAvatarElem.innerText = displayName[0].toUpperCase();
+
+        loggedOutNav.classList.add('hidden');
+        loggedOutNav.classList.remove('flex');
+        loggedInNav.classList.remove('hidden');
+        loggedInNav.classList.add('flex');
+        lucide.createIcons();
+        loadHistory();
+        return;
       }
 
-      // Se deslogado:
+      // Se realmente deslogado (sem sessão):
       currentUser = null;
       loggedOutNav.classList.remove('hidden');
       loggedOutNav.classList.add('flex');
@@ -2189,21 +2205,33 @@
           })
         });
 
+        if (!res.ok) {
+          let errDetail = 'Falha na síntese de voz';
+          try {
+            const errData = await res.json();
+            errDetail = errData.detail || errDetail;
+          } catch (_) {
+            if (res.status === 404) {
+              errDetail = 'O servidor backend da API não está conectado (404). Inicie o servidor Python com run.bat ou verifique a URL da API.';
+            } else {
+              errDetail = `Servidor retornou erro HTTP ${res.status}. Certifique-se de que o backend Python está em execução.`;
+            }
+          }
+
+          if (res.status === 401) {
+            showToast('Sessão expirada. Faça login para continuar.', 'error');
+            openAuthModal('login');
+            return;
+          }
+          if (res.status === 402) {
+            showToast(errDetail || 'Créditos esgotados! Faça uma recarga.', 'error');
+            openRechargeModal();
+            return;
+          }
+          throw new Error(errDetail);
+        }
+
         const data = await res.json();
-        
-        if (res.status === 401) {
-          showToast('Sessão expirada. Faça login para continuar.', 'error');
-          openAuthModal('login');
-          return;
-        }
-
-        if (res.status === 402) {
-          showToast(data.detail || 'Créditos esgotados! Faça uma recarga.', 'error');
-          openRechargeModal();
-          return;
-        }
-
-        if (!res.ok) throw new Error(data.detail || 'Falha na síntese');
 
         if (typeof data.credits !== 'undefined') {
           userCredits = data.credits;
