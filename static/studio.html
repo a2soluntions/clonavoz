@@ -1835,16 +1835,16 @@
 
     function playCurrentVoiceSample() {
       const v = voices.find(item => item.key === selectedVoiceKey);
-      if (v && v.sample_url) {
-        displayAudioResult({
-          filename: `amostra_${v.key}.mp3`,
-          url: v.sample_url,
-          duration: 3.5
-        });
-        showToast(`Reproduzindo amostra da voz "${getCleanVoiceName(v)}" (0 créditos consumidos)...`, 'info');
-      } else {
-        showToast('Nenhuma amostra em cache disponível para esta voz.', 'info');
-      }
+      const voiceKey = selectedVoiceKey || 'dii';
+      // Se não tiver sample_url ou estiver vazio, busca diretamente nos demos da Vercel
+      const sampleUrl = (v && v.sample_url) ? v.sample_url : `/demos/${voiceKey}_sample.mp3`;
+
+      displayAudioResult({
+        filename: `amostra_${voiceKey}.mp3`,
+        url: sampleUrl,
+        duration: 3.5
+      });
+      showToast(`Reproduzindo amostra da voz "${v ? getCleanVoiceName(v) : voiceKey}" (0 créditos consumidos)...`, 'info');
     }
 
     async function deleteCurrentCustomVoice() {
