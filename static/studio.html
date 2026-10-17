@@ -1109,10 +1109,46 @@
     </div>
   </div>
 
-  <!-- Toast Notification -->
-  <div id="toast" class="fixed bottom-5 right-5 panel-glass px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-brand-500/30 transform translate-y-24 opacity-0 transition-all duration-300 z-50">
-    <div id="toast-icon"></div>
-    <span id="toast-msg" class="text-xs text-white font-medium"></span>
+  <!-- Toast Notification Profissional Clonavoz -->
+  <div id="toast" class="fixed bottom-6 right-6 panel-glass px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-brand-500/40 bg-zinc-950/90 backdrop-blur-md transform translate-y-28 opacity-0 transition-all duration-300 z-50 max-w-sm">
+    <div id="toast-icon" class="shrink-0"></div>
+    <span id="toast-msg" class="text-xs text-zinc-200 font-medium leading-tight"></span>
+  </div>
+
+  <!-- MODAL DE CONFIRMAÇÃO PERSONALIZADO CLONAVOZ (Substitui confirm/alert nativos) -->
+  <div id="custom-confirm-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 transition-all">
+    <div class="panel-glass border border-brand-500/30 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative bg-zinc-950 text-center">
+      
+      <!-- Ícone Dinâmico -->
+      <div id="confirm-modal-icon-container" class="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 mb-1 mx-auto shadow-lg shadow-red-500/20">
+        <i id="confirm-modal-icon" data-lucide="trash-2" class="w-6 h-6"></i>
+      </div>
+
+      <!-- Título & Mensagem -->
+      <div class="space-y-1.5">
+        <h3 id="confirm-modal-title" class="text-base font-black text-white uppercase tracking-wider">Confirmar Ação</h3>
+        <p id="confirm-modal-msg" class="text-xs text-zinc-400 leading-relaxed">Você tem certeza que deseja executar esta ação?</p>
+      </div>
+
+      <!-- Ações: Cancelar e Confirmar -->
+      <div class="flex items-center gap-2 pt-2">
+        <button
+          id="confirm-modal-btn-cancel"
+          type="button"
+          class="flex-1 py-2.5 px-4 rounded-xl border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 font-semibold text-xs transition cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          id="confirm-modal-btn-confirm"
+          type="button"
+          class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-red-500/20 transition cursor-pointer flex items-center justify-center gap-1.5"
+        >
+          Confirmar
+        </button>
+      </div>
+
+    </div>
   </div>
 
   <script>
@@ -1177,6 +1213,62 @@
         return u.startsWith('/') ? u : `/${u}`;
       }
       return `${API_BASE}${u.startsWith('/') ? '' : '/'}${u}`;
+    }
+
+    function customConfirm({
+      title = 'Confirmar Ação',
+      message = 'Você tem certeza que deseja prosseguir?',
+      confirmText = 'Confirmar',
+      cancelText = 'Cancelar',
+      type = 'danger'
+    } = {}) {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('custom-confirm-modal');
+        const titleEl = document.getElementById('confirm-modal-title');
+        const msgEl = document.getElementById('confirm-modal-msg');
+        const iconContainer = document.getElementById('confirm-modal-icon-container');
+        const iconEl = document.getElementById('confirm-modal-icon');
+        const btnConfirm = document.getElementById('confirm-modal-btn-confirm');
+        const btnCancel = document.getElementById('confirm-modal-btn-cancel');
+
+        titleEl.innerText = title;
+        msgEl.innerText = message;
+        btnConfirm.innerText = confirmText;
+        btnCancel.innerText = cancelText;
+
+        if (type === 'danger') {
+          iconContainer.className = 'w-12 h-12 rounded-2xl bg-red-500/15 border border-red-500/40 flex items-center justify-center text-red-400 mb-1 mx-auto shadow-lg shadow-red-500/20';
+          iconEl.setAttribute('data-lucide', 'trash-2');
+          btnConfirm.className = 'flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-red-500/20 transition cursor-pointer flex items-center justify-center gap-1.5';
+        } else if (type === 'warning') {
+          iconContainer.className = 'w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-amber-400 mb-1 mx-auto shadow-lg shadow-amber-500/20';
+          iconEl.setAttribute('data-lucide', 'log-out');
+          btnConfirm.className = 'flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-600 to-brand-500 hover:from-amber-500 hover:to-brand-400 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition cursor-pointer flex items-center justify-center gap-1.5';
+        } else {
+          iconContainer.className = 'w-12 h-12 rounded-2xl bg-brand-500/15 border border-brand-500/40 flex items-center justify-center text-brand-400 mb-1 mx-auto shadow-lg shadow-brand-500/20';
+          iconEl.setAttribute('data-lucide', 'help-circle');
+          btnConfirm.className = 'flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 hover:from-brand-400 hover:to-amber-400 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-brand-500/20 transition cursor-pointer flex items-center justify-center gap-1.5';
+        }
+        lucide.createIcons();
+
+        modal.classList.remove('hidden');
+
+        const cleanup = () => {
+          modal.classList.add('hidden');
+          btnConfirm.onclick = null;
+          btnCancel.onclick = null;
+        };
+
+        btnConfirm.onclick = () => {
+          cleanup();
+          resolve(true);
+        };
+
+        btnCancel.onclick = () => {
+          cleanup();
+          resolve(false);
+        };
+      });
     }
 
     async function initSupabaseAuth() {
@@ -1585,15 +1677,22 @@
     }
 
     async function handleSignOut() {
-      if (confirm('Deseja realmente sair da sua conta?')) {
-        if (supabaseClient) {
-          await supabaseClient.auth.signOut();
-        }
-        currentSession = null;
-        currentUser = null;
-        await handleAuthSession(null);
-        showToast('Você saiu da sua conta.', 'info');
+      const confirmed = await customConfirm({
+        title: 'Sair da Conta?',
+        message: 'Deseja realmente desconectar da sua conta no Clonavoz?',
+        confirmText: 'Sair da Conta',
+        cancelText: 'Continuar Conectado',
+        type: 'warning'
+      });
+      if (!confirmed) return;
+
+      if (supabaseClient) {
+        await supabaseClient.auth.signOut();
       }
+      currentSession = null;
+      currentUser = null;
+      await handleAuthSession(null);
+      showToast('Você saiu da sua conta com segurança.', 'info');
     }
 
     // Toggle Speech Pace (0.85x, 1.0x, 1.15x)
@@ -1865,12 +1964,20 @@
     async function deleteCurrentCustomVoice() {
       const v = voices.find(item => item.key === selectedVoiceKey);
       if (!v) return;
-      if (!confirm(`Deseja excluir a voz "${v.label.replace(' (Personalizada)', '')}"?`)) return;
+      const cleanName = v.label.replace(' (Personalizada)', '');
+      const confirmed = await customConfirm({
+        title: 'Excluir Voz Clonada?',
+        message: `Deseja excluir permanentemente a voz "${cleanName}" do seu estúdio? Esta ação não pode ser desfeita.`,
+        confirmText: 'Excluir Voz',
+        cancelText: 'Manter',
+        type: 'danger'
+      });
+      if (!confirmed) return;
 
       try {
         const res = await fetch(`${API_BASE}/api/custom-voices/${selectedVoiceKey}`, { method: 'DELETE' });
         if (res.ok) {
-          showToast('Voz removida com sucesso.', 'info');
+          showToast(`Voz "${cleanName}" removida com sucesso.`, 'info');
           selectedVoiceKey = 'dii';
           await loadVoices();
         }
@@ -2415,7 +2522,14 @@
     }
 
     async function deleteHistoryItem(itemRef) {
-      if (!confirm('Deseja excluir este áudio do histórico?')) return;
+      const confirmed = await customConfirm({
+        title: 'Excluir do Histórico?',
+        message: 'Deseja remover este áudio permanentemente do seu histórico recente?',
+        confirmText: 'Excluir Áudio',
+        cancelText: 'Cancelar',
+        type: 'danger'
+      });
+      if (!confirmed) return;
       try {
         const headers = {};
         if (currentSession && currentSession.access_token) {
@@ -2423,13 +2537,13 @@
         }
         await fetch(`${API_BASE}/api/history/${itemRef}`, { method: 'DELETE', headers });
         loadHistory();
-        showToast('Áudio removido do histórico', 'info');
+        showToast('Áudio removido do histórico com sucesso.', 'info');
       } catch (err) {
-        showToast('Erro ao excluir', 'error');
+        showToast('Erro ao excluir áudio', 'error');
       }
     }
 
-    // Toast
+    let toastTimeout = null;
     function showToast(message, type = 'info') {
       const toast = document.getElementById('toast');
       const msg = document.getElementById('toast-msg');
@@ -2437,17 +2551,21 @@
 
       msg.innerText = message;
       if (type === 'success') {
-        icon.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>';
+        toast.className = 'fixed bottom-6 right-6 panel-glass px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-emerald-500/40 bg-zinc-950/95 backdrop-blur-md transform transition-all duration-300 z-50 max-w-sm';
+        icon.innerHTML = '<div class="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i></div>';
       } else if (type === 'error') {
-        icon.innerHTML = '<i data-lucide="alert-circle" class="w-4 h-4 text-red-400"></i>';
+        toast.className = 'fixed bottom-6 right-6 panel-glass px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-red-500/40 bg-zinc-950/95 backdrop-blur-md transform transition-all duration-300 z-50 max-w-sm';
+        icon.innerHTML = '<div class="w-6 h-6 rounded-lg bg-red-500/20 flex items-center justify-center shrink-0"><i data-lucide="alert-circle" class="w-4 h-4 text-red-400"></i></div>';
       } else {
-        icon.innerHTML = '<i data-lucide="info" class="w-4 h-4 text-brand-400"></i>';
+        toast.className = 'fixed bottom-6 right-6 panel-glass px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-brand-500/40 bg-zinc-950/95 backdrop-blur-md transform transition-all duration-300 z-50 max-w-sm';
+        icon.innerHTML = '<div class="w-6 h-6 rounded-lg bg-brand-500/20 flex items-center justify-center shrink-0"><i data-lucide="info" class="w-4 h-4 text-brand-400"></i></div>';
       }
       lucide.createIcons();
 
-      toast.classList.remove('translate-y-24', 'opacity-0');
-      setTimeout(() => {
-        toast.classList.add('translate-y-24', 'opacity-0');
+      toast.classList.remove('translate-y-28', 'opacity-0');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('translate-y-28', 'opacity-0');
       }, 3500);
     }
 

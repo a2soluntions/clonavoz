@@ -28,6 +28,7 @@ custom_voices/*.wav
 custom_voices/*.mp3
 custom_voices/*.ogg
 custom_voices/*.m4a
+custom_voices/voices.json
 
 # Operating System files
 .DS_Store
