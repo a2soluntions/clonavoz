@@ -96,6 +96,13 @@ demos_dir = os.path.join(STATIC_DIR, "demos")
 if os.path.exists(demos_dir):
     app.mount("/demos", StaticFiles(directory=demos_dir), name="demos")
 
+@app.get("/favicon.ico")
+def get_favicon():
+    fav = os.path.join(STATIC_DIR, "favicon.ico")
+    if os.path.exists(fav):
+        return FileResponse(fav, media_type="image/x-icon")
+    raise HTTPException(status_code=404)
+
 
 def get_current_user_from_header(authorization: Optional[str] = Header(None)) -> Optional[dict]:
     """Valida o token JWT do Supabase recebido no header Authorization."""

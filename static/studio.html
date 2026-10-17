@@ -1016,9 +1016,9 @@
           <i data-lucide="smartphone" class="w-3.5 h-3.5 opacity-80"></i>
         </button>
 
-        <!-- Copiar Link Direto -->
+        <!-- Link da Página de Reprodução (Player Web) -->
         <div class="pt-1.5 space-y-1">
-          <label class="block text-[11px] font-bold text-zinc-400">Link Direto do Áudio:</label>
+          <label class="block text-[11px] font-bold text-zinc-300">Link do Player Web (Recomendado):</label>
           <div class="flex items-center gap-1.5">
             <input
               id="share-url-input"
@@ -1034,10 +1034,30 @@
               Copiar
             </button>
           </div>
-          <p class="text-[10px] text-zinc-500 flex items-center gap-1 mt-1">
+          <p class="text-[10px] text-zinc-500 flex items-center gap-1 mt-0.5">
             <i data-lucide="info" class="w-3 h-3 text-brand-400 shrink-0"></i>
-            <span>Quem abrir este link poderá ouvir ou baixar o áudio gerado diretamente, sem precisar de conta.</span>
+            <span>Abre uma tela visual linda para ouvir no celular ou computador sem precisar de conta.</span>
           </p>
+        </div>
+
+        <!-- Link Direto do Arquivo -->
+        <div class="pt-1 space-y-1">
+          <label class="block text-[11px] font-bold text-zinc-400">Link Direto do Arquivo (Download):</label>
+          <div class="flex items-center gap-1.5">
+            <input
+              id="share-file-url-input"
+              type="text"
+              readonly
+              class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-[11px] font-mono text-zinc-400 focus:outline-none"
+            />
+            <button
+              type="button"
+              onclick="copyDirectFileUrl()"
+              class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold transition shrink-0 cursor-pointer"
+            >
+              Copiar
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -2487,22 +2507,34 @@
       openShareModal(currentAudioTitle || 'audio_clonavoz.mp3', currentAudioMp3, currentAudioWav);
     }
 
-    function openShareModal(title, mp3Url, wavUrl) {
-      const shareUrl = mp3Url || wavUrl || '';
-      let fullUrl = '';
-      if (shareUrl.startsWith('http://') || shareUrl.startsWith('https://')) {
-        fullUrl = shareUrl;
-      } else if (shareUrl.startsWith('/demos/') || shareUrl.startsWith('demos/') || shareUrl.startsWith('/bgm/') || shareUrl.startsWith('bgm/')) {
-        fullUrl = window.location.origin + (shareUrl.startsWith('/') ? shareUrl : '/' + shareUrl);
-      } else {
-        const base = API_BASE || window.location.origin;
-        fullUrl = `${base}${shareUrl.startsWith('/') ? '' : '/'}${shareUrl}`;
-      }
-      
-      document.getElementById('share-modal-title').innerText = title;
-      document.getElementById('share-url-input').value = fullUrl;
+    async function openShareModal(title, mp3Url, wavUrl) {
+      // 1. Converte caminhos relativos para URLs completas
+      const resolvedMp3 = mp3Url ? getFullAudioUrl(mp3Url) : '';
+      const resolvedWav = wavUrl ? getFullAudioUrl(wavUrl) : '';
 
-      const waText = `🎧 Ouça este áudio criado com voz neural ultra-realista no Clonavoz Studio:\n${fullUrl}`;
+      // 2. Determina qual arquivo de áudio existe (testa se o MP3 responde 200, senão usa WAV garantido)
+      let chosenAudioUrl = resolvedMp3 || resolvedWav || '';
+      if (resolvedMp3 && resolvedWav && resolvedMp3 !== resolvedWav) {
+        try {
+          const resp = await fetch(resolvedMp3, { method: 'HEAD' });
+          if (!resp.ok) {
+            chosenAudioUrl = resolvedWav;
+          }
+        } catch (e) {
+          chosenAudioUrl = resolvedWav;
+        }
+      }
+
+      // 3. Monta o link do player público oficial
+      const playerUrl = `${window.location.origin}/player?url=${encodeURIComponent(chosenAudioUrl)}&title=${encodeURIComponent(title || 'audio_clonavoz')}`;
+
+      // 4. Preenche os campos do modal
+      document.getElementById('share-modal-title').innerText = title || 'Áudio Clonavoz';
+      document.getElementById('share-url-input').value = playerUrl;
+      const fileInput = document.getElementById('share-file-url-input');
+      if (fileInput) fileInput.value = chosenAudioUrl;
+
+      const waText = `🎧 Ouça este áudio criado com voz neural no Clonavoz Studio:\n${playerUrl}`;
       document.getElementById('share-whatsapp-btn').href = `https://wa.me/?text=${encodeURIComponent(waText)}`;
 
       document.getElementById('share-modal').classList.remove('hidden');
@@ -2534,9 +2566,18 @@
 
     function copyShareUrl() {
       const input = document.getElementById('share-url-input');
+      if (!input || !input.value) return;
       input.select();
       navigator.clipboard.writeText(input.value);
-      showToast('Link direto copiado para a área de transferência!', 'success');
+      showToast('Link do player copiado para a área de transferência!', 'success');
+    }
+
+    function copyDirectFileUrl() {
+      const input = document.getElementById('share-file-url-input');
+      if (!input || !input.value) return;
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      showToast('Link direto do arquivo copiado!', 'success');
     }
 
     function openUploadModal() {

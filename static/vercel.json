@@ -4,6 +4,10 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/player",
+      "destination": "/player.html"
+    },
+    {
       "source": "/studio",
       "destination": "/studio.html"
     },

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player de Áudio - Clonavoz AI</title>
+  <meta name="description" content="Ouça esta narração criada com Inteligência Artificial e vozes neurais ultra-realistas no Clonavoz Studio.">
+  
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="shortcut icon" href="/favicon.ico">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+              950: '#431407'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #09090b;
+      color: #fafafa;
+    }
+    .panel-glass {
+      background: rgba(18, 18, 22, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .btn-fire {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      box-shadow: 0 4px 20px -2px rgba(249, 115, 22, 0.4);
+    }
+    .btn-fire:hover {
+      box-shadow: 0 6px 25px -2px rgba(249, 115, 22, 0.6);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 sm:p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-950/25 via-zinc-950 to-zinc-950 text-zinc-100">
+
+  <!-- Header -->
+  <header class="w-full max-w-xl mx-auto flex items-center justify-between py-4">
+    <a href="/" class="flex items-center gap-2.5 transition hover:opacity-90">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
+        <i data-lucide="waveform" class="w-5 h-5 text-white"></i>
+      </div>
+      <div>
+        <span class="text-base font-black tracking-wider text-white">CLONAVOZ</span>
+        <span class="text-[10px] ml-1 font-bold px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400 border border-brand-500/30">STUDIO</span>
+      </div>
+    </a>
+    <a href="/studio" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 transition flex items-center gap-1.5">
+      <span>Criar Narração Grátis</span>
+      <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-brand-400"></i>
+    </a>
+  </header>
+
+  <!-- Player Card Central -->
+  <main class="w-full max-w-xl mx-auto my-auto py-6">
+    <div class="panel-glass rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative border border-brand-500/20">
+      
+      <!-- Topo com Status e Badge -->
+      <div class="flex items-start justify-between gap-4">
+        <div class="space-y-1 min-w-0 flex-1">
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-[11px] font-bold">
+            <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+            Áudio Neural Clonavoz AI
+          </div>
+          <h1 id="audio-title" class="text-lg sm:text-xl font-black text-white truncate pt-1">Carregando áudio...</h1>
+          <p id="audio-subtitle" class="text-xs text-zinc-400">Narração gerada com síntese neural de alta definição</p>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 text-brand-400 shadow-inner">
+          <i data-lucide="headphones" class="w-6 h-6"></i>
+        </div>
+      </div>
+
+      <!-- Barra de Progresso e Player -->
+      <div class="space-y-3 pt-2">
+        <audio id="main-audio" preload="auto" class="hidden"></audio>
+
+        <div class="space-y-1.5">
+          <div class="relative w-full h-3 bg-zinc-900 rounded-full cursor-pointer overflow-hidden border border-zinc-800" id="progress-container">
+            <div id="progress-bar" class="absolute top-0 left-0 h-full bg-gradient-to-r from-brand-500 to-amber-400 rounded-full w-0 transition-[width] duration-100"></div>
+          </div>
+          <div class="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+            <span id="current-time">00:00</span>
+            <span id="total-duration">--:--</span>
+          </div>
+        </div>
+
+        <!-- Controles de Play / Pause / Seek -->
+        <div class="flex items-center justify-center gap-4 pt-2">
+          <button id="btn-back-10" onclick="seekRelative(-5)" class="p-2.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition cursor-pointer border border-zinc-800" title="Voltar 5 segundos">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+          </button>
+          
+          <button id="btn-play-pause" onclick="togglePlay()" class="w-16 h-16 rounded-full btn-fire text-white flex items-center justify-center transition cursor-pointer transform hover:scale-105 active:scale-95 shadow-xl shadow-brand-500/30">
+            <i data-lucide="play" id="play-icon" class="w-7 h-7 ml-1"></i>
+          </button>
+
+          <button id="btn-forward-10" onclick="seekRelative(5)" class="p-2.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition cursor-pointer border border-zinc-800" title="Avançar 5 segundos">
+            <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Ações de Download e Compartilhamento -->
+      <div class="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center gap-3">
+        <a id="btn-download" href="#" download class="w-full sm:flex-1 py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer">
+          <i data-lucide="download" class="w-4 h-4 text-brand-400"></i>
+          <span>Baixar Arquivo de Áudio</span>
+        </a>
+        <button onclick="shareThisAudio()" class="w-full sm:w-auto py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer">
+          <i data-lucide="share-2" class="w-4 h-4 text-zinc-400"></i>
+          <span>Compartilhar</span>
+        </button>
+      </div>
+
+      <!-- CTA para Criar sua Voz -->
+      <div class="p-4 rounded-2xl bg-gradient-to-r from-brand-500/10 via-amber-500/10 to-transparent border border-brand-500/30 flex items-center justify-between gap-4">
+        <div>
+          <h4 class="text-xs font-black text-white uppercase tracking-wider">Crie suas próprias narrações</h4>
+          <p class="text-[11px] text-zinc-400">Clone sua voz ou use mais de 10 vozes neurais ultra-realistas.</p>
+        </div>
+        <a href="/studio" class="py-2 px-3.5 rounded-xl btn-fire text-white font-bold text-xs shrink-0 transition">
+          Testar Grátis
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full max-w-xl mx-auto py-4 text-center text-xs text-zinc-600">
+    Clonavoz AI &copy; 2026 &bull; Tecnologia de Síntese Neural de Alta Fidelidade
+  </footer>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const audioUrl = params.get('url') || '';
+    const audioTitle = params.get('title') || 'audio_clonavoz.mp3';
+
+    const audioEl = document.getElementById('main-audio');
+    const playBtn = document.getElementById('btn-play-pause');
+    const playIcon = document.getElementById('play-icon');
+    const progressBar = document.getElementById('progress-bar');
+    const progressContainer = document.getElementById('progress-container');
+    const currentTimeEl = document.getElementById('current-time');
+    const totalDurationEl = document.getElementById('total-duration');
+    const titleEl = document.getElementById('audio-title');
+    const downloadBtn = document.getElementById('btn-download');
+
+    titleEl.innerText = audioTitle;
+    document.title = `${audioTitle} - Clonavoz Player`;
+
+    if (audioUrl) {
+      audioEl.src = audioUrl;
+      downloadBtn.href = audioUrl;
+      downloadBtn.setAttribute('download', audioTitle);
+    } else {
+      titleEl.innerText = 'Nenhum áudio especificado';
+    }
+
+    function formatTime(sec) {
+      if (isNaN(sec) || !isFinite(sec)) return '00:00';
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function togglePlay() {
+      if (!audioEl.src) return;
+      if (audioEl.paused) {
+        audioEl.play().then(() => {
+          updatePlayIcon(true);
+        }).catch(err => {
+          console.warn('Erro ao tocar áudio:', err);
+        });
+      } else {
+        audioEl.pause();
+        updatePlayIcon(false);
+      }
+    }
+
+    function updatePlayIcon(isPlaying) {
+      if (isPlaying) {
+        playIcon.setAttribute('data-lucide', 'pause');
+        playIcon.classList.remove('ml-1');
+      } else {
+        playIcon.setAttribute('data-lucide', 'play');
+        playIcon.classList.add('ml-1');
+      }
+      lucide.createIcons();
+    }
+
+    function seekRelative(delta) {
+      if (!audioEl.duration) return;
+      audioEl.currentTime = Math.max(0, Math.min(audioEl.duration, audioEl.currentTime + delta));
+    }
+
+    audioEl.addEventListener('loadedmetadata', () => {
+      totalDurationEl.innerText = formatTime(audioEl.duration);
+    });
+
+    audioEl.addEventListener('timeupdate', () => {
+      if (!audioEl.duration) return;
+      const pct = (audioEl.currentTime / audioEl.duration) * 100;
+      progressBar.style.width = `${pct}%`;
+      currentTimeEl.innerText = formatTime(audioEl.currentTime);
+    });
+
+    audioEl.addEventListener('ended', () => {
+      updatePlayIcon(false);
+      progressBar.style.width = '0%';
+      currentTimeEl.innerText = '00:00';
+    });
+
+    progressContainer.addEventListener('click', (e) => {
+      if (!audioEl.duration) return;
+      const rect = progressContainer.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const pct = Math.max(0, Math.min(1, clickX / rect.width));
+      audioEl.currentTime = pct * audioEl.duration;
+    });
+
+    async function shareThisAudio() {
+      const shareData = {
+        title: `Clonavoz - ${audioTitle}`,
+        text: 'Ouça este áudio criado com voz neural no Clonavoz AI:',
+        url: window.location.href
+      };
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+        } catch (e) {}
+      } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert('Link copiado com sucesso!');
+      }
+    }
+
+    // Inicia ícones
+    lucide.createIcons();
+  </script>
+</body>
+</html>
