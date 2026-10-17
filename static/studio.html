@@ -121,7 +121,7 @@
       <!-- Brand Logo (Pure Black & Vibrant Fire Orange) -->
       <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
         <div class="w-8 h-8 sm:w-10 lg:w-11 sm:h-10 lg:h-11 rounded-xl bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center shadow-lg shadow-brand-500/30 shrink-0">
-          <i data-lucide="waveform" class="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5]"></i>
+          <i data-lucide="audio-waveform" class="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5]"></i>
         </div>
         <div>
           <div class="flex items-center gap-1.5">
@@ -459,7 +459,7 @@
         <div id="player-container" class="panel-glass p-3 rounded-2xl border border-white/10 shadow-xl h-[170px] min-h-[170px] max-h-[170px] flex flex-col justify-between shrink-0 overflow-hidden">
           <div class="flex items-center justify-between shrink-0">
             <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
-              <i data-lucide="waveform" class="w-4 h-4 text-brand-500"></i> Áudio Sintetizado
+              <i data-lucide="audio-waveform" class="w-4 h-4 text-brand-500"></i> Áudio Sintetizado
             </h3>
             <span id="player-status-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-bold border border-zinc-700">
               Aguardando
@@ -634,6 +634,7 @@
             <input
               type="text"
               id="auth-input-name"
+              autocomplete="name"
               placeholder="Ex: Carlos Oliveira"
               class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 pl-10"
             />
@@ -648,6 +649,7 @@
             <input
               type="email"
               id="auth-input-email"
+              autocomplete="email"
               placeholder="seu@email.com"
               class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 pl-10"
             />
@@ -672,6 +674,7 @@
             <input
               type="password"
               id="auth-input-password"
+              autocomplete="current-password"
               minlength="6"
               placeholder="Mínimo de 6 caracteres"
               class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 pl-10 pr-10"
@@ -695,6 +698,7 @@
             <input
               type="password"
               id="auth-input-confirm-password"
+              autocomplete="new-password"
               minlength="6"
               placeholder="Repita a nova senha"
               class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 pl-10 pr-10"
