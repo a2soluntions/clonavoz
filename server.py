@@ -88,6 +88,14 @@ CUSTOM_VOICES_DIR = tts_engine.CUSTOM_VOICES_DIR
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount("/outputs", StaticFiles(directory=OUTPUTS_DIR), name="outputs")
 
+bgm_dir = os.path.join(STATIC_DIR, "bgm")
+if os.path.exists(bgm_dir):
+    app.mount("/bgm", StaticFiles(directory=bgm_dir), name="bgm")
+
+demos_dir = os.path.join(STATIC_DIR, "demos")
+if os.path.exists(demos_dir):
+    app.mount("/demos", StaticFiles(directory=demos_dir), name="demos")
+
 
 def get_current_user_from_header(authorization: Optional[str] = Header(None)) -> Optional[dict]:
     """Valida o token JWT do Supabase recebido no header Authorization."""
