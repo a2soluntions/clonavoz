@@ -114,9 +114,9 @@
 </head>
 <body class="min-h-screen flex flex-col font-sans selection:bg-brand-500 selection:text-white">
 
-  <!-- Top Navbar -->
-  <header class="sticky top-0 z-40 panel-glass border-b border-white/5">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+  <!-- Top Navbar com espaçamento do início da página -->
+  <header class="sticky top-0 z-40 w-full pt-2 sm:pt-3 px-3 sm:px-6 lg:px-8 shrink-0">
+    <div class="max-w-7xl mx-auto panel-glass rounded-2xl border border-white/10 px-4 sm:px-6 h-16 flex items-center justify-between shadow-xl">
       
       <!-- Brand Logo (Pure Black & Vibrant Fire Orange) -->
       <div class="flex items-center space-x-3.5">
@@ -219,8 +219,8 @@
     </div>
   </header>
 
-  <!-- Main Container (Ajustado com precisão para caber 100% na tela sem barra de rolagem externa) -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-2.5 flex flex-col justify-between gap-2.5 min-h-0">
+  <!-- Main Container (Ajustado com espaçamento padrão gap-3 e zero rolagem) -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-2.5 flex flex-col gap-3 min-h-0">
 
     <!-- 1. Voice Selector Control Bar (Black & Neon Orange) -->
     <section class="panel-glass px-3.5 py-2 rounded-2xl border border-white/10 shadow-2xl shrink-0">
@@ -306,7 +306,7 @@
       
       <!-- Left: Editor de Texto Principal -->
       <section class="lg:col-span-7 flex flex-col h-full min-h-0">
-        <div class="panel-glass p-3.5 sm:p-4 rounded-2xl border border-white/10 shadow-2xl flex flex-col justify-between h-full min-h-0">
+        <div class="panel-glass p-3.5 sm:p-4 rounded-2xl border border-white/10 shadow-2xl flex flex-col gap-2.5 h-full min-h-0">
           
           <!-- Quick Preset Chips -->
           <div class="flex items-center justify-between flex-wrap gap-2 shrink-0">
@@ -336,11 +336,11 @@
           </div>
 
           <!-- Textarea (Travado em 3.000 caracteres conforme política de créditos) -->
-          <div class="relative flex-1 flex flex-col my-2 min-h-0">
+          <div class="relative flex-1 flex flex-col min-h-0">
             <textarea
               id="text-input"
               maxlength="3000"
-              class="w-full flex-1 min-h-[200px] max-h-[320px] h-[240px] lg:h-[260px] bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-white placeholder-zinc-500 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition resize-none font-normal custom-scrollbar"
+              class="w-full flex-1 min-h-[180px] bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 text-white placeholder-zinc-500 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition resize-none font-normal custom-scrollbar"
               placeholder="Digite ou cole aqui o roteiro para converter em áudio de alta fidelidade (máximo de 3.000 caracteres por áudio)..."
             ></textarea>
             
@@ -378,8 +378,8 @@
         </div>
       </section>
 
-      <!-- Right: Menu Lateral Integrado (Preferências + Player & Download + Histórico com Altura Travada) -->
-      <section class="lg:col-span-5 flex flex-col justify-between space-y-2.5 h-full min-h-0">
+      <!-- Right: Menu Lateral Integrado (Preferências + Player & Download + Histórico com Espaçamento Padrão) -->
+      <section class="lg:col-span-5 flex flex-col gap-3 h-full min-h-0">
         
         <!-- Card 1: Ritmo da Locução & Assistente Inteligente de Cadência IA -->
         <div class="panel-glass p-3 rounded-2xl border border-white/10 shadow-xl space-y-2 shrink-0">
@@ -522,8 +522,8 @@
           </div>
         </div>
 
-        <!-- Card 3: Histórico de Áudios (ALTURA RIGOROSAMENTE TRAVADA: 215px - NUNCA CRESCE COM MAIS ÁUDIOS) -->
-        <div class="panel-glass p-3 rounded-2xl border border-white/10 shadow-xl flex flex-col justify-between shrink-0 h-[215px] min-h-[215px] max-h-[215px] overflow-hidden">
+        <!-- Card 3: Histórico de Áudios (Espaçamento Padrão e Scroll Interno Dedicado - Nunca Estica a Tela) -->
+        <div class="panel-glass p-3 rounded-2xl border border-white/10 shadow-xl flex flex-col flex-1 min-h-[160px] overflow-hidden">
           <div class="flex items-center justify-between shrink-0 mb-1.5">
             <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
               <i data-lucide="clock" class="w-4 h-4 text-brand-500"></i> Histórico Recente
