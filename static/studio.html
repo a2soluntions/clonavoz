@@ -381,8 +381,8 @@
       <!-- Right: Menu Lateral Integrado (Preferências + Player & Download + Histórico com 6 Áudios) -->
       <section class="lg:col-span-5 flex flex-col justify-between space-y-3 h-full">
         
-        <!-- Card 1: Ritmo da Locução (Configuração de Fala da IA) -->
-        <div class="panel-glass p-3.5 rounded-2xl border border-white/10 shadow-xl space-y-2 shrink-0">
+        <!-- Card 1: Ritmo da Locução & Assistente Inteligente de Cadência IA -->
+        <div class="panel-glass p-3.5 rounded-2xl border border-white/10 shadow-xl space-y-2.5 shrink-0">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
               <i data-lucide="gauge" class="w-4 h-4 text-brand-500"></i> Ritmo da Locução
@@ -395,26 +395,52 @@
               id="pace-slow"
               type="button"
               onclick="setSpeechPace(0.85)"
-              class="py-1.5 px-2 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold transition cursor-pointer text-center"
+              class="relative py-1.5 px-2 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold transition cursor-pointer text-center"
             >
-              0.85x Pausado
+              <span>0.85x Pausado</span>
+              <span id="badge-rec-slow" class="hidden absolute -top-1.5 right-1 px-1 py-0.2 rounded text-[8px] bg-brand-500 text-black font-black uppercase shadow-sm">IA</span>
             </button>
             <button
               id="pace-normal"
               type="button"
               onclick="setSpeechPace(1.0)"
-              class="py-1.5 px-2 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-xs font-bold transition cursor-pointer text-center shadow-sm"
+              class="relative py-1.5 px-2 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-xs font-bold transition cursor-pointer text-center shadow-sm"
             >
-              1.0x Natural
+              <span>1.0x Natural</span>
+              <span id="badge-rec-normal" class="hidden absolute -top-1.5 right-1 px-1 py-0.2 rounded text-[8px] bg-brand-500 text-black font-black uppercase shadow-sm">IA</span>
             </button>
             <button
               id="pace-fast"
               type="button"
               onclick="setSpeechPace(1.15)"
-              class="py-1.5 px-2 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold transition cursor-pointer text-center"
+              class="relative py-1.5 px-2 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold transition cursor-pointer text-center"
             >
-              1.15x Dinâmico
+              <span>1.15x Dinâmico</span>
+              <span id="badge-rec-fast" class="hidden absolute -top-1.5 right-1 px-1 py-0.2 rounded text-[8px] bg-brand-500 text-black font-black uppercase shadow-sm">IA</span>
             </button>
+          </div>
+
+          <!-- Sugestão Inteligente de Ritmo com base no Texto (Assistente de Cadência IA) -->
+          <div id="pace-suggestion-box" class="p-2.5 rounded-xl bg-brand-500/10 border border-brand-500/25 flex items-start gap-2.5 text-xs text-brand-300 transition-all opacity-85">
+            <div class="w-5 h-5 rounded-md bg-brand-500/20 flex items-center justify-center shrink-0 mt-0.5">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-brand-400"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1">
+                <span id="pace-suggestion-title" class="font-bold text-[10px] text-brand-300 uppercase tracking-wider">Sugestão de Ritmo IA</span>
+                <button
+                  id="pace-apply-btn"
+                  type="button"
+                  onclick="applySuggestedPace()"
+                  class="hidden text-[10px] px-2 py-0.5 rounded bg-brand-500 hover:bg-brand-400 text-black font-black uppercase tracking-wider transition cursor-pointer shrink-0 shadow-sm"
+                >
+                  Aplicar 1.0x
+                </button>
+              </div>
+              <p id="pace-suggestion-desc" class="text-[11px] text-zinc-300 mt-0.5 leading-snug">
+                Digite ou cole seu texto para a IA analisar a cadência ideal.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -1704,18 +1730,27 @@
       const label = document.getElementById('pace-label');
 
       [btnSlow, btnNormal, btnFast].forEach(b => {
-        b.className = 'py-1.5 px-2 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold transition cursor-pointer text-center';
+        b.className = 'relative py-1.5 px-2 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold transition cursor-pointer text-center';
       });
 
       if (speed <= 0.85) {
-        btnSlow.className = 'py-1.5 px-2 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-xs font-bold transition cursor-pointer text-center shadow-sm';
+        btnSlow.className = 'relative py-1.5 px-2 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-xs font-bold transition cursor-pointer text-center shadow-sm';
         label.innerText = '0.85x (Pausado)';
       } else if (speed >= 1.15) {
-        btnFast.className = 'py-1.5 px-2 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-xs font-bold transition cursor-pointer text-center shadow-sm';
+        btnFast.className = 'relative py-1.5 px-2 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-xs font-bold transition cursor-pointer text-center shadow-sm';
         label.innerText = '1.15x (Dinâmico / VSL)';
       } else {
-        btnNormal.className = 'py-1.5 px-2 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-xs font-bold transition cursor-pointer text-center shadow-sm';
+        btnNormal.className = 'relative py-1.5 px-2 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-xs font-bold transition cursor-pointer text-center shadow-sm';
         label.innerText = '1.0x (Natural)';
+      }
+
+      const applyBtn = document.getElementById('pace-apply-btn');
+      if (applyBtn) {
+        if (speed === suggestedPace) {
+          applyBtn.classList.add('hidden');
+        } else {
+          applyBtn.classList.remove('hidden');
+        }
       }
     }
 
@@ -2168,9 +2203,119 @@
       }
     }
 
-    // Text & Stats
+    // Text & Stats & Assistente de Cadência
     const textInput = document.getElementById('text-input');
     textInput.addEventListener('input', updateTextStats);
+
+    let suggestedPace = 1.0;
+
+    function analyzeCadenceAndRecommendPace(text) {
+      const box = document.getElementById('pace-suggestion-box');
+      const desc = document.getElementById('pace-suggestion-desc');
+      const applyBtn = document.getElementById('pace-apply-btn');
+      if (!box || !desc) return;
+
+      const bSlow = document.getElementById('badge-rec-slow');
+      const bNorm = document.getElementById('badge-rec-normal');
+      const bFast = document.getElementById('badge-rec-fast');
+      [bSlow, bNorm, bFast].forEach(b => { if (b) b.classList.add('hidden'); });
+
+      if (!text || text.trim().length < 15) {
+        box.classList.add('opacity-70');
+        desc.innerText = 'Digite ou cole seu texto para a IA analisar a cadência ideal.';
+        if (applyBtn) applyBtn.classList.add('hidden');
+        return;
+      }
+
+      box.classList.remove('opacity-70');
+      const lower = text.toLowerCase();
+      const words = text.trim().split(/\s+/).filter(Boolean);
+      const totalWords = words.length;
+
+      const sentences = text.split(/[.!?\n]+/).filter(s => s.trim().length > 0);
+      const avgSentenceLength = sentences.length > 0 ? (totalWords / sentences.length) : totalWords;
+
+      // Palavras de alta conversão, dinamismo e vendas (VSL)
+      const fastTriggers = [
+        'compre', 'clique', 'garanta', 'hoje', 'oferta', 'desconto', 'bônus', 'vagas', 'urgente',
+        'atenção', 'descubra', 'segredo', 'faturamento', 'vendas', 'estratégia', 'resultado',
+        'agora', 'apenas', 'grátis', 'lucro', 'método', 'revolução', 'rápido', 'exclusivo',
+        'imperdível', 'transformar', 'comece', 'assista', 'veja', 'acesso', 'vitalício', 'segredos',
+        'vsl', 'copy', 'alta conversão', 'reels', 'tiktok', 'stories', 'anúncio', 'cta'
+      ];
+
+      // Palavras de ritmo pausado, solene, meditação ou técnico
+      const slowTriggers = [
+        'respire', 'reflita', 'observe', 'silêncio', 'calma', 'tranquilidade', 'sabedoria',
+        'profundo', 'meditação', 'oração', 'filosofia', 'compreensão', 'artigo', 'parágrafo',
+        'cláusula', 'conforme', 'instruções', 'passo a passo', 'cuidadosamente', 'atenção especial',
+        'definição', 'segurança', 'saúde', 'terapia', 'relaxar', 'paz', 'pense', 'lembre-se',
+        'importante destacar', 'ponto fundamental', 'primeiramente', 'em segundo lugar'
+      ];
+
+      let fastScore = 0;
+      let slowScore = 0;
+
+      fastTriggers.forEach(t => {
+        const regex = new RegExp(`\\b${t}\\b`, 'gi');
+        const matches = lower.match(regex);
+        if (matches) fastScore += matches.length * 2;
+      });
+
+      slowTriggers.forEach(t => {
+        const regex = new RegExp(`\\b${t}\\b`, 'gi');
+        const matches = lower.match(regex);
+        if (matches) slowScore += matches.length * 2.5;
+      });
+
+      const exclamations = (text.match(/!/g) || []).length;
+      const ellipses = (text.match(/\.\.\./g) || []).length;
+      const semicolons = (text.match(/;/g) || []).length;
+
+      fastScore += exclamations * 1.5;
+      if (avgSentenceLength < 10) fastScore += 3;
+
+      slowScore += ellipses * 2.5;
+      slowScore += semicolons * 1.5;
+      if (avgSentenceLength > 17) slowScore += 3;
+
+      let recPace = 1.0;
+      let recReason = '';
+
+      if (fastScore > 3 && fastScore >= slowScore) {
+        recPace = 1.15;
+        recReason = 'Texto estilo <strong>VSL / Anúncios / Vendas</strong>. O ritmo <strong>1.15x (Dinâmico)</strong> gera alta retenção e dinamismo.';
+      } else if (slowScore > 3 && slowScore > fastScore) {
+        recPace = 0.85;
+        recReason = 'Texto <strong>Reflexivo / Técnico / Solene</strong>. O ritmo <strong>0.85x (Pausado)</strong> transmite profundidade, clareza e autoridade.';
+      } else {
+        recPace = 1.0;
+        recReason = 'Texto <strong>Narrativo / Conversacional</strong>. O ritmo <strong>1.0x (Natural)</strong> é a cadência padrão perfeita para seu conteúdo.';
+      }
+
+      suggestedPace = recPace;
+      desc.innerHTML = recReason;
+
+      if (applyBtn) {
+        applyBtn.innerText = `Aplicar ${recPace}x`;
+        if (selectedSpeed === recPace) {
+          applyBtn.classList.add('hidden');
+        } else {
+          applyBtn.classList.remove('hidden');
+        }
+      }
+
+      if (recPace === 0.85 && bSlow) bSlow.classList.remove('hidden');
+      if (recPace === 1.0 && bNorm) bNorm.classList.remove('hidden');
+      if (recPace === 1.15 && bFast) bFast.classList.remove('hidden');
+    }
+
+    function applySuggestedPace() {
+      setSpeechPace(suggestedPace);
+      const applyBtn = document.getElementById('pace-apply-btn');
+      if (applyBtn) applyBtn.classList.add('hidden');
+      showToast(`⚡ Ritmo ajustado para ${suggestedPace}x recomendado pela IA!`, 'success');
+    }
 
     function updateTextStats() {
       const text = textInput.value.trim();
@@ -2181,6 +2326,8 @@
       document.getElementById('char-count').innerText = charCount;
       document.getElementById('word-count').innerText = wordCount;
       document.getElementById('est-time').innerText = wordCount > 0 ? `~${estSeconds}s` : '~0s';
+
+      analyzeCadenceAndRecommendPace(text);
     }
 
     function setSample(type) {
