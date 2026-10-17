@@ -30,7 +30,7 @@ BGM_TRACKS = {
 
 # Vozes VIP da ElevenLabs mapeadas
 ELEVENLABS_VOICES = {
-    "el_rachel": {"voice_id": "21m00Tcm4TlvDq8ikWAM", "label": "Rachel (Ultra-HD Narrativa)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2"},
+    "el_rachel": {"voice_id": "pFZP5JQG7iQjIQuC4Bku", "label": "Rachel (Ultra-HD Narrativa)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2"},
     "el_adam": {"voice_id": "pNInz6obpgDQGcFmaJgB", "label": "Adam (Ultra-HD Locutor VSL)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2"},
     "el_sarah": {"voice_id": "EXAVITQu4vr4xnSDxMaL", "label": "Sarah (Ultra-HD Expressiva)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2"},
     "el_charlie": {"voice_id": "IKne3meq5aSn9XLyUdCD", "label": "Charlie (Ultra-HD Jovem)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2"},
