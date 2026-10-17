@@ -24,10 +24,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia o código fonte da aplicação
 COPY server.py .
 COPY tts_engine.py .
-COPY .env .
+COPY static static
 
 # Cria os diretórios necessários
-RUN mkdir -p models custom_voices outputs static
+RUN mkdir -p models custom_voices outputs
 
 # Expõe a porta 8000 da API
 EXPOSE 8000
