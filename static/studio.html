@@ -116,42 +116,42 @@
 
   <!-- Top Navbar com espaçamento do início da página e alinhamento milimétrico com os cards -->
   <header class="sticky top-0 z-40 max-w-7xl w-full mx-auto pt-2 sm:pt-3 px-3 sm:px-6 lg:px-8 shrink-0">
-    <div class="w-full panel-glass rounded-2xl border border-white/10 px-3.5 sm:px-6 h-14 sm:h-16 flex items-center justify-between shadow-xl">
+    <div class="w-full panel-glass rounded-2xl border border-white/10 px-2.5 sm:px-5 lg:px-6 h-14 sm:h-16 flex items-center justify-between shadow-xl">
       
       <!-- Brand Logo (Pure Black & Vibrant Fire Orange) -->
-      <div class="flex items-center space-x-2.5 sm:space-x-3.5">
-        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center shadow-lg shadow-brand-500/30 shrink-0">
-          <i data-lucide="waveform" class="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.5]"></i>
+      <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
+        <div class="w-8 h-8 sm:w-10 lg:w-11 sm:h-10 lg:h-11 rounded-xl bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center shadow-lg shadow-brand-500/30 shrink-0">
+          <i data-lucide="waveform" class="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5]"></i>
         </div>
         <div>
-          <div class="flex items-center gap-1.5 sm:gap-2">
-            <span class="text-base sm:text-xl font-extrabold tracking-tight text-white uppercase tracking-wider">
+          <div class="flex items-center gap-1.5">
+            <span class="text-sm sm:text-lg lg:text-xl font-extrabold tracking-tight text-white uppercase tracking-wider">
               CLONA<span class="text-brand-500">VOZ</span>
             </span>
-            <span class="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">AI PRO</span>
+            <span class="text-[8px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.2 sm:py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">AI PRO</span>
           </div>
           <p class="text-[11px] text-zinc-400 -mt-0.5 font-medium hidden sm:block">Estúdio de Síntese & Clonagem de Voz</p>
         </div>
       </div>
 
       <!-- Action Area: Auth & Credit Balance & Buttons -->
-      <div class="flex items-center space-x-1.5 sm:space-x-3">
+      <div class="flex items-center space-x-1.5 sm:space-x-2.5 lg:space-x-3 shrink-0">
         
         <!-- Estado DESLOGADO: Botões de Login e Cadastro Grátis -->
         <div id="nav-auth-logged-out" class="flex items-center gap-1.5 sm:gap-2">
-          <div class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-500/10 border border-brand-500/20 text-[11px] text-brand-300 font-bold">
+          <div class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-500/10 border border-brand-500/20 text-[11px] text-brand-300 font-bold">
             <i data-lucide="gift" class="w-3.5 h-3.5 text-brand-400"></i>
             <span>Ganhe 1 Áudio Grátis</span>
           </div>
           <button
             onclick="openAuthModal('login')"
-            class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-xs font-bold transition cursor-pointer"
+            class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-xs font-bold transition cursor-pointer"
           >
             Entrar
           </button>
           <button
             onclick="openAuthModal('signup')"
-            class="px-2.5 sm:px-3.5 py-1.5 rounded-xl btn-fire text-white text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center gap-1"
+            class="px-2.5 sm:px-3 py-1.5 rounded-xl btn-fire text-white text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center gap-1"
           >
             <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
             <span>Cadastrar</span>
@@ -159,9 +159,9 @@
         </div>
 
         <!-- Estado LOGADO: Usuário, Saldo Real e Sair -->
-        <div id="nav-auth-logged-in" class="hidden flex items-center gap-1.5 sm:gap-2.5">
-          <!-- User Profile Capsule -->
-          <div class="hidden sm:flex items-center gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-zinc-900/90 border border-zinc-800">
+        <div id="nav-auth-logged-in" class="hidden flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <!-- User Profile Capsule (apenas em telas grandes para não apertar iPad nem mobile) -->
+          <div class="hidden lg:flex items-center gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-zinc-900/90 border border-zinc-800">
             <div id="user-avatar-initial" class="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center font-black text-xs">
               U
             </div>
@@ -171,23 +171,24 @@
           </div>
 
           <!-- Credit Balance Badge -->
-          <div class="flex items-center bg-zinc-900/90 border border-brand-500/30 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl shadow-inner">
-            <div class="flex items-center gap-1.5 sm:gap-2 text-xs">
+          <div class="flex items-center bg-zinc-900/90 border border-brand-500/30 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl shadow-inner shrink-0">
+            <div class="flex items-center gap-1 sm:gap-1.5 text-xs">
               <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse shrink-0"></span>
-              <span class="text-zinc-300 hidden sm:inline">Saldo:</span>
+              <span class="text-zinc-300 hidden md:inline">Saldo:</span>
               <span id="user-credits-badge" class="font-extrabold text-white font-mono text-xs sm:text-sm">1</span>
-              <span class="text-zinc-400 text-[10px] sm:text-[11px] hidden sm:inline">áudios</span>
+              <span class="text-zinc-400 text-[10px] hidden md:inline">áudios</span>
             </div>
             <button
               onclick="openRechargeModal()"
-              class="ml-1.5 sm:ml-2.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg bg-brand-500 hover:bg-brand-400 text-black font-extrabold text-[10px] sm:text-[11px] uppercase tracking-wider transition cursor-pointer shrink-0"
+              class="ml-1 sm:ml-2 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg bg-brand-500 hover:bg-brand-400 text-black font-extrabold text-[10px] sm:text-[11px] uppercase tracking-wider transition cursor-pointer shrink-0"
               title="Recarregar créditos"
             >
-              + Recarregar
+              <span class="hidden sm:inline">+ Recarregar</span>
+              <span class="sm:hidden">+ Recarga</span>
             </button>
           </div>
 
-          <!-- Botão Sair -->
+          <!-- Botão Sair (sempre contido dentro do card, sem sobrar) -->
           <button
             onclick="handleSignOut()"
             class="p-1.5 sm:p-2 rounded-xl bg-zinc-900/80 hover:bg-red-950/60 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-500/30 transition cursor-pointer shrink-0"
@@ -200,17 +201,17 @@
         <!-- Link para a Página Inicial / Planos -->
         <a
           href="/"
-          class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 text-xs font-semibold transition cursor-pointer"
+          class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 text-xs font-semibold transition cursor-pointer"
           title="Ver apresentação completa e planos de recarga"
         >
           <i data-lucide="sparkles" class="w-3.5 h-3.5 text-brand-400"></i>
           <span>Planos</span>
         </a>
 
-        <!-- Upload Voice Button -->
+        <!-- Upload Voice Button (oculto no iPad Mini e mobile para não sobrar, visível apenas em telas desktop amplas) -->
         <button
           onclick="openUploadModal()"
-          class="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white border border-white/10 hover:border-brand-500/40 text-xs font-semibold transition cursor-pointer"
+          class="hidden xl:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white border border-white/10 hover:border-brand-500/40 text-xs font-semibold transition cursor-pointer"
         >
           <i data-lucide="user-plus" class="w-4 h-4 text-brand-500"></i>
           <span>+ Upload de Voz</span>
@@ -270,6 +271,15 @@
 
         <!-- Right: Status Badges & Quick Action Buttons -->
         <div class="flex items-center gap-2 flex-wrap shrink-0">
+          <!-- Botão Clonar / Upload de Voz universal (Mobile, iPad e Desktop) -->
+          <button
+            onclick="openUploadModal()"
+            class="text-xs px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 hover:border-brand-500/50 transition flex items-center gap-1.5 font-bold cursor-pointer"
+            title="Fazer upload de áudio e clonar uma nova voz"
+          >
+            <i data-lucide="user-plus" class="w-3.5 h-3.5 text-brand-500"></i>
+            <span>+ Clonar Voz</span>
+          </button>
           <span id="voice-status-badge" class="text-xs px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 font-medium">
             Pronta
           </span>
