@@ -1170,6 +1170,15 @@
     const SUPABASE_FALLBACK_URL = "https://ekncpoggwgmbmzmfmfvb.supabase.co";
     const SUPABASE_FALLBACK_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrbmNwb2dnd2dtYm16bWZtZnZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4NDk5MjcsImV4cCI6MjEwNzQyNTkyN30.5shXkcVllbGYyOZCXmxISQ1qm7RtDHnsqFsH4BtHZ2c";
 
+    function getFullAudioUrl(u) {
+      if (!u) return '';
+      if (u.startsWith('http://') || u.startsWith('https://')) return u;
+      if (u.startsWith('/demos/') || u.startsWith('demos/')) {
+        return u.startsWith('/') ? u : `/${u}`;
+      }
+      return `${API_BASE}${u.startsWith('/') ? '' : '/'}${u}`;
+    }
+
     async function initSupabaseAuth() {
       try {
         let sbUrl = SUPABASE_FALLBACK_URL;
@@ -1763,6 +1772,8 @@
         opt.value = v.key;
         if (v.type === 'vip_elevenlabs') {
           opt.innerText = `⭐ ${getCleanVoiceName(v)} [Ultra-HD VIP]`;
+        } else if (v.type === 'custom') {
+          opt.innerText = `🎙️ ${getCleanVoiceName(v)} [Voz Clonada]`;
         } else {
           opt.innerText = getCleanVoiceName(v);
         }
@@ -2034,10 +2045,13 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'Falha no processamento');
 
-        showToast(`Voz "${name}" cadastrada com sucesso!`, 'success');
+        showToast(`🎉 Voz "${name}" clonada e pronta para sintetizar!`, 'success');
         closeUploadModal();
         selectedVoiceKey = data.voice.id;
+        selectedGenderFilter = modalSelectedGender;
         await loadVoices();
+        renderVoiceDropdown();
+        updateVoiceStatusPills();
       } catch (err) {
         showToast(`Erro: ${err.message}`, 'error');
       } finally {
@@ -2277,19 +2291,10 @@
       document.getElementById('audio-title').innerText = data.filename;
       document.getElementById('metric-duration-badge').innerText = `${data.duration}s`;
 
-      const getFullAudioUrl = (u) => {
-        if (!u) return '';
-        if (u.startsWith('http://') || u.startsWith('https://')) return u;
-        if (u.startsWith('/demos/') || u.startsWith('demos/')) {
-          return u.startsWith('/') ? u : `/${u}`;
-        }
-        return `${API_BASE}${u.startsWith('/') ? '' : '/'}${u}`;
-      };
-
       const wavUrl = getFullAudioUrl(data.url);
-      const mp3Url = getFullAudioUrl(data.url.replace(/\.wav$/i, '.mp3'));
-      const wavName = data.filename;
-      const mp3Name = data.filename.replace(/\.wav$/i, '.mp3');
+      const mp3Url = getFullAudioUrl(data.mp3_url || (data.url ? data.url.replace(/\.wav$/i, '.mp3') : ''));
+      const wavName = data.filename || 'audio.wav';
+      const mp3Name = wavName.replace(/\.wav$/i, '.mp3');
 
       const btnWav = document.getElementById('btn-download-wav');
       btnWav.href = wavUrl;
@@ -2303,11 +2308,18 @@
         initWaveSurfer();
         wavesurfer.load(wavUrl);
         wavesurfer.once('ready', () => {
-          wavesurfer.play();
+          wavesurfer.play().catch(err => {
+            console.log('[Autoplay prevented by browser, click play to listen]');
+          });
         });
         wavesurfer.once('error', (err) => {
-          console.warn('[WaveSurfer Error, tentando MP3]', err);
-          wavesurfer.load(mp3Url);
+          console.warn('[WaveSurfer WAV Error, carregando MP3]', err);
+          if (mp3Url) {
+            wavesurfer.load(mp3Url);
+            wavesurfer.once('ready', () => {
+              wavesurfer.play().catch(() => {});
+            });
+          }
         });
       } catch (e) {
         console.error('[Player Load Error]', e);
@@ -2390,7 +2402,14 @@
       initWaveSurfer();
       wavesurfer.load(wavUrl);
       wavesurfer.once('ready', () => {
-        wavesurfer.play();
+        wavesurfer.play().catch(() => {});
+      });
+      wavesurfer.once('error', (err) => {
+        console.warn('[WaveSurfer WAV Error, carregando MP3]', err);
+        wavesurfer.load(mp3Url);
+        wavesurfer.once('ready', () => {
+          wavesurfer.play().catch(() => {});
+        });
       });
       lucide.createIcons();
     }

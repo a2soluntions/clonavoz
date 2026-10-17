@@ -160,8 +160,12 @@ def ensure_model_ready(voice_key: str, progress_callback=None):
 # Acoustic Analysis & Universal Audio Decoding
 # -------------------------------------------------------------
 
-def decode_audio_to_wav(audio_bytes: bytes, output_path: str, target_sr: int = 22050) -> tuple:
+def decode_audio_to_wav(audio_bytes: bytes, output_path: str, target_sr: int = 22050, filename: str = "audio.wav") -> tuple:
     """Decodes any audio file format (MP3, AAC, M4A, WAV, OGG, FLAC) to normalized mono WAV using native FFmpeg or SoundFile."""
+    ext = os.path.splitext(filename)[1].lower() if filename else ".wav"
+    if not ext:
+        ext = ".wav"
+
     try:
         # Try direct read with SoundFile (for WAV, FLAC, OGG)
         audio_data, orig_sr = sf.read(io.BytesIO(audio_bytes), dtype='float32')
@@ -172,7 +176,7 @@ def decode_audio_to_wav(audio_bytes: bytes, output_path: str, target_sr: int = 2
             audio_data = signal.resample(audio_data, num_samples).astype(np.float32)
     except Exception:
         # Fallback to FFmpeg subprocess (installed in Linux Docker container and Windows system)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".raw") as tmp_in:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp_in:
             tmp_in.write(audio_bytes)
             tmp_in_path = tmp_in.name
 
@@ -186,7 +190,10 @@ def decode_audio_to_wav(audio_bytes: bytes, output_path: str, target_sr: int = 2
             audio_data, _ = sf.read(output_path, dtype='float32')
         finally:
             if os.path.exists(tmp_in_path):
-                os.remove(tmp_in_path)
+                try:
+                    os.remove(tmp_in_path)
+                except Exception:
+                    pass
 
     if len(audio_data) == 0:
         raise ValueError("O arquivo de áudio decodificado está vazio.")
@@ -234,15 +241,45 @@ def estimate_pitch(audio: np.ndarray, sr: int) -> float:
     return 180.0
 
 
-def pitch_shift(audio: np.ndarray, sr: int, semitones: float) -> np.ndarray:
-    """Pitch-shifts audio array by a given number of semitones."""
+def pitch_shift_ffmpeg(wav_path: str, semitones: float, target_sr: int = 22050):
+    """Pitch-shifts a WAV file in-place using FFmpeg's asetrate and atempo filters."""
     if abs(semitones) < 0.15:
-        return audio
+        return
     factor = 2.0 ** (semitones / 12.0)
-    target_samples = max(100, int(len(audio) / factor))
-    resampled = signal.resample(audio, target_samples)
-    orig_indices = np.linspace(0, len(resampled) - 1, len(audio))
-    return np.interp(orig_indices, np.arange(len(resampled)), resampled).astype(np.float32)
+    tempo = 1.0 / factor
+
+    tempo_filters = []
+    curr_tempo = tempo
+    while curr_tempo < 0.5:
+        tempo_filters.append("atempo=0.5")
+        curr_tempo /= 0.5
+    while curr_tempo > 2.0:
+        tempo_filters.append("atempo=2.0")
+        curr_tempo /= 2.0
+    tempo_filters.append(f"atempo={curr_tempo:.4f}")
+    tempo_str = ",".join(tempo_filters)
+
+    new_rate = int(round(target_sr * factor))
+    af_filter = f"asetrate={new_rate},{tempo_str},aresample={target_sr}"
+
+    tmp_out = wav_path + ".tmp.wav"
+    cmd = [
+        "ffmpeg", "-y", "-i", wav_path,
+        "-af", af_filter,
+        "-ar", str(target_sr),
+        tmp_out
+    ]
+    try:
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        if os.path.exists(tmp_out):
+            os.replace(tmp_out, wav_path)
+    except Exception as e:
+        if os.path.exists(tmp_out):
+            try:
+                os.remove(tmp_out)
+            except Exception:
+                pass
+        print(f"[FFmpeg pitch shift error] {e}")
 
 
 def load_custom_voices_metadata() -> dict:
@@ -266,8 +303,8 @@ def add_custom_voice(name: str, gender: str, audio_bytes: bytes, filename: str) 
     sample_filename = f"{voice_id}.wav"
     sample_path = os.path.join(CUSTOM_VOICES_DIR, sample_filename)
 
-    # Universal audio decode using PyAV
-    audio_data, sr, duration = decode_audio_to_wav(audio_bytes, sample_path, target_sr=22050)
+    # Universal audio decode using PyAV / FFmpeg with original extension
+    audio_data, sr, duration = decode_audio_to_wav(audio_bytes, sample_path, target_sr=22050, filename=filename)
     pitch = estimate_pitch(audio_data, sr)
 
     base_voice = "dii" if gender.lower() == "feminina" else "faber"
@@ -343,13 +380,22 @@ def synthesize_text(
         tts = get_tts_engine(base_key, num_threads=num_threads)
         audio = tts.generate(clean_text, sid=0, speed=speed)
         samples = np.array(audio.samples, dtype=np.float32)
+        sample_rate = audio.sample_rate
 
-        # Apply acoustic profile shift (pitch matching)
+        timestamp = int(time.time() * 1000)
+        filename = f"audio_{voice_key}_{timestamp}.wav"
+        output_path = os.path.join(OUTPUTS_DIR, filename)
+        sf.write(output_path, samples, sample_rate)
+
+        # Apply acoustic profile shift (pitch matching) using FFmpeg
         semitones = cv.get("semitones_shift", 0.0)
         if abs(semitones) > 0.15:
-            samples = pitch_shift(samples, audio.sample_rate, semitones)
+            pitch_shift_ffmpeg(output_path, semitones, sample_rate)
 
-        sample_rate = audio.sample_rate
+        info = sf.info(output_path)
+        duration = info.duration
+        with open(output_path, "rb") as f:
+            audio_bytes = f.read()
     else:
         ensure_model_ready(voice_key, progress_callback=progress_callback)
         tts = get_tts_engine(voice_key, num_threads=num_threads)
@@ -357,18 +403,17 @@ def synthesize_text(
         samples = np.array(audio.samples, dtype=np.float32)
         sample_rate = audio.sample_rate
 
-    duration = len(samples) / sample_rate
+        duration = len(samples) / sample_rate
+        timestamp = int(time.time() * 1000)
+        filename = f"audio_{voice_key}_{timestamp}.wav"
+        output_path = os.path.join(OUTPUTS_DIR, filename)
+        sf.write(output_path, samples, sample_rate)
+
+        buffer = io.BytesIO()
+        sf.write(buffer, samples, sample_rate, format="WAV")
+        audio_bytes = buffer.getvalue()
+
     elapsed = time.time() - start_time
-
-    timestamp = int(time.time() * 1000)
-    filename = f"audio_{voice_key}_{timestamp}.wav"
-    output_path = os.path.join(OUTPUTS_DIR, filename)
-
-    sf.write(output_path, samples, sample_rate)
-
-    buffer = io.BytesIO()
-    sf.write(buffer, samples, sample_rate, format="WAV")
-    audio_bytes = buffer.getvalue()
 
     return {
         "file_path": output_path,

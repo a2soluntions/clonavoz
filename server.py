@@ -415,8 +415,15 @@ def synthesize(
                 pass
 
             elapsed = round(time.time() - start_time, 2)
-            word_count = len(req.text.split())
-            est_duration = max(round(word_count / 2.6, 1), 1.5)
+            est_duration = 2.0
+            if os.path.exists(wav_path):
+                try:
+                    import soundfile as sf
+                    est_duration = round(sf.info(wav_path).duration, 2)
+                except Exception:
+                    word_count = len(req.text.split())
+                    est_duration = max(round(word_count / 2.6, 1), 1.5)
+
             result = {
                 "filename": wav_filename if os.path.exists(wav_path) else mp3_filename,
                 "duration_seconds": est_duration,
@@ -465,10 +472,14 @@ def synthesize(
             except Exception as ex:
                 print(f"[Supabase Generation Save Error] {ex}")
 
+        active_filename = wav_filename if os.path.exists(wav_path) else mp3_filename
+        active_url = f"/outputs/{active_filename}"
+
         return {
             "success": True,
-            "filename": wav_filename,
-            "url": f"/outputs/{wav_filename}",
+            "filename": active_filename,
+            "url": active_url,
+            "mp3_url": f"/outputs/{mp3_filename}",
             "duration": round(result["duration_seconds"], 2),
             "elapsed": round(result["elapsed_seconds"], 2),
             "speed_factor": round(result["duration_seconds"] / max(result["elapsed_seconds"], 0.001), 1),
@@ -493,9 +504,21 @@ def get_output_file(filename: str):
             try:
                 convert_wav_to_mp3(wav_path, file_path)
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Erro na conversão MP3: {str(e)}")
+                print(f"[MP3 conversion error] {e}")
         if os.path.exists(file_path):
             return FileResponse(file_path, media_type="audio/mpeg", filename=filename)
+
+    # Se solicitou WAV e o WAV ainda não existe, converte do MP3 equivalente
+    if filename.endswith(".wav"):
+        mp3_path = os.path.join(OUTPUTS_DIR, filename[:-4] + ".mp3")
+        if not os.path.exists(file_path) and os.path.exists(mp3_path):
+            try:
+                cmd = ["ffmpeg", "-y", "-i", mp3_path, "-f", "wav", file_path]
+                subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            except Exception as e:
+                print(f"[WAV conversion error] {e}")
+        if os.path.exists(file_path):
+            return FileResponse(file_path, media_type="audio/wav", filename=filename)
 
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Arquivo de áudio não encontrado")
