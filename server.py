@@ -1,8 +1,9 @@
 import os
 import glob
+import subprocess
 from typing import Optional
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Header, Depends, BackgroundTasks
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Header, Depends, BackgroundTasks, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,6 +17,16 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "").strip()
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "").strip()
+MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MERCADO_PAGO_ACCESS_TOKEN", "").strip()
+BASE_URL = os.getenv("BASE_URL", "https://api.clonavoz.com.br").strip()
+
+# Catálogo de Trilhas Sonoras de Fundo (BGM)
+BGM_TRACKS = {
+    "inspire": {"label": "Inspirador / VSL", "file": "bgm_inspire.mp3", "description": "Piano e ambiência acolhedora para vídeos de alta conversão"},
+    "corporate": {"label": "Corporativo / Tech", "file": "bgm_corporate.mp3", "description": "Batida acústica limpa para notícias e empresas"},
+    "calm": {"label": "Calmo / Reflexivo", "file": "bgm_calm.mp3", "description": "Pad suave e relaxante para meditação e podcasts"},
+    "cinematic": {"label": "Cinemático / Dark", "file": "bgm_cinematic.mp3", "description": "Harmonia dramática com suspense para canais Dark"}
+}
 
 # Vozes VIP da ElevenLabs mapeadas
 ELEVENLABS_VOICES = {
@@ -133,10 +144,26 @@ class SynthesizeRequest(BaseModel):
     voice: str = "dii"
     speed: float = 1.0
     threads: int = 4
+    bgm: Optional[str] = "none"
+    bgm_volume: Optional[float] = 0.15
 
 
 class DownloadVoiceRequest(BaseModel):
     voice: str
+
+
+@app.get("/api/bgm-tracks")
+def get_bgm_tracks():
+    """Retorna as trilhas sonoras de fundo disponíveis com preview."""
+    tracks = []
+    for key, info in BGM_TRACKS.items():
+        tracks.append({
+            "key": key,
+            "label": info["label"],
+            "description": info["description"],
+            "url": f"/static/bgm/{info['file']}"
+        })
+    return tracks
 
 
 @app.get("/")
@@ -181,6 +208,255 @@ def get_me(authorization: Optional[str] = Header(None)):
     }
 
 
+class CreatePixRequest(BaseModel):
+    package_id: str = "criador"
+    credits: int = 12
+    price: str = "27,90"
+
+
+@app.post("/api/pix/create")
+def create_pix_payment(req: CreatePixRequest, authorization: Optional[str] = Header(None)):
+    """Cria uma cobrança PIX via Mercado Pago ou simulação para adicionar créditos."""
+    user = None
+    if supabase_admin:
+        user = get_current_user_from_header(authorization)
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="Você precisa estar conectado na sua conta para recarregar créditos.",
+            )
+
+    import time
+    import datetime
+    import uuid
+    import json
+    import urllib.request
+
+    raw_price = req.price.replace("R$", "").replace(" ", "").replace(",", ".").strip()
+    try:
+        amount_num = float(raw_price) if raw_price else 27.90
+    except ValueError:
+        amount_num = 27.90
+
+    user_email = getattr(user, "email", "cliente@clonavoz.com.br") if user else "cliente@clonavoz.com.br"
+    user_name = "Cliente"
+    if user and hasattr(user, "user_metadata") and user.user_metadata:
+        user_name = user.user_metadata.get("full_name") or user_email.split("@")[0]
+    elif user and user_email:
+        user_name = user_email.split("@")[0]
+
+    payment_id = None
+    qr_code = ""
+    qr_code_base64 = ""
+    is_simulated = True
+
+    # 1. Tenta criar cobrança real no Mercado Pago se houver token configurado
+    if MERCADO_PAGO_ACCESS_TOKEN:
+        try:
+            mp_url = "https://api.mercadopago.com/v1/payments"
+            mp_payload = {
+                "transaction_amount": amount_num,
+                "description": f"Clonavoz - {req.credits} Creditos ({req.package_id})",
+                "payment_method_id": "pix",
+                "payer": {
+                    "email": user_email,
+                    "first_name": user_name
+                },
+                "notification_url": f"{BASE_URL}/api/pix/webhook"
+            }
+            req_headers = {
+                "Authorization": f"Bearer {MERCADO_PAGO_ACCESS_TOKEN}",
+                "Content-Type": "application/json",
+                "X-Idempotency-Key": str(uuid.uuid4())
+            }
+            req_obj = urllib.request.Request(
+                mp_url,
+                data=json.dumps(mp_payload).encode("utf-8"),
+                headers=req_headers,
+                method="POST"
+            )
+            with urllib.request.urlopen(req_obj, timeout=10) as resp:
+                resp_data = json.loads(resp.read().decode("utf-8"))
+                payment_id = str(resp_data.get("id"))
+                tx_data = resp_data.get("point_of_interaction", {}).get("transaction_data", {})
+                qr_code = tx_data.get("qr_code", "")
+                qr_code_base64 = tx_data.get("qr_code_base64", "")
+                is_simulated = False
+        except Exception as mp_err:
+            print(f"[Mercado Pago API Warning - Usando Fallback]: {mp_err}")
+
+    # 2. Fallback / Simulação de desenvolvimento se token não configurado ou em teste
+    if not payment_id:
+        payment_id = f"sim_{int(time.time() * 1000)}"
+        qr_code = f"00020126580014br.gov.bcb.pix0136clonavoz-recarga-{payment_id}520400005303986540{len(str(amount_num)):02d}{amount_num:.2f}5802BR5916CLONAVOZ STUDIO6009SAO PAULO62070503***6304"
+        is_simulated = True
+
+    # 3. Registra na tabela pix_transactions se Supabase estiver ativo
+    if supabase_admin and user:
+        try:
+            supabase_admin.table("pix_transactions").insert({
+                "user_id": user.id,
+                "payment_id": payment_id,
+                "package_id": req.package_id,
+                "credits_amount": req.credits,
+                "amount_brl": amount_num,
+                "status": "pending",
+                "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+            }).execute()
+        except Exception as ex:
+            print(f"[PIX Insert Warning] {ex}")
+
+    return {
+        "success": True,
+        "payment_id": payment_id,
+        "qr_code": qr_code,
+        "qr_code_base64": qr_code_base64,
+        "amount": amount_num,
+        "credits": req.credits,
+        "package_id": req.package_id,
+        "is_simulated": is_simulated,
+        "status": "pending"
+    }
+
+
+@app.get("/api/pix/status/{payment_id}")
+def check_pix_status(payment_id: str, authorization: Optional[str] = Header(None)):
+    """Verifica se o pagamento PIX foi aprovado e credita saldo na conta."""
+    user = get_current_user_from_header(authorization) if supabase_admin else None
+
+    # Se for cobrança real no Mercado Pago
+    if not payment_id.startswith("sim_") and MERCADO_PAGO_ACCESS_TOKEN:
+        try:
+            import urllib.request
+            import json
+            req_obj = urllib.request.Request(
+                f"https://api.mercadopago.com/v1/payments/{payment_id}",
+                headers={"Authorization": f"Bearer {MERCADO_PAGO_ACCESS_TOKEN}"}
+            )
+            with urllib.request.urlopen(req_obj, timeout=8) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                mp_status = data.get("status")
+                if mp_status == "approved":
+                    if supabase_admin:
+                        try:
+                            tx_res = supabase_admin.table("pix_transactions").select("*").eq("payment_id", payment_id).execute()
+                            if tx_res.data:
+                                tx = tx_res.data[0]
+                                if tx.get("status") != "paid":
+                                    import datetime
+                                    supabase_admin.table("pix_transactions").update({
+                                        "status": "paid",
+                                        "paid_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                                    }).eq("payment_id", payment_id).execute()
+                                    
+                                    u_id = tx.get("user_id")
+                                    prof_res = supabase_admin.table("profiles").select("credits").eq("id", u_id).execute()
+                                    current_cred = prof_res.data[0]["credits"] if prof_res.data else 0
+                                    new_cred = current_cred + tx.get("credits_amount", 1)
+                                    supabase_admin.table("profiles").update({"credits": new_cred}).eq("id", u_id).execute()
+                                    return {"status": "approved", "credits": new_cred, "added": tx.get("credits_amount", 1)}
+                        except Exception as e:
+                            print(f"[PIX Approval Update Error] {e}")
+                    return {"status": "approved"}
+                return {"status": mp_status or "pending"}
+        except Exception as e:
+            print(f"[PIX Status Query Error] {e}")
+
+    # Se for em ambiente de teste ou Supabase
+    if supabase_admin and user:
+        try:
+            tx_res = supabase_admin.table("pix_transactions").select("*").eq("payment_id", payment_id).execute()
+            if tx_res.data:
+                tx = tx_res.data[0]
+                if tx.get("status") == "paid":
+                    profile = get_or_create_profile(user)
+                    return {"status": "approved", "credits": profile.get("credits", 0), "added": tx.get("credits_amount", 1)}
+        except Exception:
+            pass
+
+    return {"status": "pending"}
+
+
+@app.post("/api/pix/simulate-approve/{payment_id}")
+def simulate_approve_pix(payment_id: str, authorization: Optional[str] = Header(None)):
+    """Simula a aprovação imediata de um pagamento PIX em ambiente de testes."""
+    if not supabase_admin:
+        return {"status": "approved", "credits": 999, "added": 12}
+
+    user = get_current_user_from_header(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="Usuário não autenticado.")
+
+    import datetime
+    credits_to_add = 12
+    try:
+        tx_res = supabase_admin.table("pix_transactions").select("*").eq("payment_id", payment_id).execute()
+        if tx_res.data:
+            tx = tx_res.data[0]
+            credits_to_add = tx.get("credits_amount", 12)
+            supabase_admin.table("pix_transactions").update({
+                "status": "paid",
+                "paid_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+            }).eq("payment_id", payment_id).execute()
+    except Exception as ex:
+        print(f"[PIX Simulate Approve Warning] {ex}")
+
+    profile = get_or_create_profile(user)
+    new_credits = profile.get("credits", 0) + credits_to_add
+    try:
+        supabase_admin.table("profiles").update({"credits": new_credits}).eq("id", user.id).execute()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"status": "approved", "credits": new_credits, "added": credits_to_add}
+
+
+@app.post("/api/pix/webhook")
+async def pix_webhook(request: Request):
+    """Webhook do Mercado Pago para notificação instantânea de pagamentos aprovados."""
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+
+    payment_id = None
+    if "data" in data and "id" in data["data"]:
+        payment_id = str(data["data"]["id"])
+    elif "id" in data:
+        payment_id = str(data["id"])
+
+    if payment_id and MERCADO_PAGO_ACCESS_TOKEN and supabase_admin:
+        try:
+            import urllib.request
+            import json
+            req_obj = urllib.request.Request(
+                f"https://api.mercadopago.com/v1/payments/{payment_id}",
+                headers={"Authorization": f"Bearer {MERCADO_PAGO_ACCESS_TOKEN}"}
+            )
+            with urllib.request.urlopen(req_obj, timeout=8) as resp:
+                mp_data = json.loads(resp.read().decode("utf-8"))
+                if mp_data.get("status") == "approved":
+                    tx_res = supabase_admin.table("pix_transactions").select("*").eq("payment_id", payment_id).execute()
+                    if tx_res.data:
+                        tx = tx_res.data[0]
+                        if tx.get("status") != "paid":
+                            import datetime
+                            supabase_admin.table("pix_transactions").update({
+                                "status": "paid",
+                                "paid_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                            }).eq("payment_id", payment_id).execute()
+                            
+                            u_id = tx.get("user_id")
+                            prof_res = supabase_admin.table("profiles").select("credits").eq("id", u_id).execute()
+                            current_cred = prof_res.data[0]["credits"] if prof_res.data else 0
+                            new_cred = current_cred + tx.get("credits_amount", 1)
+                            supabase_admin.table("profiles").update({"credits": new_cred}).eq("id", u_id).execute()
+        except Exception as e:
+            print(f"[PIX Webhook Processing Error] {e}")
+
+    return {"status": "ok"}
+
+
 class SimulateRechargeRequest(BaseModel):
     package_id: str = "criador"
     credits: int = 12
@@ -204,13 +480,11 @@ def simulate_recharge(req: SimulateRechargeRequest, authorization: Optional[str]
     current_credits = profile.get("credits", 0)
     new_credits = current_credits + max(req.credits, 1)
 
-    # 1. Atualiza créditos na tabela profiles do Supabase
     try:
         supabase_admin.table("profiles").update({"credits": new_credits}).eq("id", user.id).execute()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao creditar saldo no banco: {str(e)}")
 
-    # 2. Registra a transação na tabela pix_transactions
     try:
         import datetime
         raw_price = req.price.replace("R$", "").replace(" ", "").replace(",", ".").strip()
@@ -360,6 +634,37 @@ def convert_wav_to_mp3(wav_path: str, mp3_path: str):
     out.close()
 
 
+def mix_audio_with_bgm(voice_wav_path: str, bgm_file_path: str, volume: float = 0.15) -> bool:
+    """Mixes background music into voice wav using ffmpeg with smooth fadeout."""
+    temp_mixed = voice_wav_path + ".mixed.wav"
+    try:
+        vol = max(0.01, min(float(volume), 1.0))
+        # duration=first ensures the output ends right when voice finishes
+        # dropout_transition=2 ensures a smooth 2-second fadeout
+        filter_str = f"[0:a]volume=1.0[v];[1:a]volume={vol:.2f}[m];[v][m]amix=inputs=2:duration=first:dropout_transition=2[a]"
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", voice_wav_path,
+            "-stream_loop", "-1",
+            "-i", bgm_file_path,
+            "-filter_complex", filter_str,
+            "-map", "[a]",
+            temp_mixed
+        ]
+        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if res.returncode == 0 and os.path.exists(temp_mixed) and os.path.getsize(temp_mixed) > 1000:
+            os.replace(temp_mixed, voice_wav_path)
+            return True
+    except Exception as e:
+        print(f"[BGM Mix Error] {e}")
+        if os.path.exists(temp_mixed):
+            try:
+                os.remove(temp_mixed)
+            except Exception:
+                pass
+    return False
+
+
 @app.post("/api/synthesize")
 def synthesize(
     req: SynthesizeRequest,
@@ -414,6 +719,17 @@ def synthesize(
             except Exception:
                 pass
 
+            # Aplica Trilha Sonora de Fundo (BGM) se selecionada
+            if req.bgm and req.bgm != "none" and req.bgm in BGM_TRACKS and os.path.exists(wav_path):
+                bgm_file = os.path.join(STATIC_DIR, "bgm", BGM_TRACKS[req.bgm]["file"])
+                if os.path.exists(bgm_file):
+                    if mix_audio_with_bgm(wav_path, bgm_file, req.bgm_volume or 0.15):
+                        try:
+                            cmd_mp3 = ["ffmpeg", "-y", "-i", wav_path, "-b:a", "192k", mp3_path]
+                            subprocess.run(cmd_mp3, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+                        except Exception:
+                            pass
+
             elapsed = round(time.time() - start_time, 2)
             est_duration = 2.0
             if os.path.exists(wav_path):
@@ -440,6 +756,12 @@ def synthesize(
             mp3_filename = wav_filename.replace(".wav", ".mp3")
             wav_path = os.path.join(OUTPUTS_DIR, wav_filename)
             mp3_path = os.path.join(OUTPUTS_DIR, mp3_filename)
+
+            # Aplica Trilha Sonora de Fundo (BGM) se selecionada antes de converter para MP3
+            if req.bgm and req.bgm != "none" and req.bgm in BGM_TRACKS and os.path.exists(wav_path):
+                bgm_file = os.path.join(STATIC_DIR, "bgm", BGM_TRACKS[req.bgm]["file"])
+                if os.path.exists(bgm_file):
+                    mix_audio_with_bgm(wav_path, bgm_file, req.bgm_volume or 0.15)
 
             # Dispara conversão MP3 em background (não bloqueia a resposta para o usuário)
             if os.path.exists(wav_path):

@@ -402,7 +402,7 @@
       <!-- Right: Menu Lateral Integrado (Preferências + Player & Download + Histórico com Espaçamento Padrão) -->
       <section class="lg:col-span-5 flex flex-col gap-3 h-full min-h-0">
         
-        <!-- Card 1: Ritmo da Locução & Assistente Inteligente de Cadência IA -->
+        <!-- Card 1: Ritmo da Locução & Trilha Sonora BGM -->
         <div class="panel-glass p-3 rounded-2xl border border-white/10 shadow-xl space-y-2 shrink-0">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
@@ -463,6 +463,81 @@
               </p>
             </div>
           </div>
+
+          <!-- Trilha Sonora de Fundo (BGM) Integrada -->
+          <div class="pt-2 border-t border-zinc-800/80 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="music" class="w-4 h-4 text-brand-500"></i> Trilha de Fundo (BGM)
+              </h3>
+              <div class="flex items-center gap-1.5">
+                <span id="bgm-volume-val" class="font-mono text-zinc-400 text-[10px]">15% vol</span>
+                <input
+                  id="bgm-volume-slider"
+                  type="range"
+                  min="5"
+                  max="40"
+                  value="15"
+                  step="5"
+                  oninput="updateBgmVolume(this.value)"
+                  class="w-16 accent-brand-500 h-1 bg-zinc-800 rounded cursor-pointer"
+                  title="Volume da Trilha de Fundo"
+                />
+              </div>
+            </div>
+
+            <!-- BGM Pills Grid -->
+            <div class="grid grid-cols-5 gap-1 text-[10px]">
+              <button
+                type="button"
+                id="bgm-btn-none"
+                onclick="selectBgm('none')"
+                class="py-1 px-1 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 font-bold transition cursor-pointer text-center truncate"
+              >
+                Mudo
+              </button>
+              <button
+                type="button"
+                id="bgm-btn-inspire"
+                onclick="selectBgm('inspire')"
+                class="py-1 px-0.5 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 font-semibold transition cursor-pointer text-center truncate flex items-center justify-center gap-0.5"
+                title="Inspirador / VSL (Piano e ambiência)"
+              >
+                <span>VSL</span>
+                <span onclick="event.stopPropagation(); previewBgm('inspire')" class="text-[8px] opacity-60 hover:opacity-100 hover:text-brand-400">▶</span>
+              </button>
+              <button
+                type="button"
+                id="bgm-btn-corporate"
+                onclick="selectBgm('corporate')"
+                class="py-1 px-0.5 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 font-semibold transition cursor-pointer text-center truncate flex items-center justify-center gap-0.5"
+                title="Corporativo / Tech (Batida limpa)"
+              >
+                <span>Corp</span>
+                <span onclick="event.stopPropagation(); previewBgm('corporate')" class="text-[8px] opacity-60 hover:opacity-100 hover:text-brand-400">▶</span>
+              </button>
+              <button
+                type="button"
+                id="bgm-btn-calm"
+                onclick="selectBgm('calm')"
+                class="py-1 px-0.5 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 font-semibold transition cursor-pointer text-center truncate flex items-center justify-center gap-0.5"
+                title="Calmo / Relax (Pad suave)"
+              >
+                <span>Calmo</span>
+                <span onclick="event.stopPropagation(); previewBgm('calm')" class="text-[8px] opacity-60 hover:opacity-100 hover:text-brand-400">▶</span>
+              </button>
+              <button
+                type="button"
+                id="bgm-btn-cinematic"
+                onclick="selectBgm('cinematic')"
+                class="py-1 px-0.5 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 font-semibold transition cursor-pointer text-center truncate flex items-center justify-center gap-0.5"
+                title="Dark / Suspense (Harmonia dramática)"
+              >
+                <span>Dark</span>
+                <span onclick="event.stopPropagation(); previewBgm('cinematic')" class="text-[8px] opacity-60 hover:opacity-100 hover:text-brand-400">▶</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Card 2: Áudio Pronto para Reprodução & Download (Altura Fixa Compacta: 170px) -->
@@ -485,7 +560,7 @@
             <p class="text-[10px] text-zinc-500 mt-0.5">O player com waveform e download surgirá aqui</p>
           </div>
 
-          <!-- Player ativo com Download nos 2 formatos: WAV Master ou MP3 Leve -->
+          <!-- Player ativo com Download nos 2 formatos: WAV Master ou MP3 Leve + Compartilhamento Rápido -->
           <div id="player-active" class="flex-1 flex flex-col justify-between hidden my-0.5">
             
             <!-- File Info Header -->
@@ -504,8 +579,8 @@
               <div id="waveform" class="w-full"></div>
             </div>
 
-            <!-- Control Buttons: Play + Baixar WAV + Baixar MP3 -->
-            <div class="flex items-center gap-2 pt-0.5">
+            <!-- Control Buttons: Play + Baixar WAV + Baixar MP3 + Compartilhar -->
+            <div class="flex items-center gap-1.5 pt-0.5">
               <button
                 id="btn-play-pause"
                 onclick="togglePlay()"
@@ -520,11 +595,11 @@
                 id="btn-download-wav"
                 href="#"
                 download
-                class="flex-1 py-1 px-2 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 hover:from-brand-400 hover:to-amber-400 text-black font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 shadow-lg shadow-brand-500/20 transition cursor-pointer"
+                class="flex-1 py-1 px-2 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 hover:from-brand-400 hover:to-amber-400 text-black font-black text-[10px] sm:text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 shadow-lg shadow-brand-500/20 transition cursor-pointer truncate"
                 title="Baixar em áudio sem compressão (Alta Fidelidade)"
               >
                 <i data-lucide="disc" class="w-3 h-3 stroke-[2.5]"></i>
-                <span>WAV Master</span>
+                <span>WAV</span>
               </a>
 
               <!-- Botão Baixar MP3 Leve -->
@@ -532,12 +607,24 @@
                 id="btn-download-mp3"
                 href="#"
                 download
-                class="flex-1 py-1 px-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 border border-zinc-700 hover:border-brand-500 transition cursor-pointer"
+                class="flex-1 py-1 px-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-[10px] sm:text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 border border-zinc-700 hover:border-brand-500 transition cursor-pointer truncate"
                 title="Baixar em formato comprimido para web e redes sociais"
               >
                 <i data-lucide="file-audio" class="w-3 h-3 text-brand-400"></i>
-                <span>MP3 Leve</span>
+                <span>MP3</span>
               </a>
+
+              <!-- Botão Compartilhar Rápido -->
+              <button
+                type="button"
+                id="btn-share-active"
+                onclick="openShareActiveAudio()"
+                class="py-1 px-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-brand-400 font-bold text-[10px] sm:text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 border border-brand-500/30 hover:border-brand-500 transition cursor-pointer shrink-0"
+                title="Compartilhar Áudio (WhatsApp, Link Direto ou Redes)"
+              >
+                <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+                <span class="hidden sm:inline">Compartilhar</span>
+              </button>
             </div>
 
           </div>
@@ -824,52 +911,131 @@
 
       </div>
 
-      <!-- PIX Payment Screen (Simulated Webhook Confirmation) -->
+      <!-- PIX Payment Screen (Mercado Pago Gateway Integrado com Polling em Tempo Real) -->
       <div id="pix-payment-box" class="bg-zinc-950 p-4 rounded-xl border border-zinc-800 space-y-3 text-center">
-        <div class="flex items-center justify-between text-xs px-2">
-          <span class="text-zinc-400">Pacote Selecionado: <strong id="pix-package-name" class="text-white">Criador Dark</strong></span>
-          <span class="text-zinc-400">Total a Pagar: <strong id="pix-package-price" class="text-brand-400 font-mono text-sm">R$ 27,90</strong></span>
+        <div class="flex items-center justify-between text-xs px-2 border-b border-zinc-800/80 pb-2">
+          <span class="text-zinc-400">Pacote: <strong id="pix-package-name" class="text-white">Criador Dark</strong></span>
+          <span class="text-zinc-400">Total: <strong id="pix-package-price" class="text-brand-400 font-mono text-sm">R$ 27,90</strong></span>
         </div>
         
-        <!-- QR Code Display -->
-        <div class="flex flex-col items-center justify-center p-3 bg-white rounded-xl inline-block mx-auto">
-          <!-- Real SVG QR code placeholder -->
-          <svg class="w-32 h-32" viewBox="0 0 100 100">
-            <rect width="100" height="100" fill="#fff" />
-            <path d="M10,10 h30 v30 h-30 z M15,15 v20 h20 v-20 z M22,22 h6 v6 h-6 z" fill="#000" />
-            <path d="M60,10 h30 v30 h-30 z M65,15 v20 h20 v-20 z M72,22 h6 v6 h-6 z" fill="#000" />
-            <path d="M10,60 h30 v30 h-30 z M15,65 v20 h20 v-20 z M22,72 h6 v6 h-6 z" fill="#000" />
-            <path d="M45,15 h10 v10 h-10 z M45,35 h10 v10 h-10 z M60,60 h10 v10 h-10 z M75,75 h15 v15 h-15 z" fill="#000" />
-          </svg>
+        <!-- Dynamic QR Code Display -->
+        <div id="pix-qr-container" class="flex flex-col items-center justify-center p-3 bg-white rounded-xl inline-block mx-auto min-w-[140px] min-h-[140px] relative">
+          <img id="pix-qr-img" src="" alt="QR Code PIX" class="w-32 h-32 mx-auto rounded object-contain hidden" />
+          <div id="pix-qr-loading" class="w-32 h-32 flex flex-col items-center justify-center text-zinc-600 gap-1.5">
+            <span class="animate-spin text-xl">⏳</span>
+            <span class="text-[10px] font-bold">Gerando PIX...</span>
+          </div>
         </div>
 
-        <p class="text-[11px] text-zinc-400">Escaneie o QR Code no app do seu banco ou use a chave Copia e Cola:</p>
+        <!-- Status de Polling em Tempo Real -->
+        <div id="pix-status-box" class="flex items-center justify-center gap-2 text-xs py-1">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+          <span id="pix-status-text" class="text-amber-400 text-[11px] font-medium">Aguardando confirmação do banco...</span>
+        </div>
+
+        <p class="text-[11px] text-zinc-400">Escaneie o QR Code no app do seu banco ou copie o código:</p>
         
         <div class="flex items-center gap-2 max-w-md mx-auto">
           <input
             id="pix-copy-input"
             type="text"
             readonly
-            value="00020126580014br.gov.bcb.pix0136clonavoz-recarga-pix-992384729105204000053039865802BR"
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-[11px] font-mono text-zinc-300 focus:outline-none"
+            value=""
+            placeholder="Gerando código Copia e Cola..."
+            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-[11px] font-mono text-zinc-300 focus:outline-none truncate"
           >
           <button
             onclick="copyPixKey()"
-            class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold transition shrink-0"
+            class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold transition shrink-0 cursor-pointer"
           >
             Copiar
           </button>
         </div>
 
-        <!-- Simulate Payment Confirmation -->
-        <button
-          onclick="simulatePixPayment()"
-          class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider transition cursor-pointer mt-2"
-        >
-          ✅ Simular Confirmação do PIX (Liberar Créditos)
+        <!-- Botão de Simulação Imediata (Ambiente de Teste) -->
+        <div id="pix-sim-container" class="pt-1">
+          <button
+            id="pix-btn-simulate"
+            onclick="simulateApproveCurrentPix()"
+            class="w-full py-2 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+            <span>Simular Aprovação Imediata (Ambiente de Testes)</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL DE COMPARTILHAMENTO RÁPIDO (QUICK SHARE) -->
+  <div id="share-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="panel-glass border border-brand-500/30 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+            <i data-lucide="share-2" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-white uppercase tracking-wider">Compartilhar Áudio</h3>
+            <p id="share-modal-title" class="text-xs text-zinc-400 truncate max-w-[240px]">audio_output.mp3</p>
+          </div>
+        </div>
+        <button onclick="closeShareModal()" class="text-zinc-400 hover:text-white transition p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
+      <!-- Opções Rápidas de Compartilhamento -->
+      <div class="space-y-2.5 text-xs">
+        <!-- WhatsApp -->
+        <a
+          id="share-whatsapp-btn"
+          href="#"
+          target="_blank"
+          class="w-full py-2.5 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center justify-between transition cursor-pointer shadow-lg shadow-emerald-600/20"
+        >
+          <div class="flex items-center gap-2">
+            <i data-lucide="message-circle" class="w-4 h-4"></i>
+            <span>Enviar no WhatsApp</span>
+          </div>
+          <i data-lucide="arrow-right" class="w-3.5 h-3.5 opacity-80"></i>
+        </a>
+
+        <!-- Compartilhamento Nativo do Sistema (Mobile / Web Share API) -->
+        <button
+          id="share-native-btn"
+          type="button"
+          onclick="triggerNativeShare()"
+          class="w-full py-2.5 px-3.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-black font-extrabold flex items-center justify-between transition cursor-pointer shadow-lg shadow-brand-500/20"
+        >
+          <div class="flex items-center gap-2">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span>Compartilhar nas Redes (Instagram, Telegram, etc.)</span>
+          </div>
+          <i data-lucide="smartphone" class="w-3.5 h-3.5 opacity-80"></i>
+        </button>
+
+        <!-- Copiar Link Direto -->
+        <div class="pt-1.5 space-y-1">
+          <label class="block text-[11px] font-bold text-zinc-400">Link Direto do Áudio:</label>
+          <div class="flex items-center gap-1.5">
+            <input
+              id="share-url-input"
+              type="text"
+              readonly
+              class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-[11px] font-mono text-zinc-300 focus:outline-none"
+            />
+            <button
+              type="button"
+              onclick="copyShareUrl()"
+              class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold transition shrink-0 cursor-pointer"
+            >
+              Copiar
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1222,6 +1388,16 @@
     let modalSelectedGender = 'Feminina';
     let modalSelectedFile = null;
     let selectedPkg = { id: 'criador', price: '27,90', credits: 12 };
+
+    // BGM & Gateway PIX & Share State
+    let selectedBgm = 'none';
+    let selectedBgmVolume = 0.15;
+    let bgmAudioPreview = new Audio();
+    let currentPixPaymentId = null;
+    let pixPollingTimer = null;
+    let currentAudioTitle = '';
+    let currentAudioMp3 = '';
+    let currentAudioWav = '';
 
     const sampleTexts = {
       welcome: "Olá! Seja muito bem-vindo ao Clonavoz. Este áudio foi gerado com rede neural local, 100% no seu computador e com zero latência de servidores.",
@@ -2068,43 +2244,58 @@
       }
     }
 
-    // Modals
+    // Modals & PIX Gateway Integrado (Mercado Pago / Simulação)
     function openRechargeModal() {
+      if (supabaseClient && !currentSession) {
+        showToast('Faça login ou crie sua conta para adquirir créditos!', 'info');
+        openAuthModal('signup');
+        return;
+      }
       document.getElementById('recharge-modal').classList.remove('hidden');
       lucide.createIcons();
+      generatePixPayment();
     }
 
     function closeRechargeModal() {
       document.getElementById('recharge-modal').classList.add('hidden');
+      if (pixPollingTimer) {
+        clearInterval(pixPollingTimer);
+        pixPollingTimer = null;
+      }
     }
 
     function selectPackage(id, price, credits) {
       selectedPkg = { id, price, credits };
       document.getElementById('pix-package-name').innerText = id.toUpperCase();
       document.getElementById('pix-package-price').innerText = `R$ ${price}`;
-      showToast(`Pacote selecionado: ${credits} áudios por R$ ${price}`, 'info');
-    }
-
-    function copyPixKey() {
-      const input = document.getElementById('pix-copy-input');
-      input.select();
-      navigator.clipboard.writeText(input.value);
-      showToast('Código PIX Copia e Cola copiado com sucesso!', 'success');
-    }
-
-    async function simulatePixPayment() {
-      if (supabaseClient && !currentSession) {
-        showToast('Faça login ou crie sua conta para receber seus créditos!', 'info');
-        closeRechargeModal();
-        openAuthModal('signup');
-        return;
+      
+      // Destaca o card selecionado visualmente
+      document.querySelectorAll('.package-card').forEach(c => {
+        c.classList.remove('border-brand-500', 'bg-brand-500/10', 'border-2');
+        c.classList.add('border-zinc-800', 'bg-zinc-900/50');
+      });
+      if (event && event.currentTarget) {
+        event.currentTarget.classList.add('border-brand-500', 'bg-brand-500/10', 'border-2');
+        event.currentTarget.classList.remove('border-zinc-800', 'bg-zinc-900/50');
       }
 
-      const btn = document.querySelector('#recharge-modal button[onclick="simulatePixPayment()"]');
-      const origText = btn ? btn.innerHTML : '';
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="animate-spin inline-block">⏳</span> Confirmando no Banco...';
+      generatePixPayment();
+    }
+
+    async function generatePixPayment() {
+      const qrImg = document.getElementById('pix-qr-img');
+      const qrLoading = document.getElementById('pix-qr-loading');
+      const copyInput = document.getElementById('pix-copy-input');
+      const statusText = document.getElementById('pix-status-text');
+
+      qrImg.classList.add('hidden');
+      qrLoading.classList.remove('hidden');
+      copyInput.value = '';
+      statusText.innerText = 'Gerando cobrança PIX no banco...';
+
+      if (pixPollingTimer) {
+        clearInterval(pixPollingTimer);
+        pixPollingTimer = null;
       }
 
       try {
@@ -2113,7 +2304,7 @@
           headers['Authorization'] = `Bearer ${currentSession.access_token}`;
         }
 
-        const res = await fetch(`${API_BASE}/api/recharge/simulate`, {
+        const res = await fetch(`${API_BASE}/api/pix/create`, {
           method: 'POST',
           headers: headers,
           body: JSON.stringify({
@@ -2124,20 +2315,205 @@
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || 'Erro ao processar recarga no servidor');
+        if (!res.ok) throw new Error(data.detail || 'Erro ao gerar PIX');
+
+        currentPixPaymentId = data.payment_id;
+
+        // Renderiza imagem do QR Code
+        if (data.qr_code_base64) {
+          qrImg.src = `data:image/png;base64,${data.qr_code_base64}`;
+        } else {
+          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(data.qr_code)}`;
+        }
+        qrImg.classList.remove('hidden');
+        qrLoading.classList.add('hidden');
+
+        copyInput.value = data.qr_code || '';
+        statusText.innerText = 'Aguardando confirmação do pagamento...';
+
+        startPixPolling(data.payment_id);
+      } catch (err) {
+        qrLoading.innerHTML = `<span class="text-xs text-red-400 font-bold p-2">Erro ao gerar PIX: ${err.message}</span>`;
+        statusText.innerText = 'Falha de conexão com o gateway.';
+      }
+    }
+
+    function startPixPolling(paymentId) {
+      if (pixPollingTimer) clearInterval(pixPollingTimer);
+
+      pixPollingTimer = setInterval(async () => {
+        try {
+          const headers = {};
+          if (currentSession && currentSession.access_token) {
+            headers['Authorization'] = `Bearer ${currentSession.access_token}`;
+          }
+          const res = await fetch(`${API_BASE}/api/pix/status/${paymentId}`, { headers });
+          if (!res.ok) return;
+
+          const data = await res.json();
+          if (data.status === 'approved') {
+            clearInterval(pixPollingTimer);
+            pixPollingTimer = null;
+            if (typeof data.credits !== 'undefined') {
+              userCredits = data.credits;
+            } else {
+              userCredits += (data.added || selectedPkg.credits);
+            }
+            updateCreditUI();
+            closeRechargeModal();
+            showToast(`🎉 Pagamento PIX aprovado com sucesso! +${data.added || selectedPkg.credits} créditos liberados!`, 'success');
+          }
+        } catch (e) {
+          console.warn('[PIX Polling Error]', e);
+        }
+      }, 3000);
+    }
+
+    function copyPixKey() {
+      const input = document.getElementById('pix-copy-input');
+      if (!input.value) return;
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      showToast('Código PIX Copia e Cola copiado com sucesso!', 'success');
+    }
+
+    async function simulateApproveCurrentPix() {
+      if (!currentPixPaymentId) {
+        showToast('Nenhum pagamento ativo para simular.', 'error');
+        return;
+      }
+      const btn = document.getElementById('pix-btn-simulate');
+      const origText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="animate-spin inline-block">⏳</span> Confirmando com o Banco...';
+      }
+
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (currentSession && currentSession.access_token) {
+          headers['Authorization'] = `Bearer ${currentSession.access_token}`;
+        }
+
+        const res = await fetch(`${API_BASE}/api/pix/simulate-approve/${currentPixPaymentId}`, {
+          method: 'POST',
+          headers: headers
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Erro ao simular aprovação');
+
+        if (pixPollingTimer) {
+          clearInterval(pixPollingTimer);
+          pixPollingTimer = null;
+        }
 
         userCredits = data.credits;
         updateCreditUI();
         closeRechargeModal();
-        showToast(`🎉 Pagamento confirmado! +${data.added || selectedPkg.credits} áudios creditados com sucesso na sua conta! Saldo: ${userCredits}`, 'success');
+        showToast(`🎉 Pagamento aprovado com sucesso! +${data.added || selectedPkg.credits} créditos creditados!`, 'success');
       } catch (err) {
-        showToast(`Erro na recarga: ${err.message}`, 'error');
+        showToast(`Erro na aprovação: ${err.message}`, 'error');
       } finally {
         if (btn) {
           btn.disabled = false;
-          btn.innerHTML = origText || '⚡ Simular Confirmação do PIX (Liberar Créditos)';
+          btn.innerHTML = origText;
         }
       }
+    }
+
+    async function simulatePixPayment() {
+      return simulateApproveCurrentPix();
+    }
+
+    // Trilha Sonora de Fundo (BGM) Handlers
+    function selectBgm(key) {
+      selectedBgm = key;
+      const keys = ['none', 'inspire', 'corporate', 'calm', 'cinematic'];
+      keys.forEach(k => {
+        const btn = document.getElementById(`bgm-btn-${k}`);
+        if (!btn) return;
+        if (k === key) {
+          btn.className = 'py-1 px-1 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 font-bold transition cursor-pointer text-center truncate shadow-sm';
+        } else {
+          btn.className = 'py-1 px-1 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 font-semibold transition cursor-pointer text-center truncate';
+        }
+      });
+      const names = { none: 'Mudo', inspire: 'VSL / Inspire', corporate: 'Corp Tech', calm: 'Calmo / Relax', cinematic: 'Dark Suspense' };
+      showToast(`Trilha selecionada: ${names[key] || key}`, 'info');
+    }
+
+    function previewBgm(key) {
+      if (bgmAudioPreview && !bgmAudioPreview.paused) {
+        bgmAudioPreview.pause();
+        return;
+      }
+      bgmAudioPreview.src = `/static/bgm/bgm_${key}.mp3`;
+      bgmAudioPreview.volume = selectedBgmVolume;
+      bgmAudioPreview.play().catch(() => {});
+      showToast(`Ouvindo prévia da trilha...`, 'info');
+    }
+
+    function updateBgmVolume(val) {
+      selectedBgmVolume = parseFloat(val) / 100;
+      const label = document.getElementById('bgm-volume-val');
+      if (label) label.innerText = `${val}% vol`;
+      if (bgmAudioPreview && !bgmAudioPreview.paused) {
+        bgmAudioPreview.volume = selectedBgmVolume;
+      }
+    }
+
+    // Quick Share Handlers
+    function openShareActiveAudio() {
+      if (!currentAudioMp3 && !currentAudioWav) {
+        showToast('Gere ou selecione um áudio primeiro para compartilhar.', 'info');
+        return;
+      }
+      openShareModal(currentAudioTitle || 'audio_clonavoz.mp3', currentAudioMp3, currentAudioWav);
+    }
+
+    function openShareModal(title, mp3Url, wavUrl) {
+      const shareUrl = mp3Url || wavUrl;
+      const fullUrl = window.location.origin + (shareUrl.startsWith('/') ? shareUrl : '/' + shareUrl);
+      
+      document.getElementById('share-modal-title').innerText = title;
+      document.getElementById('share-url-input').value = fullUrl;
+
+      const waText = `🎧 Ouça este áudio criado com voz neural ultra-realista no Clonavoz Studio:\n${fullUrl}`;
+      document.getElementById('share-whatsapp-btn').href = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+
+      document.getElementById('share-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeShareModal() {
+      document.getElementById('share-modal').classList.add('hidden');
+    }
+
+    async function triggerNativeShare() {
+      const shareUrl = document.getElementById('share-url-input').value;
+      const title = document.getElementById('share-modal-title').innerText;
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `Clonavoz Studio - ${title}`,
+            text: 'Ouça esta narração neural ultra-realista gerada com IA:',
+            url: shareUrl
+          });
+          showToast('Compartilhado com sucesso!', 'success');
+        } catch (e) {
+          if (e.name !== 'AbortError') copyShareUrl();
+        }
+      } else {
+        copyShareUrl();
+      }
+    }
+
+    function copyShareUrl() {
+      const input = document.getElementById('share-url-input');
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      showToast('Link direto copiado para a área de transferência!', 'success');
     }
 
     function openUploadModal() {
@@ -2503,7 +2879,9 @@
             text: text,
             voice: selectedVoiceKey,
             speed: speed,
-            threads: threads
+            threads: threads,
+            bgm: selectedBgm,
+            bgm_volume: selectedBgmVolume
           })
         });
 
@@ -2575,6 +2953,11 @@
       const wavName = data.filename || 'audio.wav';
       const mp3Name = wavName.replace(/\.wav$/i, '.mp3');
 
+      // Guarda estado para compartilhamento rápido
+      currentAudioTitle = data.filename || 'audio_clonavoz.mp3';
+      currentAudioWav = wavUrl;
+      currentAudioMp3 = mp3Url;
+
       const btnWav = document.getElementById('btn-download-wav');
       btnWav.href = wavUrl;
       btnWav.download = wavName;
@@ -2641,6 +3024,9 @@
               <a href="${itemMp3}" download="${item.filename.replace(/\.wav$/i, '.mp3')}" class="px-2 py-1 rounded-md bg-brand-500/20 hover:bg-brand-500/30 text-brand-400 text-[10px] font-bold" title="Baixar MP3 Leve">
                 MP3
               </a>
+              <button onclick="openShareModal('${item.title || item.filename}', '${itemMp3}', '${itemWav}')" class="p-1.5 rounded-lg bg-zinc-800 hover:bg-brand-500/20 text-zinc-300 hover:text-brand-400 cursor-pointer" title="Compartilhar Áudio">
+                <i data-lucide="share-2" class="w-3 h-3"></i>
+              </button>
               <button onclick="deleteHistoryItem('${item.id || item.filename}')" class="p-1.5 rounded-lg bg-red-950/40 text-red-400 hover:bg-red-900/40 cursor-pointer" title="Excluir">
                 <i data-lucide="trash-2" class="w-3 h-3"></i>
               </button>
@@ -2654,6 +3040,7 @@
         console.error('History error', err);
       }
     }
+
 
     function playHistoryItem(url, filename) {
       document.getElementById('player-placeholder').classList.add('hidden');
@@ -2677,6 +3064,11 @@
       const btnMp3 = document.getElementById('btn-download-mp3');
       btnMp3.href = mp3Url;
       btnMp3.download = mp3Name;
+
+      // Guarda estado para compartilhamento rápido
+      currentAudioTitle = filename || 'audio_clonavoz.mp3';
+      currentAudioWav = wavUrl;
+      currentAudioMp3 = mp3Url;
 
       initWaveSurfer();
       wavesurfer.load(wavUrl);
