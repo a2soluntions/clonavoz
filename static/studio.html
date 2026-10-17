@@ -952,8 +952,8 @@
           </button>
         </div>
 
-        <!-- Botão de Simulação Imediata (Ambiente de Teste) -->
-        <div id="pix-sim-container" class="pt-1">
+        <!-- Botão de Simulação Imediata (Apenas exibido se a API estiver em modo simulado) -->
+        <div id="pix-sim-container" class="pt-1 hidden">
           <button
             id="pix-btn-simulate"
             onclick="simulateApproveCurrentPix()"
@@ -2330,6 +2330,15 @@
 
         copyInput.value = data.qr_code || '';
         statusText.innerText = 'Aguardando confirmação do pagamento...';
+
+        const simContainer = document.getElementById('pix-sim-container');
+        if (simContainer) {
+          if (data.is_simulated) {
+            simContainer.classList.remove('hidden');
+          } else {
+            simContainer.classList.add('hidden');
+          }
+        }
 
         startPixPolling(data.payment_id);
       } catch (err) {
