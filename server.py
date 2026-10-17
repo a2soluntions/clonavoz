@@ -86,7 +86,7 @@ OUTPUTS_DIR = tts_engine.OUTPUTS_DIR
 CUSTOM_VOICES_DIR = tts_engine.CUSTOM_VOICES_DIR
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-app.mount("/outputs", StaticFiles(directory=OUTPUTS_DIR), name="outputs")
+# /outputs/{filename} é servido dinamicamente por @app.get("/outputs/{filename}") para garantir conversão WAV/MP3 on-the-fly
 
 bgm_dir = os.path.join(STATIC_DIR, "bgm")
 if os.path.exists(bgm_dir):

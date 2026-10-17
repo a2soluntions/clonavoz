@@ -1034,6 +1034,10 @@
               Copiar
             </button>
           </div>
+          <p class="text-[10px] text-zinc-500 flex items-center gap-1 mt-1">
+            <i data-lucide="info" class="w-3 h-3 text-brand-400 shrink-0"></i>
+            <span>Quem abrir este link poderá ouvir ou baixar o áudio gerado diretamente, sem precisar de conta.</span>
+          </p>
         </div>
       </div>
     </div>
@@ -2484,8 +2488,16 @@
     }
 
     function openShareModal(title, mp3Url, wavUrl) {
-      const shareUrl = mp3Url || wavUrl;
-      const fullUrl = window.location.origin + (shareUrl.startsWith('/') ? shareUrl : '/' + shareUrl);
+      const shareUrl = mp3Url || wavUrl || '';
+      let fullUrl = '';
+      if (shareUrl.startsWith('http://') || shareUrl.startsWith('https://')) {
+        fullUrl = shareUrl;
+      } else if (shareUrl.startsWith('/demos/') || shareUrl.startsWith('demos/') || shareUrl.startsWith('/bgm/') || shareUrl.startsWith('bgm/')) {
+        fullUrl = window.location.origin + (shareUrl.startsWith('/') ? shareUrl : '/' + shareUrl);
+      } else {
+        const base = API_BASE || window.location.origin;
+        fullUrl = `${base}${shareUrl.startsWith('/') ? '' : '/'}${shareUrl}`;
+      }
       
       document.getElementById('share-modal-title').innerText = title;
       document.getElementById('share-url-input').value = fullUrl;
