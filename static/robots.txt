@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /studio
+Allow: /player
+Allow: /demos/
+Allow: /bgm/
+
+Sitemap: https://www.clonavoz.com.br/sitemap.xml
