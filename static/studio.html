@@ -120,6 +120,14 @@
       scrollbar-width: thin;
       scrollbar-color: #27272A rgba(18, 18, 22, 0.5);
     }
+    @keyframes soundwave-pulse {
+      0%, 100% { height: 4px; opacity: 0.3; }
+      50% { height: 28px; opacity: 1; }
+    }
+    .freq-bar {
+      animation: soundwave-pulse 0.9s ease-in-out infinite;
+      transform-origin: bottom;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col font-sans selection:bg-brand-500 selection:text-white">
@@ -558,6 +566,57 @@
             </div>
             <p class="text-[11px] text-zinc-300 font-semibold">Aguardando geração de áudio</p>
             <p class="text-[10px] text-zinc-500 mt-0.5">O player com waveform e download surgirá aqui</p>
+          </div>
+
+          <!-- Card de Evolução da Síntese em Tempo Real (Mostra frequência animada e progresso) -->
+          <div id="player-generating" class="flex-1 flex flex-col justify-between hidden my-0.5 animate-fadeIn">
+            <!-- Header da Síntese -->
+            <div class="flex items-center justify-between text-xs">
+              <div class="truncate mr-2 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-brand-500 animate-ping shrink-0"></span>
+                <span id="synth-voice-name" class="font-bold text-white text-[11px] truncate">Sintetizando...</span>
+              </div>
+              <span id="synth-elapsed-badge" class="px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 font-mono text-[10px] font-bold shrink-0">
+                0.0s
+              </span>
+            </div>
+
+            <!-- Frequência Sonora Animada (Espectro em Tempo Real) -->
+            <div class="bg-zinc-950/90 p-1.5 rounded-xl border border-brand-500/30 my-0.5 flex flex-col justify-center items-center overflow-hidden shadow-inner">
+              <div class="flex items-end justify-center gap-1 h-7 w-full px-2">
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.1s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.4s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.2s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.6s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.3s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.7s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.15s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.5s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.25s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.8s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.35s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.65s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.1s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.45s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.2s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.75s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.3s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.55s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.15s;"></div>
+                <div class="freq-bar w-1 rounded-full bg-gradient-to-t from-brand-600 to-amber-400" style="animation-delay: 0.4s;"></div>
+              </div>
+            </div>
+
+            <!-- Barra de Progresso e Status -->
+            <div class="space-y-1 pt-0.5">
+              <div class="w-full bg-zinc-900 rounded-full h-1.5 overflow-hidden border border-zinc-800">
+                <div id="synth-progress-bar" class="h-full bg-gradient-to-r from-brand-500 via-amber-400 to-brand-500 rounded-full w-1/4 transition-all duration-300"></div>
+              </div>
+              <div class="flex items-center justify-between text-[10px] text-zinc-400">
+                <span id="synth-status-step" class="truncate font-medium text-zinc-300">Processando espectrograma neural...</span>
+                <span id="synth-words-badge" class="font-mono text-zinc-400 shrink-0 ml-1">0 palavras</span>
+              </div>
+            </div>
           </div>
 
           <!-- Player ativo com Download nos 2 formatos: WAV Master ou MP3 Leve + Compartilhamento Rápido -->
@@ -2921,6 +2980,42 @@
       const btnText = document.getElementById('btn-text');
       btn.disabled = true;
       btn.classList.add('opacity-85');
+      btnText.innerHTML = '<span class="animate-spin inline-block mr-1.5">⏳</span> SINTETIZANDO ÁUDIO...';
+
+      // 1. Identifica nome da voz selecionada
+      const vObj = voices.find(item => item.key === selectedVoiceKey);
+      const vLabel = vObj ? getCleanVoiceName(vObj) : selectedVoiceKey;
+
+      // 2. Ativa o display de evolução dentro do card de Áudio Sintetizado
+      const placeholder = document.getElementById('player-placeholder');
+      const activePlayer = document.getElementById('player-active');
+      const generatingPlayer = document.getElementById('player-generating');
+      const statusBadge = document.getElementById('player-status-badge');
+
+      if (placeholder) {
+        placeholder.classList.add('hidden');
+        placeholder.classList.remove('flex');
+      }
+      if (activePlayer) {
+        activePlayer.classList.add('hidden');
+        activePlayer.classList.remove('flex');
+      }
+      if (generatingPlayer) {
+        generatingPlayer.classList.remove('hidden');
+        generatingPlayer.classList.add('flex');
+      }
+
+      if (statusBadge) {
+        statusBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-brand-500 animate-ping inline-block mr-1"></span>Sintetizando';
+        statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 font-bold border border-brand-500/30 flex items-center';
+      }
+
+      const voiceNameEl = document.getElementById('synth-voice-name');
+      if (voiceNameEl) voiceNameEl.innerText = `Voz: ${vLabel}`;
+      const wordsBadgeEl = document.getElementById('synth-words-badge');
+      if (wordsBadgeEl) wordsBadgeEl.innerText = `${wordCount} palavras`;
+      const elapsedBadgeEl = document.getElementById('synth-elapsed-badge');
+      if (elapsedBadgeEl) elapsedBadgeEl.innerText = '0.0s';
 
       // Pré-ativa o contexto de áudio durante o clique do usuário para autorizar o autoplay ao concluir a IA
       try {
@@ -2932,12 +3027,33 @@
       } catch (_) {}
 
       let elapsedSeconds = 0;
-      btnText.innerText = `SINTETIZANDO ${wordCount} PALAVRAS (0s)...`;
+      const statusSteps = [
+        'Conectando ao motor neural...',
+        'Calculando espectrograma e prosódia...',
+        'Sintetizando fonemas e respiração...',
+        'Renderizando ondas sonoras neurais...',
+        'Masterizando em alta definição...'
+      ];
 
       const synthTimer = setInterval(() => {
-        elapsedSeconds += 1;
-        btnText.innerText = `SINTETIZANDO ${wordCount} PALAVRAS (${elapsedSeconds}s)...`;
-      }, 1000);
+        elapsedSeconds += 0.2;
+        const elapsedFormatted = elapsedSeconds.toFixed(1) + 's';
+        
+        const badge = document.getElementById('synth-elapsed-badge');
+        if (badge) badge.innerText = elapsedFormatted;
+
+        const progressBar = document.getElementById('synth-progress-bar');
+        if (progressBar) {
+          const pct = Math.min(18 + (elapsedSeconds * 10), 94);
+          progressBar.style.width = `${pct}%`;
+        }
+
+        const stepEl = document.getElementById('synth-status-step');
+        if (stepEl) {
+          const stepIdx = Math.min(Math.floor(elapsedSeconds / 1.5), statusSteps.length - 1);
+          stepEl.innerText = statusSteps[stepIdx];
+        }
+      }, 200);
 
       try {
         const headers = { 'Content-Type': 'application/json' };
@@ -2997,6 +3113,18 @@
         displayAudioResult(data);
         loadHistory();
       } catch (err) {
+        if (generatingPlayer) {
+          generatingPlayer.classList.add('hidden');
+          generatingPlayer.classList.remove('flex');
+        }
+        if (placeholder) {
+          placeholder.classList.remove('hidden');
+          placeholder.classList.add('flex');
+        }
+        if (statusBadge) {
+          statusBadge.innerText = 'Aguardando';
+          statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-bold border border-zinc-700';
+        }
         showToast(`Erro: ${err.message}`, 'error');
       } finally {
         clearInterval(synthTimer);
@@ -3074,10 +3202,19 @@
     function displayAudioResult(data) {
       const placeholder = document.getElementById('player-placeholder');
       const activePlayer = document.getElementById('player-active');
-      placeholder.classList.add('hidden');
-      placeholder.classList.remove('flex');
-      activePlayer.classList.remove('hidden');
-      activePlayer.classList.add('flex');
+      const generatingPlayer = document.getElementById('player-generating');
+      if (placeholder) {
+        placeholder.classList.add('hidden');
+        placeholder.classList.remove('flex');
+      }
+      if (generatingPlayer) {
+        generatingPlayer.classList.add('hidden');
+        generatingPlayer.classList.remove('flex');
+      }
+      if (activePlayer) {
+        activePlayer.classList.remove('hidden');
+        activePlayer.classList.add('flex');
+      }
       
       const statusBadge = document.getElementById('player-status-badge');
       statusBadge.innerText = '⏳ Carregando...';
@@ -3213,8 +3350,15 @@
 
 
     function playHistoryItem(url, filename) {
-      document.getElementById('player-placeholder').classList.add('hidden');
-      document.getElementById('player-active').classList.remove('hidden');
+      const placeholder = document.getElementById('player-placeholder');
+      const activePlayer = document.getElementById('player-active');
+      const generatingPlayer = document.getElementById('player-generating');
+      if (placeholder) placeholder.classList.add('hidden');
+      if (generatingPlayer) generatingPlayer.classList.add('hidden');
+      if (activePlayer) {
+        activePlayer.classList.remove('hidden');
+        activePlayer.classList.add('flex');
+      }
       
       const statusBadge = document.getElementById('player-status-badge');
       statusBadge.innerText = '▶️ Tocando';
