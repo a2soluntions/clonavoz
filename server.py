@@ -30,11 +30,11 @@ BGM_TRACKS = {
 
 # Vozes VIP da ElevenLabs mapeadas
 ELEVENLABS_VOICES = {
-    "el_rachel": {"voice_id": "pFZP5JQG7iQjIQuC4Bku", "label": "Rachel (Ultra-HD Narrativa)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2"},
-    "el_adam": {"voice_id": "pNInz6obpgDQGcFmaJgB", "label": "Adam (Ultra-HD Locutor VSL)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2"},
-    "el_sarah": {"voice_id": "EXAVITQu4vr4xnSDxMaL", "label": "Sarah (Ultra-HD Expressiva)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2"},
-    "el_charlie": {"voice_id": "IKne3meq5aSn9XLyUdCD", "label": "Charlie (Ultra-HD Jovem)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2"},
-    "el_george": {"voice_id": "JBFqnCBsd6RMkjVDRZzb", "label": "George (Ultra-HD Storyteller)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2"},
+    "el_rachel": {"voice_id": "pFZP5JQG7iQjIQuC4Bku", "label": "Rachel (Ultra-HD Narrativa)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "dii", "fallback_semitones": -0.6},
+    "el_adam": {"voice_id": "pNInz6obpgDQGcFmaJgB", "label": "Adam (Ultra-HD Locutor VSL)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "miro", "fallback_semitones": -0.8},
+    "el_sarah": {"voice_id": "EXAVITQu4vr4xnSDxMaL", "label": "Sarah (Ultra-HD Expressiva)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "dii", "fallback_semitones": 0.5},
+    "el_charlie": {"voice_id": "IKne3meq5aSn9XLyUdCD", "label": "Charlie (Ultra-HD Jovem)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "cadu", "fallback_semitones": 0.6},
+    "el_george": {"voice_id": "JBFqnCBsd6RMkjVDRZzb", "label": "George (Ultra-HD Storyteller)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "faber", "fallback_semitones": -1.0},
 }
 
 def synthesize_elevenlabs(voice_id: str, text: str, output_path: str):
@@ -56,7 +56,7 @@ def synthesize_elevenlabs(voice_id: str, text: str, output_path: str):
         }
     }
     req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=90) as resp:
         audio_content = resp.read()
     with open(output_path, "wb") as f:
         f.write(audio_content)
@@ -633,20 +633,30 @@ def get_sample_file(filename: str):
 
 
 def convert_wav_to_mp3(wav_path: str, mp3_path: str):
-    """Converte arquivo WAV para MP3 usando PyAV com qualidade de 192kbps."""
-    import av
-    inp = av.open(wav_path)
-    out = av.open(mp3_path, mode="w", format="mp3")
-    in_stream = inp.streams.audio[0]
-    out_stream = out.add_stream("mp3", rate=in_stream.rate)
-    out_stream.bit_rate = 192000
-    for frame in inp.decode(in_stream):
-        for packet in out_stream.encode(frame):
+    """Converte arquivo WAV para MP3 usando FFmpeg (ou PyAV fallback) com qualidade de 192kbps."""
+    try:
+        cmd = ["ffmpeg", "-y", "-i", wav_path, "-codec:a", "libmp3lame", "-b:a", "192k", mp3_path]
+        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if res.returncode == 0 and os.path.exists(mp3_path) and os.path.getsize(mp3_path) > 500:
+            return
+    except Exception as e:
+        print(f"[FFmpeg MP3 Error] {e}")
+    try:
+        import av
+        inp = av.open(wav_path)
+        out = av.open(mp3_path, mode="w", format="mp3")
+        in_stream = inp.streams.audio[0]
+        out_stream = out.add_stream("mp3", rate=in_stream.rate)
+        out_stream.bit_rate = 192000
+        for frame in inp.decode(in_stream):
+            for packet in out_stream.encode(frame):
+                out.mux(packet)
+        for packet in out_stream.encode():
             out.mux(packet)
-    for packet in out_stream.encode():
-        out.mux(packet)
-    inp.close()
-    out.close()
+        inp.close()
+        out.close()
+    except Exception as e:
+        print(f"[PyAV MP3 Fallback Error] {e}")
 
 
 def mix_audio_with_bgm(voice_wav_path: str, bgm_file_path: str, volume: float = 0.15) -> bool:
@@ -686,14 +696,16 @@ def synthesize(
     background_tasks: BackgroundTasks,
     authorization: Optional[str] = Header(None)
 ):
-    if not req.text.strip():
+    normalized_text = req.text.replace("\r\n", "\n").strip()
+    if not normalized_text:
         raise HTTPException(status_code=400, detail="Texto não pode estar vazio")
 
-    if len(req.text.strip()) > 3000:
+    if len(normalized_text) > 3500:
         raise HTTPException(
             status_code=400,
             detail="O texto ultrapassou o limite máximo de 3.000 caracteres por áudio.",
         )
+    req.text = normalized_text
 
     user = None
     profile = None
@@ -725,14 +737,28 @@ def synthesize(
             mp3_path = os.path.join(OUTPUTS_DIR, mp3_filename)
             wav_path = os.path.join(OUTPUTS_DIR, wav_filename)
 
-            synthesize_elevenlabs(voice_id, req.text, mp3_path)
-            
-            # Converte para WAV também para waveform visual
             try:
-                cmd = ["ffmpeg", "-y", "-i", mp3_path, "-f", "wav", wav_path]
-                subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-            except Exception:
-                pass
+                synthesize_elevenlabs(voice_id, req.text, mp3_path)
+                # Converte para WAV também para waveform visual
+                try:
+                    cmd = ["ffmpeg", "-y", "-i", mp3_path, "-f", "wav", wav_path]
+                    subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+                except Exception:
+                    pass
+            except Exception as el_err:
+                print(f"[ElevenLabs Quota/API Warning - Usando Motor Neural Local Garantido]: {el_err}")
+                fb_voice = el_voice.get("fallback_voice", "dii")
+                fb_semi = el_voice.get("fallback_semitones", 0.0)
+                fb_res = tts_engine.synthesize_text(
+                    text=req.text,
+                    voice_key=fb_voice,
+                    speed=req.speed,
+                    num_threads=req.threads,
+                )
+                os.replace(fb_res["file_path"], wav_path)
+                if abs(fb_semi) > 0.15:
+                    tts_engine.pitch_shift_ffmpeg(wav_path, fb_semi, fb_res.get("sample_rate", 22050))
+                convert_wav_to_mp3(wav_path, mp3_path)
 
             # Aplica Trilha Sonora de Fundo (BGM) se selecionada
             if req.bgm and req.bgm != "none" and req.bgm in BGM_TRACKS and os.path.exists(wav_path):
