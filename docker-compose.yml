@@ -6,6 +6,9 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      - ./server.py:/app/server.py
+      - ./tts_engine.py:/app/tts_engine.py
+      - ./static:/app/static
       - ./models:/app/models
       - ./custom_voices:/app/custom_voices
       - ./outputs:/app/outputs

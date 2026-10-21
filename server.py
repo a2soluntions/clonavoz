@@ -56,7 +56,7 @@ def synthesize_elevenlabs(voice_id: str, text: str, output_path: str):
         }
     }
     req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
-    with urllib.request.urlopen(req, timeout=90) as resp:
+    with urllib.request.urlopen(req, timeout=120) as resp:
         audio_content = resp.read()
     with open(output_path, "wb") as f:
         f.write(audio_content)
