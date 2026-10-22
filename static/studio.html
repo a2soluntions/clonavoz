@@ -403,6 +403,24 @@
             </div>
           </div>
 
+          <!-- Opção Salvar no Histórico da Nuvem / Apenas Baixar -->
+          <div class="flex items-center justify-between text-xs pt-1 px-0.5 shrink-0">
+            <label class="flex items-center gap-2 cursor-pointer select-none group" title="Marque para manter uma cópia salva na sua conta ou desmarque para apenas escutar e baixar agora sem ocupar espaço">
+              <input
+                type="checkbox"
+                id="toggle-save-history"
+                checked
+                onchange="onToggleSaveHistoryChange(this.checked)"
+                class="w-4 h-4 rounded bg-zinc-900 border-zinc-700 text-brand-500 focus:ring-brand-500 accent-brand-500 cursor-pointer"
+              />
+              <span class="text-zinc-300 text-[11px] sm:text-xs font-semibold group-hover:text-white transition flex items-center gap-1.5">
+                <i data-lucide="cloud-download" class="w-3.5 h-3.5 text-brand-400"></i>
+                <span>Salvar áudio no meu histórico</span>
+              </span>
+            </label>
+            <span id="save-history-hint" class="text-[10px] text-zinc-500 hidden sm:inline">Desmarque para apenas baixar</span>
+          </div>
+
           <!-- Master Action Button (Pílula Laranja Vibrante) -->
           <button
             id="btn-generate"
@@ -2998,6 +3016,9 @@
           headers['Authorization'] = `Bearer ${currentSession.access_token}`;
         }
 
+        const saveHistoryCheckbox = document.getElementById('toggle-save-history');
+        const shouldSaveHistory = saveHistoryCheckbox ? saveHistoryCheckbox.checked : true;
+
         const res = await fetch(`${API_BASE}/api/synthesize`, {
           method: 'POST',
           headers: headers,
@@ -3007,7 +3028,8 @@
             speed: speed,
             threads: threads,
             bgm: selectedBgm,
-            bgm_volume: selectedBgmVolume
+            bgm_volume: selectedBgmVolume,
+            save_history: shouldSaveHistory
           })
         });
 
@@ -3048,7 +3070,11 @@
 
         showToast(`🎉 Áudio de ${data.duration}s (~${estMinutes} min) gerado com sucesso em ${data.elapsed}s (${data.speed_factor}x tempo real)!`, 'success');
         displayAudioResult(data);
-        loadHistory();
+        if (data.saved_history !== false) {
+          loadHistory();
+        } else {
+          showToast('Áudio pronto para ouvir e baixar (não salvo no histórico).', 'info');
+        }
       } catch (err) {
         if (generatingPlayer) {
           generatingPlayer.classList.add('hidden');
@@ -3431,6 +3457,30 @@
     }
 
     // Init
+    function onToggleSaveHistoryChange(checked) {
+      try {
+        localStorage.setItem('clonavoz_save_history', checked ? 'true' : 'false');
+        const hint = document.getElementById('save-history-hint');
+        if (hint) {
+          hint.innerText = checked ? 'Salvo no histórico da conta' : 'Apenas ouvir/baixar (sem histórico)';
+          hint.className = checked ? 'text-[10px] text-brand-400 font-medium hidden sm:inline' : 'text-[10px] text-amber-400 font-medium hidden sm:inline';
+        }
+      } catch (_) {}
+    }
+
+    function initSaveHistoryPreference() {
+      try {
+        const savedPref = localStorage.getItem('clonavoz_save_history');
+        if (savedPref !== null) {
+          const chk = document.getElementById('toggle-save-history');
+          if (chk) {
+            chk.checked = (savedPref === 'true');
+            onToggleSaveHistoryChange(chk.checked);
+          }
+        }
+      } catch (_) {}
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
       initSupabaseAuth();
@@ -3439,6 +3489,7 @@
       loadHistory();
       setSample('welcome');
       checkCookieConsent();
+      initSaveHistoryPreference();
     });
   </script>
 </body>

@@ -156,11 +156,12 @@ def get_or_create_profile(user) -> dict:
 
 class SynthesizeRequest(BaseModel):
     text: str
-    voice: str = "dii"
+    voice: str = "sarah"
     speed: float = 1.0
     threads: int = 4
     bgm: Optional[str] = "none"
     bgm_volume: Optional[float] = 0.15
+    save_history: Optional[bool] = True
 
 
 class DownloadVoiceRequest(BaseModel):
@@ -818,22 +819,23 @@ def synthesize(
             except Exception as ex:
                 print(f"[Supabase Credit Update Error] {ex}")
 
-            try:
-                size_kb = round(os.path.getsize(wav_path) / 1024, 1) if os.path.exists(wav_path) else 0
-                title = req.text.strip().replace("\n", " ")[:60]
-                supabase_admin.table("audio_generations").insert({
-                    "user_id": user.id,
-                    "title": title,
-                    "text_prompt": req.text,
-                    "voice_key": req.voice,
-                    "speed": req.speed,
-                    "duration_seconds": round(result["duration_seconds"], 2),
-                    "audio_url_wav": f"/outputs/{wav_filename}",
-                    "audio_url_mp3": f"/outputs/{mp3_filename}",
-                    "file_size_kb": size_kb
-                }).execute()
-            except Exception as ex:
-                print(f"[Supabase Generation Save Error] {ex}")
+            if req.save_history:
+                try:
+                    size_kb = round(os.path.getsize(wav_path) / 1024, 1) if os.path.exists(wav_path) else 0
+                    title = req.text.strip().replace("\n", " ")[:60]
+                    supabase_admin.table("audio_generations").insert({
+                        "user_id": user.id,
+                        "title": title,
+                        "text_prompt": req.text,
+                        "voice_key": req.voice,
+                        "speed": req.speed,
+                        "duration_seconds": round(result["duration_seconds"], 2),
+                        "audio_url_wav": f"/outputs/{wav_filename}",
+                        "audio_url_mp3": f"/outputs/{mp3_filename}",
+                        "file_size_kb": size_kb
+                    }).execute()
+                except Exception as ex:
+                    print(f"[Supabase Generation Save Error] {ex}")
 
         active_filename = wav_filename if os.path.exists(wav_path) else mp3_filename
         active_url = f"/outputs/{active_filename}"
@@ -849,6 +851,7 @@ def synthesize(
             "voice": req.voice,
             "text": req.text,
             "credits": remaining_credits,
+            "saved_history": bool(req.save_history),
         }
     except HTTPException:
         raise
