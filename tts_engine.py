@@ -23,6 +23,16 @@ os.makedirs(CUSTOM_VOICES_DIR, exist_ok=True)
 
 # Standard Piper Neural voices
 VOICES = {
+    "sarah": {
+        "label": "Sarah (Feminina - Expressiva Natural)",
+        "gender": "Feminina",
+        "quality": "Alta (Neural Expressiva)",
+        "model_id": "vits-piper-pt_BR-dii-high",
+        "onnx_file": "pt_BR-dii-high.onnx",
+        "tar_url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-pt_BR-dii-high.tar.bz2",
+        "base_pitch": 204.0,
+        "pitch_shift": -0.85,
+    },
     "dii": {
         "label": "Dii (Feminina - Alta Definição)",
         "gender": "Feminina",
@@ -126,11 +136,12 @@ def download_model(voice_key: str, progress_callback=None) -> str:
 
 
 def get_tts_engine(voice_key: str, num_threads: int = 4):
-    if voice_key in _tts_cache:
-        return _tts_cache[voice_key]
+    info = VOICES[voice_key]
+    cache_key = f"{info['model_id']}_{num_threads}"
+    if cache_key in _tts_cache:
+        return _tts_cache[cache_key]
 
     ensure_model_ready(voice_key)
-    info = VOICES[voice_key]
     model_dir = os.path.join(MODELS_DIR, info["model_id"])
 
     vits_config = sherpa_onnx.OfflineTtsVitsModelConfig(
@@ -147,7 +158,7 @@ def get_tts_engine(voice_key: str, num_threads: int = 4):
         silence_scale=0.25,
     )
     tts = sherpa_onnx.OfflineTts(tts_config)
-    _tts_cache[voice_key] = tts
+    _tts_cache[cache_key] = tts
     return tts
 
 
@@ -409,9 +420,18 @@ def synthesize_text(
         output_path = os.path.join(OUTPUTS_DIR, filename)
         sf.write(output_path, samples, sample_rate)
 
-        buffer = io.BytesIO()
-        sf.write(buffer, samples, sample_rate, format="WAV")
-        audio_bytes = buffer.getvalue()
+        # Apply calibrated acoustic pitch shift if defined for the voice (e.g. Sarah)
+        pitch_shift = VOICES.get(voice_key, {}).get("pitch_shift", 0.0)
+        if abs(pitch_shift) > 0.05:
+            pitch_shift_ffmpeg(output_path, pitch_shift, sample_rate)
+            try:
+                info = sf.info(output_path)
+                duration = info.duration
+            except Exception:
+                pass
+
+        with open(output_path, "rb") as f:
+            audio_bytes = f.read()
 
     elapsed = time.time() - start_time
 

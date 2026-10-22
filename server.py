@@ -32,7 +32,7 @@ BGM_TRACKS = {
 ELEVENLABS_VOICES = {
     "el_rachel": {"voice_id": "pFZP5JQG7iQjIQuC4Bku", "label": "Rachel (Ultra-HD Narrativa)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "dii", "fallback_semitones": -0.6},
     "el_adam": {"voice_id": "pNInz6obpgDQGcFmaJgB", "label": "Adam (Ultra-HD Locutor VSL)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "miro", "fallback_semitones": -0.8},
-    "el_sarah": {"voice_id": "EXAVITQu4vr4xnSDxMaL", "label": "Sarah (Ultra-HD Expressiva)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "dii", "fallback_semitones": 0.5},
+    "el_sarah": {"voice_id": "EXAVITQu4vr4xnSDxMaL", "label": "Sarah (Ultra-HD Cloud VIP)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "sarah", "fallback_semitones": 0.0},
     "el_charlie": {"voice_id": "IKne3meq5aSn9XLyUdCD", "label": "Charlie (Ultra-HD Jovem)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "cadu", "fallback_semitones": 0.6},
     "el_george": {"voice_id": "JBFqnCBsd6RMkjVDRZzb", "label": "George (Ultra-HD Storyteller)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "faber", "fallback_semitones": -1.0},
 }
