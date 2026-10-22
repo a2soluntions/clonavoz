@@ -33,6 +33,16 @@ VOICES = {
         "base_pitch": 204.0,
         "pitch_shift": -0.85,
     },
+    "duda": {
+        "label": "Duda (Feminina - Jovem & Dinâmica)",
+        "gender": "Feminina",
+        "quality": "Alta (Neural Dinâmica)",
+        "model_id": "vits-piper-pt_BR-dii-high",
+        "onnx_file": "pt_BR-dii-high.onnx",
+        "tar_url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-pt_BR-dii-high.tar.bz2",
+        "base_pitch": 180.0,
+        "pitch_shift": -3.08,
+    },
     "dii": {
         "label": "Dii (Feminina - Alta Definição)",
         "gender": "Feminina",
