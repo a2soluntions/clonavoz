@@ -480,80 +480,7 @@
             </div>
           </div>
 
-          <!-- Trilha Sonora de Fundo (BGM) Integrada -->
-          <div class="pt-2 border-t border-zinc-800/80 space-y-1.5">
-            <div class="flex items-center justify-between">
-              <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
-                <i data-lucide="music" class="w-4 h-4 text-brand-500"></i> Trilha de Fundo (BGM)
-              </h3>
-              <div class="flex items-center gap-1.5">
-                <span id="bgm-volume-val" class="font-mono text-zinc-400 text-[10px]">15% vol</span>
-                <input
-                  id="bgm-volume-slider"
-                  type="range"
-                  min="5"
-                  max="40"
-                  value="15"
-                  step="5"
-                  oninput="updateBgmVolume(this.value)"
-                  class="w-16 accent-brand-500 h-1 bg-zinc-800 rounded cursor-pointer"
-                  title="Volume da Trilha de Fundo"
-                />
-              </div>
-            </div>
 
-            <!-- BGM Pills Grid -->
-            <div class="grid grid-cols-5 gap-1 text-[10px]">
-              <button
-                type="button"
-                id="bgm-btn-none"
-                onclick="selectBgm('none')"
-                class="py-1 px-1 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 font-bold transition cursor-pointer text-center truncate"
-              >
-                Mudo
-              </button>
-              <button
-                type="button"
-                id="bgm-btn-inspire"
-                onclick="selectBgm('inspire')"
-                class="py-1 px-0.5 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 font-semibold transition cursor-pointer text-center truncate flex items-center justify-center gap-0.5"
-                title="Inspirador / VSL (Piano e ambiência)"
-              >
-                <span>VSL</span>
-                <span onclick="event.stopPropagation(); previewBgm('inspire')" class="text-[8px] opacity-60 hover:opacity-100 hover:text-brand-400">▶</span>
-              </button>
-              <button
-                type="button"
-                id="bgm-btn-corporate"
-                onclick="selectBgm('corporate')"
-                class="py-1 px-0.5 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 font-semibold transition cursor-pointer text-center truncate flex items-center justify-center gap-0.5"
-                title="Corporativo / Tech (Batida limpa)"
-              >
-                <span>Corp</span>
-                <span onclick="event.stopPropagation(); previewBgm('corporate')" class="text-[8px] opacity-60 hover:opacity-100 hover:text-brand-400">▶</span>
-              </button>
-              <button
-                type="button"
-                id="bgm-btn-calm"
-                onclick="selectBgm('calm')"
-                class="py-1 px-0.5 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 font-semibold transition cursor-pointer text-center truncate flex items-center justify-center gap-0.5"
-                title="Calmo / Relax (Pad suave)"
-              >
-                <span>Calmo</span>
-                <span onclick="event.stopPropagation(); previewBgm('calm')" class="text-[8px] opacity-60 hover:opacity-100 hover:text-brand-400">▶</span>
-              </button>
-              <button
-                type="button"
-                id="bgm-btn-cinematic"
-                onclick="selectBgm('cinematic')"
-                class="py-1 px-0.5 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 font-semibold transition cursor-pointer text-center truncate flex items-center justify-center gap-0.5"
-                title="Dark / Suspense (Harmonia dramática)"
-              >
-                <span>Dark</span>
-                <span onclick="event.stopPropagation(); previewBgm('cinematic')" class="text-[8px] opacity-60 hover:opacity-100 hover:text-brand-400">▶</span>
-              </button>
-            </div>
-          </div>
         </div>
 
         <!-- Card 2: Áudio Pronto para Reprodução & Download (Altura Fixa Compacta: 170px) -->
@@ -697,18 +624,18 @@
           </div>
         </div>
 
-        <!-- Card 3: Histórico de Áudios (Espaçamento Padrão e Scroll Interno Dedicado - Nunca Estica a Tela) -->
-        <div class="panel-glass p-3 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[260px] lg:h-auto lg:flex-1 min-h-[220px] lg:min-h-[160px] overflow-hidden">
-          <div class="flex items-center justify-between shrink-0 mb-1.5">
+        <!-- Card 3: Histórico de Áudios (Tamanho Fixo e Scroll Interno Suave - Nunca Estica a Tela) -->
+        <div class="panel-glass p-3 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[340px] min-h-[340px] max-h-[340px] shrink-0 overflow-hidden">
+          <div class="flex items-center justify-between shrink-0 mb-2 pb-1.5 border-b border-zinc-800/60">
             <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
               <i data-lucide="clock" class="w-4 h-4 text-brand-500"></i> Histórico Recente
             </h3>
-            <button onclick="loadHistory()" class="text-xs text-zinc-400 hover:text-white transition cursor-pointer" title="Recarregar histórico">
-              <i data-lucide="rotate-cw" class="w-3 h-3"></i>
+            <button onclick="loadHistory()" class="text-xs text-zinc-400 hover:text-white transition cursor-pointer p-1 rounded-md hover:bg-zinc-800" title="Recarregar histórico">
+              <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
             </button>
           </div>
           
-          <!-- Lista com scroll interno estritamente contido (min-h-0 e overflow-y-auto impedem o card de crescer) -->
+          <!-- Lista com scroll interno estritamente contido (Tamanho fixo, nunca cresce) -->
           <div id="history-list" class="space-y-1.5 flex-1 overflow-y-auto pr-1 min-h-0 custom-scrollbar">
             <p class="text-xs text-zinc-500 py-3 text-center">Nenhum áudio gerado ainda.</p>
           </div>
