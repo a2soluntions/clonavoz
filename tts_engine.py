@@ -32,6 +32,8 @@ VOICES = {
         "tar_url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-pt_BR-dii-high.tar.bz2",
         "base_pitch": 204.0,
         "pitch_shift": -0.85,
+        "default_speed": 0.97,
+        "dsp_filter": "equalizer=f=320:t=q:w=1.2:g=3.5,equalizer=f=2200:t=q:w=1.5:g=-3.5,equalizer=f=4000:t=q:w=1.0:g=1.5,acompressor=threshold=-16dB:ratio=2.5:attack=5:release=50",
     },
     "duda": {
         "label": "Duda (Feminina - Jovem & Dinâmica)",
@@ -41,7 +43,9 @@ VOICES = {
         "onnx_file": "pt_BR-dii-high.onnx",
         "tar_url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-pt_BR-dii-high.tar.bz2",
         "base_pitch": 180.0,
-        "pitch_shift": -3.08,
+        "pitch_shift": -2.85,
+        "default_speed": 1.12,
+        "dsp_filter": "highpass=f=140,equalizer=f=2800:t=q:w=1.2:g=4.0,equalizer=f=5000:t=q:w=1.0:g=2.5,equalizer=f=500:t=q:w=1.5:g=-2.0,acompressor=threshold=-14dB:ratio=3:attack=3:release=40",
     },
     "dii": {
         "label": "Dii (Feminina - Alta Definição)",
@@ -262,26 +266,34 @@ def estimate_pitch(audio: np.ndarray, sr: int) -> float:
     return 180.0
 
 
-def pitch_shift_ffmpeg(wav_path: str, semitones: float, target_sr: int = 22050):
-    """Pitch-shifts a WAV file in-place using FFmpeg's asetrate and atempo filters."""
-    if abs(semitones) < 0.15:
+def pitch_shift_ffmpeg(wav_path: str, semitones: float, target_sr: int = 22050, extra_filter: str = ""):
+    """Pitch-shifts and shapes acoustic profile of a WAV file in-place using FFmpeg."""
+    if abs(semitones) < 0.15 and not extra_filter:
         return
-    factor = 2.0 ** (semitones / 12.0)
-    tempo = 1.0 / factor
+    
+    filters = []
+    if abs(semitones) >= 0.15:
+        factor = 2.0 ** (semitones / 12.0)
+        tempo = 1.0 / factor
 
-    tempo_filters = []
-    curr_tempo = tempo
-    while curr_tempo < 0.5:
-        tempo_filters.append("atempo=0.5")
-        curr_tempo /= 0.5
-    while curr_tempo > 2.0:
-        tempo_filters.append("atempo=2.0")
-        curr_tempo /= 2.0
-    tempo_filters.append(f"atempo={curr_tempo:.4f}")
-    tempo_str = ",".join(tempo_filters)
+        tempo_filters = []
+        curr_tempo = tempo
+        while curr_tempo < 0.5:
+            tempo_filters.append("atempo=0.5")
+            curr_tempo /= 0.5
+        while curr_tempo > 2.0:
+            tempo_filters.append("atempo=2.0")
+            curr_tempo /= 2.0
+        tempo_filters.append(f"atempo={curr_tempo:.4f}")
+        tempo_str = ",".join(tempo_filters)
 
-    new_rate = int(round(target_sr * factor))
-    af_filter = f"asetrate={new_rate},{tempo_str},aresample={target_sr}"
+        new_rate = int(round(target_sr * factor))
+        filters.append(f"asetrate={new_rate},{tempo_str},aresample={target_sr}")
+    
+    if extra_filter:
+        filters.append(extra_filter)
+
+    af_filter = ",".join(filters)
 
     tmp_out = wav_path + ".tmp.wav"
     cmd = [
@@ -420,7 +432,8 @@ def synthesize_text(
     else:
         ensure_model_ready(voice_key, progress_callback=progress_callback)
         tts = get_tts_engine(voice_key, num_threads=num_threads)
-        audio = tts.generate(clean_text, sid=0, speed=speed)
+        effective_speed = speed * VOICES.get(voice_key, {}).get("default_speed", 1.0)
+        audio = tts.generate(clean_text, sid=0, speed=effective_speed)
         samples = np.array(audio.samples, dtype=np.float32)
         sample_rate = audio.sample_rate
 
@@ -430,10 +443,11 @@ def synthesize_text(
         output_path = os.path.join(OUTPUTS_DIR, filename)
         sf.write(output_path, samples, sample_rate)
 
-        # Apply calibrated acoustic pitch shift if defined for the voice (e.g. Sarah)
+        # Apply calibrated acoustic pitch shift and DSP equalization if defined for the voice
         pitch_shift = VOICES.get(voice_key, {}).get("pitch_shift", 0.0)
-        if abs(pitch_shift) > 0.05:
-            pitch_shift_ffmpeg(output_path, pitch_shift, sample_rate)
+        dsp_filter = VOICES.get(voice_key, {}).get("dsp_filter", "")
+        if abs(pitch_shift) > 0.05 or dsp_filter:
+            pitch_shift_ffmpeg(output_path, pitch_shift, sample_rate, extra_filter=dsp_filter)
             try:
                 info = sf.info(output_path)
                 duration = info.duration
