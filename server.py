@@ -206,14 +206,20 @@ def get_or_create_profile(user) -> dict:
     """Busca ou cria o registro do perfil com 1 crédito grátis se ainda não existir."""
     if not supabase_admin:
         return {"id": user.id, "credits": 999, "full_name": "Local User"}
-    try:
-        res = supabase_admin.table("profiles").select("*").eq("id", user.id).limit(1).execute()
-        if res.data and len(res.data) > 0:
-            return res.data[0]
-    except Exception as e:
-        print(f"[Profile Query Error] {e}")
+    
+    # 1. Tenta buscar perfil existente com retry resiliente
+    for attempt in range(2):
+        try:
+            res = supabase_admin.table("profiles").select("*").eq("id", user.id).limit(1).execute()
+            if res.data and len(res.data) > 0:
+                return res.data[0]
+            break
+        except Exception as e:
+            print(f"[Profile Query Attempt {attempt+1} Error] {e}")
+            import time
+            time.sleep(0.3)
 
-    # Cria o profile caso não exista
+    # 2. Cria o profile caso não exista
     try:
         full_name = "Criador"
         if hasattr(user, "user_metadata") and user.user_metadata:
@@ -231,7 +237,14 @@ def get_or_create_profile(user) -> dict:
         if ins.data:
             return ins.data[0]
     except Exception as e:
-        print(f"[Profile Insert Error] {e}")
+        print(f"[Profile Insert Warning/Duplicate] {e}")
+        # Se falhou por conflito/já existente, busca novamente o registro original
+        try:
+            retry_res = supabase_admin.table("profiles").select("*").eq("id", user.id).limit(1).execute()
+            if retry_res.data and len(retry_res.data) > 0:
+                return retry_res.data[0]
+        except Exception:
+            pass
 
     return {"id": user.id, "email": getattr(user, "email", ""), "full_name": "Criador", "credits": 1}
 
@@ -394,7 +407,7 @@ def create_pix_payment(req: CreatePixRequest, authorization: Optional[str] = Hea
         try:
             supabase_admin.table("pix_transactions").insert({
                 "user_id": user.id,
-                "payment_id": payment_id,
+                "gateway_txid": payment_id,
                 "package_id": req.package_id,
                 "credits_amount": req.credits,
                 "amount_brl": amount_num,
@@ -437,7 +450,7 @@ def check_pix_status(payment_id: str, authorization: Optional[str] = Header(None
                 if mp_status == "approved":
                     if supabase_admin:
                         try:
-                            tx_res = supabase_admin.table("pix_transactions").select("*").eq("payment_id", payment_id).execute()
+                            tx_res = supabase_admin.table("pix_transactions").select("*").eq("gateway_txid", payment_id).execute()
                             if tx_res.data:
                                 tx = tx_res.data[0]
                                 if tx.get("status") != "paid":
@@ -445,7 +458,7 @@ def check_pix_status(payment_id: str, authorization: Optional[str] = Header(None
                                     supabase_admin.table("pix_transactions").update({
                                         "status": "paid",
                                         "paid_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
-                                    }).eq("payment_id", payment_id).execute()
+                                    }).eq("gateway_txid", payment_id).execute()
                                     
                                     u_id = tx.get("user_id")
                                     prof_res = supabase_admin.table("profiles").select("credits").eq("id", u_id).execute()
@@ -463,7 +476,7 @@ def check_pix_status(payment_id: str, authorization: Optional[str] = Header(None
     # Se for em ambiente de teste ou Supabase
     if supabase_admin and user:
         try:
-            tx_res = supabase_admin.table("pix_transactions").select("*").eq("payment_id", payment_id).execute()
+            tx_res = supabase_admin.table("pix_transactions").select("*").eq("gateway_txid", payment_id).execute()
             if tx_res.data:
                 tx = tx_res.data[0]
                 if tx.get("status") == "paid":
@@ -476,35 +489,50 @@ def check_pix_status(payment_id: str, authorization: Optional[str] = Header(None
 
 
 @app.post("/api/pix/simulate-approve/{payment_id}")
-def simulate_approve_pix(payment_id: str, authorization: Optional[str] = Header(None)):
+def simulate_approve_pix(payment_id: str, credits: Optional[int] = None, package_id: Optional[str] = None, authorization: Optional[str] = Header(None)):
     """Simula a aprovação imediata de um pagamento PIX em ambiente de testes."""
     if not supabase_admin:
-        return {"status": "approved", "credits": 999, "added": 12}
+        return {"status": "approved", "credits": 999, "added": credits or 12}
 
     user = get_current_user_from_header(authorization)
     if not user:
         raise HTTPException(status_code=401, detail="Usuário não autenticado.")
 
     import datetime
-    credits_to_add = 12
+    credits_to_add = credits or 12
     try:
-        tx_res = supabase_admin.table("pix_transactions").select("*").eq("payment_id", payment_id).execute()
+        tx_res = supabase_admin.table("pix_transactions").select("*").eq("gateway_txid", payment_id).execute()
         if tx_res.data:
             tx = tx_res.data[0]
-            credits_to_add = tx.get("credits_amount", 12)
+            credits_to_add = tx.get("credits_amount") or credits or 12
             supabase_admin.table("pix_transactions").update({
                 "status": "paid",
                 "paid_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
-            }).eq("payment_id", payment_id).execute()
+            }).eq("gateway_txid", payment_id).execute()
+        else:
+            # Se não existia o registro prévio, cria agora como pago
+            supabase_admin.table("pix_transactions").insert({
+                "user_id": user.id,
+                "gateway_txid": payment_id,
+                "package_id": package_id or "pacote",
+                "credits_amount": credits_to_add,
+                "amount_brl": 0.0,
+                "status": "paid",
+                "paid_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+            }).execute()
     except Exception as ex:
         print(f"[PIX Simulate Approve Warning] {ex}")
 
-    profile = get_or_create_profile(user)
-    new_credits = profile.get("credits", 0) + credits_to_add
+    # Atualiza saldo de forma resiliente consultando o saldo mais atual no Supabase
     try:
+        prof_res = supabase_admin.table("profiles").select("credits").eq("id", user.id).execute()
+        current_db_credits = prof_res.data[0]["credits"] if prof_res.data else 0
+        new_credits = current_db_credits + credits_to_add
         supabase_admin.table("profiles").update({"credits": new_credits}).eq("id", user.id).execute()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        profile = get_or_create_profile(user)
+        new_credits = profile.get("credits", 0) + credits_to_add
+        supabase_admin.table("profiles").update({"credits": new_credits}).eq("id", user.id).execute()
 
     return {"status": "approved", "credits": new_credits, "added": credits_to_add}
 
@@ -534,7 +562,7 @@ async def pix_webhook(request: Request):
             with urllib.request.urlopen(req_obj, timeout=8) as resp:
                 mp_data = json.loads(resp.read().decode("utf-8"))
                 if mp_data.get("status") == "approved":
-                    tx_res = supabase_admin.table("pix_transactions").select("*").eq("payment_id", payment_id).execute()
+                    tx_res = supabase_admin.table("pix_transactions").select("*").eq("gateway_txid", payment_id).execute()
                     if tx_res.data:
                         tx = tx_res.data[0]
                         if tx.get("status") != "paid":
@@ -542,7 +570,7 @@ async def pix_webhook(request: Request):
                             supabase_admin.table("pix_transactions").update({
                                 "status": "paid",
                                 "paid_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
-                            }).eq("payment_id", payment_id).execute()
+                            }).eq("gateway_txid", payment_id).execute()
                             
                             u_id = tx.get("user_id")
                             prof_res = supabase_admin.table("profiles").select("credits").eq("id", u_id).execute()
@@ -894,12 +922,15 @@ def synthesize(
         remaining_credits = profile.get("credits", 1) if profile else 999
 
         # Atualiza créditos e salva histórico no Supabase
-        if supabase_admin and user and profile:
-            remaining_credits = max(profile.get("credits", 1) - 1, 0)
+        if supabase_admin and user:
             try:
+                prof_cur = supabase_admin.table("profiles").select("credits").eq("id", user.id).execute()
+                current_db_credits = prof_cur.data[0]["credits"] if prof_cur.data and len(prof_cur.data) > 0 else (profile.get("credits", 1) if profile else 1)
+                remaining_credits = max(current_db_credits - 1, 0)
                 supabase_admin.table("profiles").update({"credits": remaining_credits}).eq("id", user.id).execute()
             except Exception as ex:
                 print(f"[Supabase Credit Update Error] {ex}")
+                remaining_credits = max(profile.get("credits", 1) - 1, 0) if profile else 999
 
             if req.save_history:
                 try:

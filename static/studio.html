@@ -186,6 +186,13 @@
 
         <!-- Estado LOGADO: Usuário, Saldo Real e Sair -->
         <div id="nav-auth-logged-in" class="hidden flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <!-- Admin Visitor Pill (visível para o dono) -->
+          <div id="admin-studio-views-badge" class="hidden items-center gap-1.5 bg-zinc-900/90 border border-brand-500/40 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-xs shrink-0 cursor-pointer hover:bg-zinc-800 transition" title="Métricas de visitantes da Landing Page" onclick="openStudioStatsModal()">
+            <i data-lucide="eye" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i>
+            <span class="text-zinc-300 hidden md:inline">Visitas:</span>
+            <span id="admin-studio-views-count" class="font-extrabold text-white font-mono text-xs sm:text-sm">...</span>
+          </div>
+
           <!-- User Profile Capsule (apenas em telas grandes para não apertar iPad nem mobile) -->
           <div class="hidden lg:flex items-center gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-zinc-900/90 border border-zinc-800">
             <div id="user-avatar-initial" class="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center font-black text-xs">
@@ -1616,7 +1623,24 @@
           console.warn('[Auth Profile Fallback]', err);
         }
 
-        // Se não conseguiu carregar da API (ex: Vercel estático ou backend iniciando), usa dados do Supabase
+        // Se não conseguiu carregar da API (ex: Vercel estático ou backend iniciando), busca direto no Supabase
+        if (!profileLoaded && supabaseClient) {
+          try {
+            const { data: dbProf, error: dbErr } = await supabaseClient
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            if (dbProf && !dbErr) {
+              currentUser = dbProf;
+              userCredits = typeof dbProf.credits !== 'undefined' ? dbProf.credits : userCredits;
+              profileLoaded = true;
+            }
+          } catch (sbErr) {
+            console.warn('[Direct Supabase Profile Read Error]', sbErr);
+          }
+        }
+
         if (!profileLoaded) {
           currentUser = {
             id: session.user.id,
@@ -1624,6 +1648,13 @@
             full_name: (session.user.user_metadata && session.user.user_metadata.full_name) || session.user.email.split('@')[0],
             credits: userCredits || 1
           };
+        }
+
+        // Se for o dono (araujoexcel@gmail.com), ativa o painel de visitas em tempo real
+        const isOwner = (currentUser && currentUser.email === 'araujoexcel@gmail.com') || (session.user && session.user.email === 'araujoexcel@gmail.com') || localStorage.getItem('clonavoz_owner_access') === 'true';
+        if (isOwner) {
+          localStorage.setItem('clonavoz_owner_access', 'true');
+          initStudioAdminViews();
         }
 
         updateCreditUI();
@@ -2443,7 +2474,11 @@
           headers['Authorization'] = `Bearer ${currentSession.access_token}`;
         }
 
-        const res = await fetch(`${API_BASE}/api/pix/simulate-approve/${currentPixPaymentId}`, {
+        const queryParams = new URLSearchParams({
+          credits: selectedPkg.credits || 12,
+          package_id: selectedPkg.id || 'criador'
+        });
+        const res = await fetch(`${API_BASE}/api/pix/simulate-approve/${currentPixPaymentId}?${queryParams.toString()}`, {
           method: 'POST',
           headers: headers
         });
@@ -2472,6 +2507,35 @@
 
     async function simulatePixPayment() {
       return simulateApproveCurrentPix();
+    }
+
+    // Painel e Métricas de Visitas do Dono no Studio
+    async function initStudioAdminViews() {
+      const badge = document.getElementById('admin-studio-views-badge');
+      if (!badge) return;
+      badge.classList.remove('hidden');
+      badge.classList.add('flex');
+      lucide.createIcons();
+
+      try {
+        const res = await fetch(`${API_BASE}/api/stats`);
+        if (res.ok) {
+          const stats = await res.json();
+          const countEl = document.getElementById('admin-studio-views-count');
+          if (countEl) countEl.innerText = stats.total_views.toLocaleString('pt-BR');
+          badge.title = `Total: ${stats.total_views} | Hoje: ${stats.today_views} | Únicos: ${stats.unique_visitors} (Clique para detalhes)`;
+        }
+      } catch (err) {
+        console.warn('[Studio Stats Error]', err);
+      }
+    }
+
+    function openStudioStatsModal() {
+      fetch(`${API_BASE}/api/stats`).then(r => r.json()).then(stats => {
+        showToast(`📊 Visitas: ${stats.total_views} no total | ${stats.today_views} hoje (${stats.unique_visitors} únicos)`, 'info');
+      }).catch(() => {
+        showToast('Não foi possível carregar as métricas no momento.', 'error');
+      });
     }
 
     // Trilha Sonora de Fundo (BGM) Handlers

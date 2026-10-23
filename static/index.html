@@ -1352,9 +1352,27 @@
       initAdminAnalytics();
     }
 
+    function toggleAdminAnalyticsManual() {
+      const isCurrentlyActive = localStorage.getItem('clonavoz_owner_access') === 'true';
+      localStorage.setItem('clonavoz_owner_access', isCurrentlyActive ? 'false' : 'true');
+      if (!isCurrentlyActive) {
+        initAdminAnalytics();
+      } else {
+        const badge = document.getElementById('admin-analytics-badge');
+        const mini = document.getElementById('admin-analytics-minimized');
+        if (badge) badge.classList.add('hidden');
+        if (mini) mini.classList.add('hidden');
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       initLandingWaveSurfer();
       loadAndPlayCurrentDemo(false);
+
+      // Auto-exibir painel analítico se for o dono acessando
+      if (localStorage.getItem('clonavoz_owner_access') === 'true' || urlParams.has('admin') || urlParams.has('stats') || urlParams.has('visitas')) {
+        initAdminAnalytics();
+      }
 
       // Auto-exibir banner de cookies se ainda não aceito
       if (!localStorage.getItem('vox_cookies_accepted')) {
