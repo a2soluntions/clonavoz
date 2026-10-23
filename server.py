@@ -138,6 +138,21 @@ def save_analytics(data: dict):
 @app.post("/api/track-visit")
 async def track_visit(request: Request):
     try:
+        # 1. Ignora acessos do dono/administrador
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+
+        if body.get("is_owner") or request.headers.get("x-clonavoz-owner") == "true":
+            return {"success": True, "ignored": "owner_flag"}
+
+        auth_header = request.headers.get("authorization")
+        if auth_header and supabase_admin:
+            u = get_current_user_from_header(auth_header)
+            if u and getattr(u, "email", "") == "araujoexcel@gmail.com":
+                return {"success": True, "ignored": "owner_account"}
+
         forwarded = request.headers.get("x-forwarded-for")
         ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
         # Anonimiza o IP com SHA-256 (conformidade total com LGPD)
@@ -184,6 +199,20 @@ def get_stats():
         "last_visit": data.get("last_visit", "Nenhuma visita registrada ainda"),
         "date": today_str
     }
+
+@app.post("/api/reset-stats")
+def reset_stats():
+    """Zera os contadores analíticos para iniciar uma contagem limpa de visitas reais."""
+    data = {
+        "total_views": 0,
+        "unique_visitors": [],
+        "today": datetime.date.today().isoformat(),
+        "today_views": 0,
+        "today_uniques": [],
+        "last_visit": "Nenhuma visita registrada ainda"
+    }
+    save_analytics(data)
+    return {"success": True, "message": "Contadores zerados com sucesso."}
 
 
 def get_current_user_from_header(authorization: Optional[str] = Header(None)) -> Optional[dict]:

@@ -1279,20 +1279,26 @@
     // -------------------------------------------------------------
     const API_ANALYTICS_BASE = (window.location.hostname.includes('localhost') ? '' : 'https://api.clonavoz.com.br');
 
-    // 1. Rastreamento assíncrono em background (não afeta o carregamento do site)
-    try {
-      fetch(`${API_ANALYTICS_BASE}/api/track-visit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: window.location.pathname, referrer: document.referrer || '' })
-      }).catch(() => {});
-    } catch (_) {}
-
-    // 2. Ativação do Modo Secreto do Dono:
-    // Acesse com ?admin=1 ou ?stats=1 (fica salvo no navegador do dono)
+    // 1. Identificação do Dono ANTES de qualquer rastreamento:
+    // Se o dono acessou antes, ou tem flag ?admin=1 / ?stats=1 / ?visitas=1, NÃO CONTA
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('admin') || urlParams.has('stats') || urlParams.has('visitas')) {
+    const isOwnerParam = urlParams.has('admin') || urlParams.has('stats') || urlParams.has('visitas');
+    if (isOwnerParam) {
       localStorage.setItem('clonavoz_owner_access', 'true');
+    }
+    const isOwner = localStorage.getItem('clonavoz_owner_access') === 'true';
+
+    // 2. Rastreamento assíncrono em background (APENAS para visitantes reais, ignorando o dono)
+    if (!isOwner) {
+      try {
+        fetch(`${API_ANALYTICS_BASE}/api/track-visit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: window.location.pathname, referrer: document.referrer || '' })
+        }).catch(() => {});
+      } catch (_) {}
+    } else {
+      console.log('[Analytics] Acesso do proprietário detectado - visita NÃO contabilizada.');
     }
 
     // Atalho secreto de teclado: Pressione 'Ctrl + Shift + A' para exibir/ocultar
@@ -1350,6 +1356,18 @@
       const mini = document.getElementById('admin-analytics-minimized');
       if (mini) mini.classList.add('hidden');
       initAdminAnalytics();
+    }
+
+    async function resetAdminAnalytics() {
+      if (!confirm("Deseja zerar os contadores de visita para iniciar uma contagem limpa sem testes?")) return;
+      try {
+        const res = await fetch(`${API_ANALYTICS_BASE}/api/reset-stats`, { method: 'POST' });
+        if (res.ok) {
+          initAdminAnalytics();
+        }
+      } catch (e) {
+        console.warn(e);
+      }
     }
 
     function toggleAdminAnalyticsManual() {
@@ -1419,6 +1437,14 @@
       <div class="flex items-center justify-between text-[10px] text-zinc-500 pt-1.5 border-t border-white/5">
         <span>Último acesso:</span>
         <span id="stat-last-visit" class="font-mono text-zinc-400 truncate max-w-[130px]">--</span>
+      </div>
+      <div class="flex items-center justify-between text-[10px] pt-2 border-t border-white/10">
+        <span class="text-emerald-400 flex items-center gap-1">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Seus acessos não contam
+        </span>
+        <button onclick="resetAdminAnalytics()" class="text-zinc-500 hover:text-red-400 transition underline cursor-pointer" title="Zerar dados de testes">
+          Zerar testes
+        </button>
       </div>
     </div>
   </div>
