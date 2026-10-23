@@ -1274,6 +1274,84 @@
     }
 
     // Inicialização ao carregar
+        // -------------------------------------------------------------
+    // Rastreamento Silencioso de Visitas & Modo Secreto do Dono
+    // -------------------------------------------------------------
+    const API_ANALYTICS_BASE = (window.location.hostname.includes('localhost') ? '' : 'https://api.clonavoz.com.br');
+
+    // 1. Rastreamento assíncrono em background (não afeta o carregamento do site)
+    try {
+      fetch(`${API_ANALYTICS_BASE}/api/track-visit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: window.location.pathname, referrer: document.referrer || '' })
+      }).catch(() => {});
+    } catch (_) {}
+
+    // 2. Ativação do Modo Secreto do Dono:
+    // Acesse com ?admin=1 ou ?stats=1 (fica salvo no navegador do dono)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('admin') || urlParams.has('stats') || urlParams.has('visitas')) {
+      localStorage.setItem('clonavoz_owner_access', 'true');
+    }
+
+    // Atalho secreto de teclado: Pressione 'Ctrl + Shift + A' para exibir/ocultar
+    window.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        const isCurrentlyActive = localStorage.getItem('clonavoz_owner_access') === 'true';
+        localStorage.setItem('clonavoz_owner_access', isCurrentlyActive ? 'false' : 'true');
+        if (!isCurrentlyActive) {
+          initAdminAnalytics();
+        } else {
+          const badge = document.getElementById('admin-analytics-badge');
+          const mini = document.getElementById('admin-analytics-minimized');
+          if (badge) badge.classList.add('hidden');
+          if (mini) mini.classList.add('hidden');
+        }
+      }
+    });
+
+    async function initAdminAnalytics() {
+      if (localStorage.getItem('clonavoz_owner_access') !== 'true') return;
+
+      const badge = document.getElementById('admin-analytics-badge');
+      if (!badge) return;
+      badge.classList.remove('hidden');
+      lucide.createIcons();
+
+      try {
+        const res = await fetch(`${API_ANALYTICS_BASE}/api/stats`);
+        if (res.ok) {
+          const stats = await res.json();
+          const totalEl = document.getElementById('stat-total-views');
+          const uniqueEl = document.getElementById('stat-unique-visitors');
+          const todayEl = document.getElementById('stat-today-views');
+          const lastEl = document.getElementById('stat-last-visit');
+
+          if (totalEl) totalEl.innerText = stats.total_views.toLocaleString('pt-BR');
+          if (uniqueEl) uniqueEl.innerText = stats.unique_visitors.toLocaleString('pt-BR');
+          if (todayEl) todayEl.innerText = stats.today_views.toLocaleString('pt-BR');
+          if (lastEl) lastEl.innerText = stats.last_visit;
+        }
+      } catch (e) {
+        console.warn('[Analytics Error]', e);
+      }
+    }
+
+    function minimizeAdminBadge() {
+      const badge = document.getElementById('admin-analytics-badge');
+      const mini = document.getElementById('admin-analytics-minimized');
+      if (badge) badge.classList.add('hidden');
+      if (mini) mini.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function maximizeAdminBadge() {
+      const mini = document.getElementById('admin-analytics-minimized');
+      if (mini) mini.classList.add('hidden');
+      initAdminAnalytics();
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       initLandingWaveSurfer();
       loadAndPlayCurrentDemo(false);
@@ -1287,5 +1365,54 @@
       }
     });
   </script>
+  <!-- Painel Secreto de Visitas do Dono (Totalmente Invisível para Visitantes Comuns) -->
+  <div id="admin-analytics-badge" class="hidden fixed bottom-5 right-5 z-[9999] p-4 rounded-2xl panel-glass border border-brand-500/40 shadow-2xl backdrop-blur-2xl bg-zinc-950/95 text-white font-sans text-xs w-72 animate-fadeIn transition-all">
+    <div class="flex items-center justify-between pb-2 border-b border-white/10 mb-2.5">
+      <div class="flex items-center gap-1.5 font-black text-brand-400 uppercase tracking-wider text-[11px]">
+        <i data-lucide="bar-chart-3" class="w-4 h-4 text-brand-500"></i> Painel do Dono
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Rastreando em tempo real"></span>
+        <button onclick="minimizeAdminBadge()" class="text-zinc-400 hover:text-white p-0.5 rounded cursor-pointer" title="Minimizar">
+          <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="space-y-2 font-medium">
+      <div class="flex items-center justify-between">
+        <span class="text-zinc-400 flex items-center gap-1.5">
+          <i data-lucide="eye" class="w-3.5 h-3.5 text-zinc-500"></i> Visitas Totais:
+        </span>
+        <strong id="stat-total-views" class="text-white font-mono font-bold text-sm">--</strong>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-zinc-400 flex items-center gap-1.5">
+          <i data-lucide="users" class="w-3.5 h-3.5 text-zinc-500"></i> Visitantes Únicos:
+        </span>
+        <strong id="stat-unique-visitors" class="text-brand-300 font-mono font-bold text-sm">--</strong>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-zinc-400 flex items-center gap-1.5">
+          <i data-lucide="calendar" class="w-3.5 h-3.5 text-zinc-500"></i> Visitas Hoje:
+        </span>
+        <strong id="stat-today-views" class="text-emerald-400 font-mono font-bold text-sm">--</strong>
+      </div>
+      <div class="flex items-center justify-between text-[10px] text-zinc-500 pt-1.5 border-t border-white/5">
+        <span>Último acesso:</span>
+        <span id="stat-last-visit" class="font-mono text-zinc-400 truncate max-w-[130px]">--</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botão Flutuante quando Minimizado -->
+  <button
+    id="admin-analytics-minimized"
+    onclick="maximizeAdminBadge()"
+    class="hidden fixed bottom-5 right-5 z-[9999] p-3 rounded-full panel-glass border border-brand-500/50 shadow-2xl bg-zinc-950/90 text-brand-400 hover:text-white hover:scale-110 transition cursor-pointer"
+    title="Abrir Painel de Visitas"
+  >
+    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+  </button>
 </body>
 </html>

@@ -1,3 +1,6 @@
+import datetime
+import hashlib
+import json
 import os
 import glob
 import subprocess
@@ -102,6 +105,85 @@ def get_favicon():
     if os.path.exists(fav):
         return FileResponse(fav, media_type="image/x-icon")
     raise HTTPException(status_code=404)
+
+
+# -------------------------------------------------------------
+# Analytics & Visit Tracker (Armazenado com persistência em OUTPUTS_DIR/analytics.json)
+# -------------------------------------------------------------
+ANALYTICS_FILE = os.path.join(OUTPUTS_DIR, "analytics.json")
+
+def load_analytics() -> dict:
+    if os.path.exists(ANALYTICS_FILE):
+        try:
+            with open(ANALYTICS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {
+        "total_views": 0,
+        "unique_visitors": [],
+        "today": datetime.date.today().isoformat(),
+        "today_views": 0,
+        "today_uniques": [],
+        "last_visit": "Nenhuma visita registrada ainda"
+    }
+
+def save_analytics(data: dict):
+    try:
+        with open(ANALYTICS_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[Analytics Save Error] {e}")
+
+@app.post("/api/track-visit")
+async def track_visit(request: Request):
+    try:
+        forwarded = request.headers.get("x-forwarded-for")
+        ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
+        # Anonimiza o IP com SHA-256 (conformidade total com LGPD)
+        ip_hash = hashlib.sha256(f"clonavoz_salt_{ip}".encode()).hexdigest()[:16]
+
+        today_str = datetime.date.today().isoformat()
+        data = load_analytics()
+
+        # Reseta contador diário na virada do dia
+        if data.get("today") != today_str:
+            data["today"] = today_str
+            data["today_views"] = 0
+            data["today_uniques"] = []
+
+        data["total_views"] = data.get("total_views", 0) + 1
+        data["today_views"] = data.get("today_views", 0) + 1
+
+        uniques = set(data.get("unique_visitors", []))
+        uniques.add(ip_hash)
+        data["unique_visitors"] = list(uniques)[-3000:]
+
+        today_uniques = set(data.get("today_uniques", []))
+        today_uniques.add(ip_hash)
+        data["today_uniques"] = list(today_uniques)[-1000:]
+        data["last_visit"] = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
+        save_analytics(data)
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/stats")
+def get_stats():
+    data = load_analytics()
+    today_str = datetime.date.today().isoformat()
+    today_views = data.get("today_views", 0) if data.get("today") == today_str else 0
+    today_uniques = len(data.get("today_uniques", [])) if data.get("today") == today_str else 0
+
+    return {
+        "total_views": data.get("total_views", 0),
+        "unique_visitors": len(data.get("unique_visitors", [])),
+        "today_views": today_views,
+        "today_uniques": today_uniques,
+        "last_visit": data.get("last_visit", "Nenhuma visita registrada ainda"),
+        "date": today_str
+    }
 
 
 def get_current_user_from_header(authorization: Optional[str] = Header(None)) -> Optional[dict]:
