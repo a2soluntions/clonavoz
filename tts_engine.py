@@ -10,6 +10,7 @@ import numpy as np
 from scipy import signal
 import soundfile as sf
 import sherpa_onnx
+import text_normalizer
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, "models")
@@ -409,7 +410,10 @@ def synthesize_text(
     num_threads: int = 4,
     progress_callback=None,
 ) -> dict:
-    clean_text = text.strip()
+    # Normaliza gramática, pontuação, acentuação e expansão fonética (R$, abreviações, PIX)
+    clean_text = text_normalizer.normalize_for_tts(text)
+    if not clean_text:
+        clean_text = text.strip()
     if not clean_text:
         raise ValueError("O texto fornecido está vazio.")
 

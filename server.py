@@ -278,6 +278,18 @@ def get_or_create_profile(user) -> dict:
     return {"id": user.id, "email": getattr(user, "email", ""), "full_name": "Criador", "credits": 1}
 
 
+class EnhanceTextRequest(BaseModel):
+    text: str
+
+
+@app.post("/api/enhance-text")
+def enhance_text_endpoint(req: EnhanceTextRequest):
+    import text_normalizer
+    if not req.text or not req.text.strip():
+        return {"original": "", "enhanced": "", "changes": 0}
+    return text_normalizer.enhance_text_for_display(req.text)
+
+
 class SynthesizeRequest(BaseModel):
     text: str
     voice: str = "sarah"
