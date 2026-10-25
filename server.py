@@ -286,8 +286,24 @@ class EnhanceTextRequest(BaseModel):
 def enhance_text_endpoint(req: EnhanceTextRequest):
     import text_normalizer
     if not req.text or not req.text.strip():
-        return {"original": "", "enhanced": "", "changes": 0}
+        return {"original": "", "enhanced": "", "changes": 0, "analysis": {}}
     return text_normalizer.enhance_text_for_display(req.text)
+
+
+@app.post("/api/analyze-text")
+def analyze_text_endpoint(req: EnhanceTextRequest):
+    import text_normalizer
+    if not req.text or not req.text.strip():
+        return {
+            "has_issues": False,
+            "issues_count": 0,
+            "issues_details": [],
+            "original_text": "",
+            "suggested_text": "",
+            "risk_explanation": "",
+            "disclaimer": ""
+        }
+    return text_normalizer.analyze_text_quality(req.text)
 
 
 class SynthesizeRequest(BaseModel):

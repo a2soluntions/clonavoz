@@ -2946,6 +2946,10 @@ Deseja zerar os contadores de testes para começar do zero?`);
         });
     }
 
+    
+    let currentDictionAnalysis = null;
+    let dictionWarningDismissedForText = '';
+
     async function enhanceTextForDiction() {
       const text = textInput.value.trim();
       if (!text) {
@@ -2956,25 +2960,31 @@ Deseja zerar os contadores de testes para começar do zero?`);
       const btn = document.getElementById('btn-enhance-text');
       const originalHtml = btn ? btn.innerHTML : '';
       if (btn) {
-        btn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 text-emerald-400 animate-spin"></i> Otimizando...';
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 text-emerald-400 animate-spin"></i> Analisando...';
         btn.disabled = true;
       }
 
       try {
-        const res = await fetch('/api/enhance-text', {
+        const res = await fetch('/api/analyze-text', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text })
         });
         const data = await res.json();
-        if (data && data.enhanced) {
-          textInput.value = data.enhanced;
-          updateTextStats();
-          showToast('✨ Dicção e gramática otimizadas com sucesso!', 'success');
+        currentDictionAnalysis = data;
+
+        if (data && data.has_issues && data.issues_count > 0) {
+          openDictionModal(data);
+        } else {
+          if (data && data.suggested_text) {
+            textInput.value = data.suggested_text;
+            updateTextStats();
+          }
+          showToast('✨ Texto analisado: Pontuação e dicção já estão impecáveis!', 'success');
         }
       } catch (err) {
-        console.error('Erro ao otimizar texto:', err);
-        showToast('Não foi possível otimizar o texto.', 'error');
+        console.error('Erro ao analisar texto:', err);
+        showToast('Não foi possível analisar o texto.', 'error');
       } finally {
         if (btn) {
           btn.innerHTML = originalHtml;
@@ -2983,6 +2993,59 @@ Deseja zerar os contadores de testes para começar do zero?`);
         }
       }
     }
+
+    function openDictionModal(data) {
+      const badge = document.getElementById('diction-issues-badge');
+      if (badge) badge.innerText = `${data.issues_count} ponto(s) detectado(s)`;
+      
+      const riskEl = document.getElementById('diction-risk-explanation');
+      if (riskEl && data.risk_explanation) {
+        riskEl.innerText = data.risk_explanation;
+      }
+      
+      const listContainer = document.getElementById('diction-issues-list');
+      if (listContainer) {
+        if (data.issues_details && data.issues_details.length > 0) {
+          listContainer.innerHTML = data.issues_details.map(issue => `
+            <div class="px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700/80 text-xs flex items-center gap-1.5 shadow-sm" title="${issue.reason || ''}">
+              <span class="text-red-400 line-through font-mono font-medium">${issue.original}</span>
+              <span class="text-zinc-500">➔</span>
+              <span class="text-emerald-400 font-mono font-bold">${issue.suggestion}</span>
+            </div>
+          `).join('');
+        } else {
+          listContainer.innerHTML = '<span class="text-zinc-400 text-xs">Pequenos ajustes de pontuação e acentuação detectados.</span>';
+        }
+      }
+
+      const sugEl = document.getElementById('diction-suggested-text');
+      if (sugEl) sugEl.innerText = data.suggested_text || '';
+      
+      const modal = document.getElementById('modal-diction-advisor');
+      if (modal) modal.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeDictionModal() {
+      const modal = document.getElementById('modal-diction-advisor');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function applyDictionSuggestion() {
+      if (currentDictionAnalysis && currentDictionAnalysis.suggested_text) {
+        textInput.value = currentDictionAnalysis.suggested_text;
+        updateTextStats();
+        closeDictionModal();
+        showToast('✨ Correções aplicadas com sucesso! Seu áudio terá dicção perfeita.', 'success');
+      }
+    }
+
+    function keepOriginalDictionText() {
+      dictionWarningDismissedForText = textInput.value.trim();
+      closeDictionModal();
+      showToast('⚠️ Texto original mantido conforme sua escolha.', 'info');
+    }
+
 
     function clearText() {
       textInput.value = '';
@@ -3621,5 +3684,97 @@ Deseja zerar os contadores de testes para começar do zero?`);
       initSaveHistoryPreference();
     });
   </script>
+
+  <!-- Modal Assistente de Dicção & Gramática (Isenção e Correções) -->
+  <div id="modal-diction-advisor" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="panel-glass bg-zinc-950 border border-amber-500/40 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Header do Modal -->
+      <div class="p-4 sm:p-5 border-b border-zinc-800/80 flex items-center justify-between bg-zinc-900/60 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              Assistente de Dicção & Gramática
+              <span id="diction-issues-badge" class="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold">12 pontos detectados</span>
+            </h3>
+            <p class="text-xs text-zinc-400">Recomendações para garantir narração natural sem tropeços de dicção</p>
+          </div>
+        </div>
+        <button onclick="closeDictionModal()" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center transition cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Conteúdo do Modal com Scroll -->
+      <div class="p-4 sm:p-6 overflow-y-auto custom-scrollbar space-y-4 text-xs sm:text-sm">
+        
+        <!-- Alerta Educativo de Risco -->
+        <div class="p-3.5 rounded-xl bg-amber-950/20 border border-amber-500/30 text-amber-200/90 leading-relaxed space-y-1.5">
+          <div class="flex items-center gap-2 font-bold text-amber-300">
+            <i data-lucide="info" class="w-4 h-4 shrink-0"></i>
+            <span>Por que isso acontece na voz neural?</span>
+          </div>
+          <p class="text-xs text-zinc-300" id="diction-risk-explanation">
+            A inteligência artificial sintetiza a fonética exatamente como o texto foi digitado. Expressões coloquiais (como <em>"onti"</em>, <em>"num"</em>, <em>"ta"</em>), verbos cortados (como <em>"paga"</em>) ou palavras sem acento (como <em>"la"</em>, <em>"mes"</em>, <em>"onibus"</em>) forçam a voz a mudar a sílaba tônica, cortar o fôlego ou soar robotizada.
+          </p>
+        </div>
+
+        <!-- Lista de Desvios Detectados -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">Desvios de Dicção Encontrados:</h4>
+          <div id="diction-issues-list" class="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-2 bg-zinc-900/60 rounded-xl border border-zinc-800/80 custom-scrollbar">
+            <!-- Inserido dinamicamente via JS -->
+          </div>
+        </div>
+
+        <!-- Comparativo: Sugestão Recomendada -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              Texto Corrigido para Narração Perfeita:
+            </h4>
+            <span class="text-[11px] text-zinc-500">Pronto para narração fluida</span>
+          </div>
+          <div id="diction-suggested-text" class="p-3.5 rounded-xl bg-zinc-900/90 border border-emerald-500/40 text-zinc-200 text-xs sm:text-sm leading-relaxed max-h-40 overflow-y-auto custom-scrollbar select-all">
+            <!-- Inserido dinamicamente via JS -->
+          </div>
+        </div>
+
+        <!-- Termo de Isenção Legal / Retirada de Responsabilidade -->
+        <div class="p-3 rounded-xl bg-zinc-900/40 border border-zinc-800 text-[11px] text-zinc-400 leading-normal flex items-start gap-2.5">
+          <i data-lucide="shield-alert" class="w-4 h-4 text-zinc-500 shrink-0 mt-0.5"></i>
+          <div>
+            <strong class="text-zinc-300">Termo de Isenção de Responsabilidade:</strong>
+            O usuário tem total liberdade criativa. Caso opte por manter o texto original com gírias ou ausência de acentos, declara-se ciente de que a plataforma não se responsabiliza por eventuais desvios de pronúncia ou inconsistências fonéticas no áudio final.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer do Modal com Botões -->
+      <div class="p-4 sm:p-5 border-t border-zinc-800/80 bg-zinc-900/60 flex flex-col-reverse sm:flex-row items-center justify-between gap-2.5 shrink-0">
+        <button
+          onclick="keepOriginalDictionText()"
+          class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition border border-zinc-700 cursor-pointer text-center"
+        >
+          Manter Meu Texto Original (Ciente do Risco)
+        </button>
+
+        <button
+          onclick="applyDictionSuggestion()"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-95"
+        >
+          <i data-lucide="check-check" class="w-4 h-4"></i>
+          <span>Aplicar Correções Sugeridas (Recomendado)</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 </body>
 </html>
