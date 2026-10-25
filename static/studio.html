@@ -2947,10 +2947,151 @@ Deseja zerar os contadores de testes para começar do zero?`);
     }
 
     
+    // =========================================================================
+    // MOTOR DE ANÁLISE DE DICÇÃO & GRAMÁTICA CLIENT-SIDE (INSTANTÂNEO & OFFLINE)
+    // =========================================================================
+    function analyzeTextDictionJS(text) {
+      if (!text || !text.trim()) {
+        return { has_issues: false, issues_count: 0, issues_details: [], original_text: text, suggested_text: text };
+      }
+
+      const original = text.trim();
+      let working = original;
+      const issues = [];
+
+      // 1. Regras coloquiais e gírias orais
+      const colloquialRules = [
+        { regex: /\b[Oo]nti\b/g, rep: 'Ontem', orig: 'onti', to: 'ontem', reason: 'Gíria oral que causa pronúncia truncada na voz neural.' },
+        { regex: /\bnum\s+(pude|posso|sei|quero|vou|vai|deu|tinha|é|consigo|faz)\b/gi, rep: 'não $1', orig: 'num', to: 'não', reason: 'Linguagem coloquial falada que a IA não reconhece como negação.' },
+        { regex: /,\s*mais\s+(eu|ele|ela|nós|eles|elas|não|num|ninguém|alguém)\b/gi, rep: ', mas $1', orig: 'mais', to: 'mas', reason: 'Uso indevido de "mais" (soma) em vez de "mas" (oposição).' },
+        { regex: /\bmais\s+(eu|ele|ela|nós|eles|elas)\b/gi, rep: 'mas $1', orig: 'mais', to: 'mas', reason: 'Uso indevido de "mais" em vez de "mas".' },
+        { regex: /\bta\b/gi, rep: 'está', orig: 'ta', to: 'está', reason: 'Abreviação coloquial do verbo estar.' },
+        { regex: /\btá\b/gi, rep: 'está', orig: 'tá', to: 'está', reason: 'Abreviação coloquial do verbo estar.' },
+        { regex: /\bto\b/gi, rep: 'estou', orig: 'to', to: 'estou', reason: 'Abreviação coloquial de estou.' },
+        { regex: /\btô\b/gi, rep: 'estou', orig: 'tô', to: 'estou', reason: 'Abreviação coloquial de estou.' },
+        { regex: /\btava\b/gi, rep: 'estava', orig: 'tava', to: 'estava', reason: 'Forma coloquial de estava.' },
+        { regex: /\btavam\b/gi, rep: 'estavam', orig: 'tavam', to: 'estavam', reason: 'Forma coloquial de estavam.' },
+        { regex: /\btamo\b/gi, rep: 'estamos', orig: 'tamo', to: 'estamos', reason: 'Forma coloquial de estamos.' },
+        { regex: /\btamos\b/gi, rep: 'estamos', orig: 'tamos', to: 'estamos', reason: 'Forma coloquial de estamos.' },
+        { regex: /\bpra\b/gi, rep: 'para', orig: 'pra', to: 'para', reason: 'Contração coloquial de para.' },
+        { regex: /\bpro\b/gi, rep: 'para o', orig: 'pro', to: 'para o', reason: 'Contração coloquial de para o.' },
+        { regex: /\bpros\b/gi, rep: 'para os', orig: 'pros', to: 'para os', reason: 'Contração coloquial de para os.' },
+        { regex: /\bpras\b/gi, rep: 'para as', orig: 'pras', to: 'para as', reason: 'Contração coloquial de para as.' },
+        { regex: /\bvc\b/gi, rep: 'você', orig: 'vc', to: 'você', reason: 'Abreviação de internet.' },
+        { regex: /\bvcs\b/gi, rep: 'vocês', orig: 'vcs', to: 'vocês', reason: 'Abreviação de internet.' },
+        { regex: /\bpq\b/gi, rep: 'porque', orig: 'pq', to: 'porque', reason: 'Abreviação de internet.' },
+        { regex: /\bp\/q\b/gi, rep: 'porque', orig: 'p/q', to: 'porque', reason: 'Abreviação de internet.' },
+        { regex: /\btb\b/gi, rep: 'também', orig: 'tb', to: 'também', reason: 'Abreviação de internet.' },
+        { regex: /\btbm\b/gi, rep: 'também', orig: 'tbm', to: 'também', reason: 'Abreviação de internet.' },
+        { regex: /\bq\b/gi, rep: 'que', orig: 'q', to: 'que', reason: 'Abreviação de internet.' },
+        { regex: /\bmsg\b/gi, rep: 'mensagem', orig: 'msg', to: 'mensagem', reason: 'Abreviação de mensagem.' },
+        { regex: /\bmsgs\b/gi, rep: 'mensagens', orig: 'msgs', to: 'mensagens', reason: 'Abreviação de mensagens.' },
+        { regex: /\bblz\b/gi, rep: 'beleza', orig: 'blz', to: 'beleza', reason: 'Gíria de internet.' },
+        { regex: /\bfds\b/gi, rep: 'fim de semana', orig: 'fds', to: 'fim de semana', reason: 'Abreviação de fim de semana.' },
+        { regex: /\bvdd\b/gi, rep: 'verdade', orig: 'vdd', to: 'verdade', reason: 'Abreviação de verdade.' },
+        { regex: /\bcmg\b/gi, rep: 'comigo', orig: 'cmg', to: 'comigo', reason: 'Abreviação de comigo.' },
+        { regex: /\bctz\b/gi, rep: 'com certeza', orig: 'ctz', to: 'com certeza', reason: 'Abreviação de com certeza.' },
+        { regex: /\bpfv\b/gi, rep: 'por favor', orig: 'pfv', to: 'por favor', reason: 'Abreviação de por favor.' },
+        { regex: /\bobg\b/gi, rep: 'obrigado', orig: 'obg', to: 'obrigado', reason: 'Abreviação de obrigado.' }
+      ];
+
+      for (const r of colloquialRules) {
+        if (r.regex.test(working)) {
+          issues.push({ original: r.orig, suggestion: r.to, reason: r.reason });
+          working = working.replace(r.regex, r.rep);
+        }
+      }
+
+      // 2. Verbos no infinitivo sem "r" após auxiliares (ex: tendo que paga -> pagar)
+      const infRegex = /\b(tendo\s+que|tem\s+que|ter\s+que|vai|ia|para|sem|ao)\s+(paga|faze|anda|corre|come|compra|vende|olha|ajuda|escuta|fala|resolve|escreve|bebe|mexe|cria|grava|aprende|descobre)\b/gi;
+      if (infRegex.test(working)) {
+        working = working.replace(infRegex, (match, aux, v) => {
+          const vCorr = v.toLowerCase() === 'faze' ? 'fazer' : v + 'r';
+          issues.push({ original: aux + ' ' + v, suggestion: aux + ' ' + vCorr, reason: 'Verbo no infinitivo sem o "r" final.' });
+          return aux + ' ' + vCorr;
+        });
+      }
+
+      // 3. Acentuação de palavras frequentes
+      const accentRules = [
+        { regex: /\bla\b/gi, rep: 'lá', orig: 'la', to: 'lá', reason: 'Ausência de acento altera a sílaba tônica.' },
+        { regex: /\bja\b/gi, rep: 'já', orig: 'ja', to: 'já', reason: 'Falta de acento altera a pronúncia.' },
+        { regex: /\bmes\b/gi, rep: 'mês', orig: 'mes', to: 'mês', reason: 'Falta de acento fecha o som incorretamente.' },
+        { regex: /\bso\b/gi, rep: 'só', orig: 'so', to: 'só', reason: 'Sem acento fecha o som em "so".' },
+        { regex: /\bate\b/gi, rep: 'até', orig: 'ate', to: 'até', reason: 'Sem acento soa como o verbo atar.' },
+        { regex: /\bvoce\b/gi, rep: 'você', orig: 'voce', to: 'você', reason: 'Sem acento circunflexo oxítono.' },
+        { regex: /\bvoces\b/gi, rep: 'vocês', orig: 'voces', to: 'vocês', reason: 'Sem acento circunflexo oxítono.' },
+        { regex: /\btambem\b/gi, rep: 'também', orig: 'tambem', to: 'também', reason: 'Sem acento agudo nasal.' },
+        { regex: /\bnao\b/gi, rep: 'não', orig: 'nao', to: 'não', reason: 'Sem til nasal.' },
+        { regex: /\bestao\b/gi, rep: 'estão', orig: 'estao', to: 'estão', reason: 'Sem til nasal.' },
+        { regex: /\bsao\b/gi, rep: 'são', orig: 'sao', to: 'são', reason: 'Sem til nasal.' },
+        { regex: /\bvarios\b/gi, rep: 'vários', orig: 'varios', to: 'vários', reason: 'Palavra paroxítona sem acento.' },
+        { regex: /\bvarias\b/gi, rep: 'várias', orig: 'varias', to: 'várias', reason: 'Palavra paroxítona sem acento.' },
+        { regex: /\bautomovel\b/gi, rep: 'automóvel', orig: 'automovel', to: 'automóvel', reason: 'Sem acento paroxítono no mó.' },
+        { regex: /\bautomoveis\b/gi, rep: 'automóveis', orig: 'automoveis', to: 'automóveis', reason: 'Sem acento paroxítono.' },
+        { regex: /\bonibus\b/gi, rep: 'ônibus', orig: 'onibus', to: 'ônibus', reason: 'Proparoxítona sem acento.' },
+        { regex: /\bnumero\b/gi, rep: 'número', orig: 'numero', to: 'número', reason: 'Sem acento proparoxítono.' },
+        { regex: /\bnumeros\b/gi, rep: 'números', orig: 'numeros', to: 'números', reason: 'Sem acento proparoxítono.' },
+        { regex: /\bhistoria\b/gi, rep: 'história', orig: 'historia', to: 'história', reason: 'Sem acento paroxítono.' },
+        { regex: /\bvideo\b/gi, rep: 'vídeo', orig: 'video', to: 'vídeo', reason: 'Sem acento paroxítono.' },
+        { regex: /\bvideos\b/gi, rep: 'vídeos', orig: 'videos', to: 'vídeos', reason: 'Sem acento paroxítono.' },
+        { regex: /\baudio\b/gi, rep: 'áudio', orig: 'audio', to: 'áudio', reason: 'Sem acento paroxítono.' },
+        { regex: /\baudios\b/gi, rep: 'áudios', orig: 'audios', to: 'áudios', reason: 'Sem acento paroxítono.' },
+        { regex: /\bcamera\b/gi, rep: 'câmera', orig: 'camera', to: 'câmera', reason: 'Proparoxítona sem acento.' },
+        { regex: /\bpublico\b/gi, rep: 'público', orig: 'publico', to: 'público', reason: 'Sem acento proparoxítono.' },
+        { regex: /\bconteudo\b/gi, rep: 'conteúdo', orig: 'conteudo', to: 'conteúdo', reason: 'Sem acento agudo no hiato em u.' },
+        { regex: /\bgratis\b/gi, rep: 'grátis', orig: 'gratis', to: 'grátis', reason: 'Sem acento paroxítono.' },
+        { regex: /\bfacil\b/gi, rep: 'fácil', orig: 'facil', to: 'fácil', reason: 'Sem acento paroxítono.' },
+        { regex: /\bdificil\b/gi, rep: 'difícil', orig: 'dificil', to: 'difícil', reason: 'Sem acento paroxítono.' },
+        { regex: /\brapido\b/gi, rep: 'rápido', orig: 'rapido', to: 'rápido', reason: 'Proparoxítona sem acento.' },
+        { regex: /\bincrivel\b/gi, rep: 'incrível', orig: 'incrivel', to: 'incrível', reason: 'Sem acento paroxítono.' }
+      ];
+
+      for (const r of accentRules) {
+        if (r.regex.test(working)) {
+          issues.push({ original: r.orig, suggestion: r.to, reason: r.reason });
+          working = working.replace(r.regex, r.rep);
+        }
+      }
+
+      // 4. Formata marcas e nomes
+      working = working.replace(/\bchatgpt\b/gi, 'ChatGPT');
+      working = working.replace(/\byoutube\b/gi, 'YouTube');
+      working = working.replace(/\bwhatsapp\b/gi, 'WhatsApp');
+      working = working.replace(/\bpix\b/gi, 'PIX');
+
+      // 5. Pontuação e espaçamentos
+      working = working.replace(/([a-zA-ZÀ-ÿ])([,;:\.\!\?])([a-zA-ZÀ-ÿ0-9])/g, '$1$2 $3');
+      working = working.replace(/\s+([,;:\.\!\?])/g, '$1');
+      working = working.replace(/\!{2,}/g, '!');
+      working = working.replace(/\?{2,}/g, '?');
+
+      // 6. Capitalização
+      working = working.replace(/(?:^|[\.\!\?]\s+)([a-zA-ZÀ-ÿ])/g, (m, char) => m.toUpperCase());
+
+      // 7. Pontuação final
+      if (working && !/[.!?…]$/.test(working)) {
+        working += '.';
+      }
+
+      const has_issues = issues.length > 0 || working !== original;
+
+      return {
+        has_issues: has_issues,
+        issues_count: issues.length,
+        issues_details: issues,
+        original_text: original,
+        suggested_text: working,
+        risk_explanation: "A inteligência artificial lê exatamente os fonemas da grafia enviada. Palavras com gírias orais (como 'onti', 'num', 'ta'), verbos cortados (como 'paga') ou palavras sem acento (como 'la', 'mes', 'onibus') forçam a voz neural a mudar a sílaba tônica, cortar o fôlego ou soar robotizada.",
+        disclaimer: "Termo de Isenção de Responsabilidade Fonética: O usuário declara ciência de que o motor neural de voz sintetiza o texto estritamente de acordo com a grafia fornecida. Ao optar por manter expressões coloquiais, gírias ou erros ortográficos sem acatar as correções recomendadas, o usuário isenta o Clonavoz de qualquer responsabilidade sobre desvios de pronúncia, cortes fonéticos ou sonoridade não natural no áudio gerado."
+      };
+    }
+
     let currentDictionAnalysis = null;
     let dictionWarningDismissedForText = '';
+    let isPendingGenerationAfterDiction = false;
 
-    async function enhanceTextForDiction() {
+    function enhanceTextForDiction() {
       const text = textInput.value.trim();
       if (!text) {
         showToast('Digite ou cole algum texto antes de otimizar a dicção.', 'warning');
@@ -2964,37 +3105,36 @@ Deseja zerar os contadores de testes para começar do zero?`);
         btn.disabled = true;
       }
 
-      try {
-        const res = await fetch('/api/analyze-text', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text })
-        });
-        const data = await res.json();
-        currentDictionAnalysis = data;
+      setTimeout(() => {
+        try {
+          const analysis = analyzeTextDictionJS(text);
+          currentDictionAnalysis = analysis;
 
-        if (data && data.has_issues && data.issues_count > 0) {
-          openDictionModal(data);
-        } else {
-          if (data && data.suggested_text) {
-            textInput.value = data.suggested_text;
-            updateTextStats();
+          if (analysis && analysis.has_issues && analysis.issues_count > 0) {
+            openDictionModal(analysis, false);
+          } else {
+            if (analysis && analysis.suggested_text) {
+              textInput.value = analysis.suggested_text;
+              updateTextStats();
+            }
+            showToast('✨ Texto analisado: Pontuação e dicção já estão impecáveis!', 'success');
           }
-          showToast('✨ Texto analisado: Pontuação e dicção já estão impecáveis!', 'success');
+        } catch (err) {
+          console.error('Erro ao analisar dicção:', err);
+          showToast('Erro ao analisar dicção.', 'error');
+        } finally {
+          if (btn) {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            if (window.lucide) lucide.createIcons();
+          }
         }
-      } catch (err) {
-        console.error('Erro ao analisar texto:', err);
-        showToast('Não foi possível analisar o texto.', 'error');
-      } finally {
-        if (btn) {
-          btn.innerHTML = originalHtml;
-          btn.disabled = false;
-          if (window.lucide) lucide.createIcons();
-        }
-      }
+      }, 150);
     }
 
-    function openDictionModal(data) {
+    function openDictionModal(data, forGeneration = false) {
+      isPendingGenerationAfterDiction = forGeneration;
+      
       const badge = document.getElementById('diction-issues-badge');
       if (badge) badge.innerText = `${data.issues_count} ponto(s) detectado(s)`;
       
@@ -3021,6 +3161,20 @@ Deseja zerar os contadores de testes para começar do zero?`);
       const sugEl = document.getElementById('diction-suggested-text');
       if (sugEl) sugEl.innerText = data.suggested_text || '';
       
+      // Ajusta botões caso tenha sido disparado ao clicar em "Gerar Áudio"
+      const btnApply = document.getElementById('btn-apply-diction');
+      const btnKeep = document.getElementById('btn-keep-diction');
+      if (btnApply) {
+        btnApply.innerHTML = forGeneration 
+          ? '<i data-lucide="check-check" class="w-4 h-4"></i><span>Aplicar e Gerar Áudio Perfeito</span>'
+          : '<i data-lucide="check-check" class="w-4 h-4"></i><span>Aplicar Correções Sugeridas (Recomendado)</span>';
+      }
+      if (btnKeep) {
+        btnKeep.innerText = forGeneration
+          ? 'Gerar Mesmo Assim com Texto Original'
+          : 'Manter Meu Texto Original (Ciente do Risco)';
+      }
+
       const modal = document.getElementById('modal-diction-advisor');
       if (modal) modal.classList.remove('hidden');
       if (window.lucide) lucide.createIcons();
@@ -3036,7 +3190,12 @@ Deseja zerar os contadores de testes para começar do zero?`);
         textInput.value = currentDictionAnalysis.suggested_text;
         updateTextStats();
         closeDictionModal();
-        showToast('✨ Correções aplicadas com sucesso! Seu áudio terá dicção perfeita.', 'success');
+        showToast('✨ Correções aplicadas com sucesso! Dicção perfeita garantida.', 'success');
+        
+        if (isPendingGenerationAfterDiction) {
+          isPendingGenerationAfterDiction = false;
+          generateVoice();
+        }
       }
     }
 
@@ -3044,6 +3203,11 @@ Deseja zerar os contadores de testes para começar do zero?`);
       dictionWarningDismissedForText = textInput.value.trim();
       closeDictionModal();
       showToast('⚠️ Texto original mantido conforme sua escolha.', 'info');
+      
+      if (isPendingGenerationAfterDiction) {
+        isPendingGenerationAfterDiction = false;
+        generateVoice();
+      }
     }
 
 
@@ -3098,6 +3262,19 @@ Deseja zerar os contadores de testes para começar do zero?`);
     // Generate Voice with Credit Validation & Supabase Integration
     async function generateVoice() {
       const text = textInput.value.trim();
+      if (!text) {
+        showToast('Digite algum texto para sintetizar.', 'error');
+        textInput.focus();
+        return;
+      }
+
+      // Verificação Inteligente de Dicção & Gramática antes de consumir créditos
+      const dictionCheck = analyzeTextDictionJS(text);
+      if (dictionCheck && dictionCheck.has_issues && dictionCheck.issues_count > 0 && dictionWarningDismissedForText !== text) {
+        currentDictionAnalysis = dictionCheck;
+        openDictionModal(dictionCheck, true);
+        return;
+      }
       if (!text) {
         showToast('Digite algum texto para sintetizar.', 'error');
         textInput.focus();
@@ -3758,6 +3935,7 @@ Deseja zerar os contadores de testes para começar do zero?`);
       <!-- Footer do Modal com Botões -->
       <div class="p-4 sm:p-5 border-t border-zinc-800/80 bg-zinc-900/60 flex flex-col-reverse sm:flex-row items-center justify-between gap-2.5 shrink-0">
         <button
+          id="btn-keep-diction"
           onclick="keepOriginalDictionText()"
           class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition border border-zinc-700 cursor-pointer text-center"
         >
@@ -3765,6 +3943,7 @@ Deseja zerar os contadores de testes para começar do zero?`);
         </button>
 
         <button
+          id="btn-apply-diction"
           onclick="applyDictionSuggestion()"
           class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-95"
         >
