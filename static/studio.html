@@ -1501,7 +1501,9 @@
       message = 'Você tem certeza que deseja prosseguir?',
       confirmText = 'Confirmar',
       cancelText = 'Cancelar',
-      type = 'danger'
+      type = 'danger',
+      html = null,
+      icon = null
     } = {}) {
       return new Promise((resolve) => {
         const modal = document.getElementById('custom-confirm-modal');
@@ -1513,7 +1515,11 @@
         const btnCancel = document.getElementById('confirm-modal-btn-cancel');
 
         titleEl.innerText = title;
-        msgEl.innerText = message;
+        if (html) {
+          msgEl.innerHTML = html;
+        } else {
+          msgEl.innerText = message;
+        }
         btnConfirm.innerText = confirmText;
         btnCancel.innerText = cancelText;
 
@@ -1530,6 +1536,7 @@
           iconEl.setAttribute('data-lucide', 'help-circle');
           btnConfirm.className = 'flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 hover:from-brand-400 hover:to-amber-400 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-brand-500/20 transition cursor-pointer flex items-center justify-center gap-1.5';
         }
+        if (icon) iconEl.setAttribute('data-lucide', icon);
         lucide.createIcons();
 
         modal.classList.remove('hidden');
@@ -2542,17 +2549,33 @@
     }
 
     function openStudioStatsModal() {
-      fetch(`${API_BASE}/api/stats`).then(r => r.json()).then(stats => {
-        const resetAction = confirm(`📊 Métricas da Landing Page:
+      fetch(`${API_BASE}/api/stats`).then(r => r.json()).then(async stats => {
+        const row = (label, value, color = 'text-white') => `
+          <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-zinc-900/80 border border-zinc-800">
+            <span class="text-zinc-400">${label}</span>
+            <span class="font-bold ${color}">${value}</span>
+          </div>`;
+        const html = `
+          <div class="space-y-2 text-left text-xs mt-2">
+            ${row('Total de Visitas Reais', Number(stats.total_views || 0).toLocaleString('pt-BR'), 'text-brand-400')}
+            ${row('Visitas Hoje', Number(stats.today_views || 0).toLocaleString('pt-BR'))}
+            ${row('Visitantes Únicos', Number(stats.unique_visitors || 0).toLocaleString('pt-BR'))}
+            ${row('Última Visita', stats.last_visit || '—', 'text-zinc-300')}
+            <div class="flex items-start gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[11px] leading-snug">
+              <span>🛡️</span><span>Seus próprios acessos são ignorados e não contam.</span>
+            </div>
+            <p class="text-zinc-400 text-center pt-1">Deseja zerar os contadores de testes para começar do zero?</p>
+          </div>`;
 
-• Total de Visitas Reais: ${stats.total_views}
-• Visitas Hoje: ${stats.today_views}
-• Visitantes Únicos: ${stats.unique_visitors}
-• Última Visita: ${stats.last_visit}
+        const resetAction = await customConfirm({
+          title: 'Métricas da Landing Page',
+          html,
+          confirmText: 'Zerar Contadores',
+          cancelText: 'Fechar',
+          type: 'info',
+          icon: 'bar-chart-3'
+        });
 
-🛡️ Seus próprios acessos são ignorados e não contam.
-
-Deseja zerar os contadores de testes para começar do zero?`);
         if (resetAction) {
           fetch(`${API_BASE}/api/reset-stats`, { method: 'POST' }).then(() => {
             initStudioAdminViews();
@@ -3763,6 +3786,9 @@ Deseja zerar os contadores de testes para começar do zero?`);
       if (type === 'success') {
         toast.className = 'fixed bottom-6 right-6 panel-glass px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-emerald-500/40 bg-zinc-950/95 backdrop-blur-md transform transition-all duration-300 z-50 max-w-sm';
         icon.innerHTML = '<div class="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i></div>';
+      } else if (type === 'warning') {
+        toast.className = 'fixed bottom-6 right-6 panel-glass px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-amber-500/40 bg-zinc-950/95 backdrop-blur-md transform transition-all duration-300 z-50 max-w-sm';
+        icon.innerHTML = '<div class="w-6 h-6 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0"><i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i></div>';
       } else if (type === 'error') {
         toast.className = 'fixed bottom-6 right-6 panel-glass px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-red-500/40 bg-zinc-950/95 backdrop-blur-md transform transition-all duration-300 z-50 max-w-sm';
         icon.innerHTML = '<div class="w-6 h-6 rounded-lg bg-red-500/20 flex items-center justify-center shrink-0"><i data-lucide="alert-circle" class="w-4 h-4 text-red-400"></i></div>';

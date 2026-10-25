@@ -260,7 +260,7 @@
         } catch (e) {}
       } else {
         navigator.clipboard.writeText(window.location.href);
-        alert('Link copiado com sucesso!');
+        (function(){var t=document.createElement('div');t.textContent='✅ Link copiado com sucesso!';t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#09090b;color:#fff;border:1px solid rgba(16,185,129,.4);padding:12px 18px;border-radius:16px;font:600 13px system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:9999';document.body.appendChild(t);setTimeout(function(){t.remove();},2500);})();
       }
     }
 

@@ -1359,7 +1359,7 @@
     }
 
     async function resetAdminAnalytics() {
-      if (!confirm("Deseja zerar os contadores de visita para iniciar uma contagem limpa sem testes?")) return;
+      if (!(await cvConfirm("Zerar Contadores", "Deseja zerar os contadores de visita para iniciar uma contagem limpa sem testes?", "Zerar Contadores", "Cancelar"))) return;
       try {
         const res = await fetch(`${API_ANALYTICS_BASE}/api/reset-stats`, { method: 'POST' });
         if (res.ok) {
@@ -1458,5 +1458,36 @@
   >
     <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
   </button>
+
+  <!-- MODAL DE CONFIRMAÇÃO PADRÃO CLONAVOZ -->
+  <div id="cv-confirm-modal" style="display:none" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] items-center justify-center p-4">
+    <div class="border border-orange-500/30 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl bg-zinc-950 text-center">
+      <div class="w-12 h-12 rounded-2xl bg-orange-500/15 border border-orange-500/40 flex items-center justify-center text-orange-400 mx-auto text-xl">📊</div>
+      <div class="space-y-1.5">
+        <h3 id="cv-confirm-title" class="text-base font-black text-white uppercase tracking-wider">Confirmar</h3>
+        <p id="cv-confirm-msg" class="text-xs text-zinc-400 leading-relaxed"></p>
+      </div>
+      <div class="flex items-center gap-2 pt-2">
+        <button id="cv-confirm-cancel" type="button" class="flex-1 py-2.5 px-4 rounded-xl border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 font-semibold text-xs transition cursor-pointer">Cancelar</button>
+        <button id="cv-confirm-ok" type="button" class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-orange-500/20 transition cursor-pointer">Confirmar</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    function cvConfirm(title, message, okText = 'Confirmar', cancelText = 'Cancelar') {
+      return new Promise((resolve) => {
+        const m = document.getElementById('cv-confirm-modal');
+        document.getElementById('cv-confirm-title').innerText = title;
+        document.getElementById('cv-confirm-msg').innerText = message;
+        const ok = document.getElementById('cv-confirm-ok');
+        const cancel = document.getElementById('cv-confirm-cancel');
+        ok.innerText = okText; cancel.innerText = cancelText;
+        m.style.display = 'flex';
+        const done = (v) => { m.style.display = 'none'; ok.onclick = null; cancel.onclick = null; resolve(v); };
+        ok.onclick = () => done(true);
+        cancel.onclick = () => done(false);
+      });
+    }
+  </script>
 </body>
 </html>
