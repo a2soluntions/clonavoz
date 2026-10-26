@@ -1621,6 +1621,22 @@
     const SUPABASE_FALLBACK_URL = "https://ekncpoggwgmbmzmfmfvb.supabase.co";
     const SUPABASE_FALLBACK_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrbmNwb2dnd2dtYm16bWZtZnZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4NDk5MjcsImV4cCI6MjEwNzQyNTkyN30.5shXkcVllbGYyOZCXmxISQ1qm7RtDHnsqFsH4BtHZ2c";
 
+    // Rastreamento Silencioso de Visitas no Estúdio (Ignorando Dono)
+    try {
+      const _urlParams = new URLSearchParams(window.location.search);
+      if (_urlParams.has('admin') || _urlParams.has('stats') || _urlParams.has('visitas')) {
+        localStorage.setItem('clonavoz_owner_access', 'true');
+      }
+      const _isOwner = localStorage.getItem('clonavoz_owner_access') === 'true';
+      if (!_isOwner) {
+        fetch(`${API_BASE}/api/track-visit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: window.location.pathname, referrer: document.referrer || '' })
+        }).catch(() => {});
+      }
+    } catch (_) {}
+
     function getFullAudioUrl(u) {
       if (!u) return '';
       if (u.startsWith('http://') || u.startsWith('https://')) return u;
