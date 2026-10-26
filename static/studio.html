@@ -2287,9 +2287,11 @@
 
     function playCurrentVoiceSample() {
       const v = voices.find(item => item.key === selectedVoiceKey);
-      const voiceKey = selectedVoiceKey || 'dii';
-      // Se não tiver sample_url ou estiver vazio, busca diretamente nos demos da Vercel
-      const sampleUrl = (v && v.sample_url) ? v.sample_url : `/demos/${voiceKey}_sample.mp3`;
+      const isSu = v && getCleanVoiceName(v).toLowerCase() === 'su';
+      const voiceKey = isSu ? 'su' : (selectedVoiceKey || 'dii');
+      const presetKey = currentPreset || 'welcome';
+      // Para a voz Su ou vozes padrão, reproduz a frase de demonstração ativa
+      const sampleUrl = isSu ? `/demos/su_${presetKey}.mp3` : ((v && v.sample_url) ? v.sample_url : `/demos/${voiceKey}_sample.mp3`);
 
       displayAudioResult({
         filename: `amostra_${voiceKey}.mp3`,
@@ -2946,7 +2948,9 @@
     }
 
     function playCurrentPresetDemo() {
-      const demoKey = selectedVoiceKey || 'dii';
+      const vObj = voices.find(item => item.key === selectedVoiceKey);
+      const isSu = vObj && getCleanVoiceName(vObj).toLowerCase() === 'su';
+      const demoKey = isSu ? 'su' : (selectedVoiceKey || 'dii');
       const presetKey = currentPreset || 'welcome';
       // Mapeamento correto: no frontend da Vercel, a pasta static é a raiz, então os demos ficam em /demos/
       const presetUrl = `/demos/${demoKey}_${presetKey}.mp3`;
