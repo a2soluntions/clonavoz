@@ -769,6 +769,24 @@
           </div>
         </div>
 
+        <!-- WhatsApp / Celular (Apenas no Cadastro) -->
+        <div id="auth-field-whatsapp" class="hidden space-y-1">
+          <label class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider flex items-center justify-between">
+            <span>WhatsApp / Telefone</span>
+            <span class="text-[10px] text-zinc-500 font-normal">Opcional • Suporte e Promoções</span>
+          </label>
+          <div class="relative">
+            <input
+              type="tel"
+              id="auth-input-whatsapp"
+              autocomplete="tel"
+              placeholder="(11) 99999-9999"
+              class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 pl-10"
+            />
+            <i data-lucide="phone" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-3"></i>
+          </div>
+        </div>
+
         <!-- E-mail (Exibido no login, cadastro e esqueci minha senha) -->
         <div id="auth-field-email" class="space-y-1">
           <label class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">E-mail</label>
@@ -903,6 +921,27 @@
         <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 shrink-0">Vitalício</span>
       </div>
 
+      <!-- Banner Promocional de Boas-Vindas (Tripwire 30 Créditos por R$ 19,90) -->
+      <div id="recharge-tripwire-banner" onclick="selectPackage('boas_vindas', '19,90', 30)" class="p-3.5 rounded-xl bg-gradient-to-r from-brand-500/20 via-amber-500/15 to-brand-500/10 border-2 border-brand-500/50 hover:border-brand-400 cursor-pointer transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-brand-500/25 text-brand-400 flex items-center justify-center font-black text-lg shrink-0 border border-brand-500/40">
+            🔥
+          </div>
+          <div class="text-left">
+            <div class="flex items-center gap-2">
+              <span class="text-xs sm:text-sm font-black text-white group-hover:text-brand-300 transition">OFERTA DE BOAS-VINDAS: 30 ÁUDIOS</span>
+              <span class="text-[9px] font-black text-black bg-brand-400 px-1.5 py-0.5 rounded uppercase">65% OFF</span>
+            </div>
+            <p class="text-[11px] text-zinc-400 mt-0.5">De <span class="line-through">R$ 57,90</span> por apenas <strong class="text-emerald-400 font-mono text-xs sm:text-sm">R$ 19,90</strong> no PIX • Apenas <strong class="text-brand-300">R$ 0,66</strong> por áudio</p>
+          </div>
+        </div>
+        <div class="text-right shrink-0">
+          <span class="inline-block px-3 py-1.5 rounded-lg bg-brand-500 text-black text-xs font-black shadow-md group-hover:bg-brand-400 transition pointer-events-none">
+            Ativar R$ 19,90
+          </span>
+        </div>
+      </div>
+
       <!-- Packages Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-left">
         
@@ -993,6 +1032,101 @@
             <span>Simular Aprovação Imediata (Ambiente de Testes)</span>
           </button>
         </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL DE OFERTA EXCLUSIVA DE BOAS-VINDAS (TRIPWIRE 30 CRÉDITOS R$ 19,90) -->
+  <div id="welcome-offer-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="panel-glass border-2 border-brand-500/60 rounded-2xl max-w-lg w-full p-6 sm:p-7 space-y-5 shadow-[0_0_60px_rgba(249,115,22,0.3)] relative text-center">
+      
+      <!-- Botão Fechar -->
+      <button onclick="closeWelcomeOfferModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white transition p-1 cursor-pointer">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <!-- Badge de Urgência & Cronômetro -->
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/15 border border-brand-500/40 text-brand-400 text-xs font-bold uppercase tracking-wider mx-auto">
+        <span class="w-2 h-2 rounded-full bg-brand-500 animate-ping"></span>
+        <span>Oferta Especial de Boas-Vindas</span>
+        <span class="text-zinc-500">•</span>
+        <span id="welcome-offer-timer" class="text-white font-mono font-black">14:59</span>
+      </div>
+
+      <!-- Título Impactante -->
+      <div class="space-y-1.5">
+        <h3 class="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight">
+          Gostou da Voz Neural? <br/>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-amber-300 to-brand-500">
+            Desbloqueie 30 Áudios com 65% OFF
+          </span>
+        </h3>
+        <p class="text-xs text-zinc-400 max-w-sm mx-auto">
+          Condição especial única para novos criadores. Produza seus canais dark, Reels, TikToks e VSLs em escala!
+        </p>
+      </div>
+
+      <!-- Card de Preço / Economia -->
+      <div class="p-4 rounded-xl bg-zinc-900/90 border border-brand-500/30 text-center relative overflow-hidden">
+        <div class="absolute -right-8 -top-8 w-24 h-24 bg-brand-500/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center justify-center gap-3">
+          <span class="text-sm text-zinc-500 line-through">De R$ 57,90</span>
+          <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Economize R$ 38,00</span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-center gap-1.5">
+          <span class="text-xs text-zinc-400 font-bold uppercase">Por apenas</span>
+          <span class="text-3xl sm:text-4xl font-black text-white font-mono">R$ 19,90</span>
+          <span class="text-xs text-brand-400 font-bold">no PIX</span>
+        </div>
+        <div class="mt-1 text-[11px] text-zinc-400">
+          Apenas <strong>R$ 0,66</strong> por áudio completo (cada crédito gera até 3.000 caracteres / ~3 min)
+        </div>
+      </div>
+
+      <!-- Lista de Benefícios -->
+      <div class="space-y-2 text-left text-xs text-zinc-300 px-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <i data-lucide="check" class="w-3 h-3"></i>
+          </div>
+          <span><strong>30 Créditos Vitalícios:</strong> Não expiram nunca, use conforme precisar</span>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <div class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <i data-lucide="check" class="w-3 h-3"></i>
+          </div>
+          <span><strong>Todas as Vozes VIP Liberadas:</strong> Acesso a Su, Bella, Adam e Clones</span>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <div class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <i data-lucide="check" class="w-3 h-3"></i>
+          </div>
+          <span><strong>Uso Comercial 100% Liberado:</strong> Monetize no YouTube, TikTok e Anúncios</span>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <div class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <i data-lucide="check" class="w-3 h-3"></i>
+          </div>
+          <span><strong>Sem Mensalidades:</strong> Pagamento único no PIX com liberação imediata</span>
+        </div>
+      </div>
+
+      <!-- CTA Principal -->
+      <div class="space-y-2.5 pt-2">
+        <button
+          onclick="claimWelcomeOffer()"
+          class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 hover:from-brand-400 hover:to-amber-400 text-black font-black text-sm uppercase tracking-wider transition shadow-lg shadow-brand-500/25 cursor-pointer flex items-center justify-center gap-2 transform active:scale-[0.99]"
+        >
+          <i data-lucide="zap" class="w-4 h-4 fill-black"></i>
+          <span>Garantir 30 Áudios por R$ 19,90 Agora</span>
+        </button>
+        <button
+          onclick="closeWelcomeOfferModal(); openRechargeModal();"
+          class="text-xs text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
+        >
+          Ver tabela completa de pacotes normais →
+        </button>
       </div>
 
     </div>
@@ -1744,6 +1878,8 @@
         tabSignup.className = 'py-2 text-xs font-bold rounded-lg transition bg-brand-500 text-black shadow-md cursor-pointer';
         tabLogin.className = 'py-2 text-xs font-semibold rounded-lg transition text-zinc-400 hover:text-white cursor-pointer';
         fieldName.classList.remove('hidden');
+        const fieldWhatsapp = document.getElementById('auth-field-whatsapp');
+        if (fieldWhatsapp) fieldWhatsapp.classList.remove('hidden');
         fieldEmail.classList.remove('hidden');
         fieldPassword.classList.remove('hidden');
         fieldConfirmPassword.classList.add('hidden');
@@ -1759,6 +1895,8 @@
         tabLogin.className = 'py-2 text-xs font-bold rounded-lg transition bg-brand-500 text-black shadow-md cursor-pointer';
         tabSignup.className = 'py-2 text-xs font-semibold rounded-lg transition text-zinc-400 hover:text-white cursor-pointer';
         fieldName.classList.add('hidden');
+        const fieldWhatsapp = document.getElementById('auth-field-whatsapp');
+        if (fieldWhatsapp) fieldWhatsapp.classList.add('hidden');
         fieldEmail.classList.remove('hidden');
         fieldPassword.classList.remove('hidden');
         fieldConfirmPassword.classList.add('hidden');
@@ -1772,6 +1910,8 @@
       } else if (mode === 'forgot') {
         tabsContainer.classList.add('hidden');
         fieldName.classList.add('hidden');
+        const fieldWhatsapp = document.getElementById('auth-field-whatsapp');
+        if (fieldWhatsapp) fieldWhatsapp.classList.add('hidden');
         fieldEmail.classList.remove('hidden');
         fieldPassword.classList.add('hidden');
         fieldConfirmPassword.classList.add('hidden');
@@ -1827,6 +1967,8 @@
       const email = document.getElementById('auth-input-email').value.trim();
       const password = document.getElementById('auth-input-password').value;
       const name = document.getElementById('auth-input-name').value.trim();
+      const whatsappInput = document.getElementById('auth-input-whatsapp');
+      const whatsapp = whatsappInput ? whatsappInput.value.trim() : '';
       const submitBtn = document.getElementById('auth-btn-submit');
       const submitText = document.getElementById('auth-btn-submit-text');
 
@@ -1926,7 +2068,10 @@
             email: email,
             password: password,
             options: {
-              data: { full_name: name || email.split('@')[0] }
+              data: {
+                full_name: name || email.split('@')[0],
+                whatsapp: whatsapp || ''
+              }
             }
           });
 
@@ -1935,6 +2080,11 @@
           if (data.session) {
             showToast('🎉 Conta criada com sucesso! 1 crédito grátis ativado!', 'success');
             closeAuthModal();
+            if (whatsapp && supabaseClient) {
+              try {
+                await supabaseClient.from('profiles').update({ whatsapp: whatsapp }).eq('id', data.user.id);
+              } catch (_) {}
+            }
             await handleAuthSession(data.session);
           } else if (data.user) {
             showAuthAlert('Conta criada! Verifique seu e-mail para confirmar seu cadastro e liberar o estúdio.', 'success');
@@ -2342,6 +2492,58 @@
       }
     }
 
+    // Sistema de Oferta de Boas-Vindas (Tripwire 30 Créditos por R$ 19,90)
+    let welcomeOfferCountdown = 899; // 14:59
+    let welcomeOfferInterval = null;
+
+    function startWelcomeOfferTimer() {
+      if (welcomeOfferInterval) return;
+      const timerEl = document.getElementById('welcome-offer-timer');
+      welcomeOfferInterval = setInterval(() => {
+        if (welcomeOfferCountdown <= 0) {
+          clearInterval(welcomeOfferInterval);
+          welcomeOfferInterval = null;
+          if (timerEl) timerEl.innerText = '00:00';
+          return;
+        }
+        welcomeOfferCountdown--;
+        const mins = Math.floor(welcomeOfferCountdown / 60);
+        const secs = welcomeOfferCountdown % 60;
+        if (timerEl) {
+          timerEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+      }, 1000);
+    }
+
+    function openWelcomeOfferModal() {
+      if (supabaseClient && !currentSession) {
+        showToast('Crie sua conta para liberar a oferta exclusiva!', 'info');
+        openAuthModal('signup');
+        return;
+      }
+      const modal = document.getElementById('welcome-offer-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        startWelcomeOfferTimer();
+        lucide.createIcons();
+      }
+    }
+
+    function closeWelcomeOfferModal() {
+      const modal = document.getElementById('welcome-offer-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function claimWelcomeOffer() {
+      closeWelcomeOfferModal();
+      openRechargeModalWithPackage('boas_vindas', '19,90', 30);
+    }
+
+    function openRechargeModalWithPackage(pkgId, price, credits) {
+      openRechargeModal();
+      selectPackage(pkgId, price, credits);
+    }
+
     // Modals & PIX Gateway Integrado (Mercado Pago / Simulação)
     function openRechargeModal() {
       if (supabaseClient && !currentSession) {
@@ -2364,15 +2566,35 @@
 
     function selectPackage(id, price, credits) {
       selectedPkg = { id, price, credits };
-      document.getElementById('pix-package-name').innerText = id.toUpperCase();
-      document.getElementById('pix-package-price').innerText = `R$ ${price}`;
+      const pkgNameEl = document.getElementById('pix-package-name');
+      const pkgPriceEl = document.getElementById('pix-package-price');
+      if (pkgNameEl) {
+        pkgNameEl.innerText = id === 'boas_vindas' ? 'BOAS-VINDAS (30 CRÉDITOS)' : id.toUpperCase();
+      }
+      if (pkgPriceEl) {
+        pkgPriceEl.innerText = `R$ ${price}`;
+      }
       
       // Destaca o card selecionado visualmente
       document.querySelectorAll('.package-card').forEach(c => {
         c.classList.remove('border-brand-500', 'bg-brand-500/10', 'border-2');
         c.classList.add('border-zinc-800', 'bg-zinc-900/50');
       });
-      if (event && event.currentTarget) {
+
+      const tripwireBanner = document.getElementById('recharge-tripwire-banner');
+      if (id === 'boas_vindas') {
+        if (tripwireBanner) {
+          tripwireBanner.classList.add('border-brand-500', 'bg-brand-500/30', 'ring-2', 'ring-brand-500/50');
+          tripwireBanner.classList.remove('border-brand-500/50');
+        }
+      } else {
+        if (tripwireBanner) {
+          tripwireBanner.classList.remove('border-brand-500', 'bg-brand-500/30', 'ring-2', 'ring-brand-500/50');
+          tripwireBanner.classList.add('border-brand-500/50');
+        }
+      }
+
+      if (typeof event !== 'undefined' && event && event.currentTarget && event.currentTarget.classList && event.currentTarget.classList.contains('package-card')) {
         event.currentTarget.classList.add('border-brand-500', 'bg-brand-500/10', 'border-2');
         event.currentTarget.classList.remove('border-zinc-800', 'bg-zinc-900/50');
       }
@@ -3323,8 +3545,8 @@
       }
 
       if (userCredits <= 0) {
-        showToast('Seus créditos acabaram! Recarregue no PIX para continuar.', 'error');
-        openRechargeModal();
+        showToast('Seus créditos acabaram! Aproveite a oferta de boas-vindas com 65% OFF.', 'info');
+        openWelcomeOfferModal();
         return;
       }
 
@@ -3456,8 +3678,8 @@
             return;
           }
           if (res.status === 402) {
-            showToast(errDetail || 'Créditos esgotados! Faça uma recarga.', 'error');
-            openRechargeModal();
+            showToast(errDetail || 'Créditos esgotados! Aproveite a oferta exclusiva de boas-vindas.', 'info');
+            openWelcomeOfferModal();
             return;
           }
           throw new Error(errDetail);
@@ -3471,6 +3693,14 @@
           userCredits = Math.max(userCredits - 1, 0);
         }
         updateCreditUI();
+
+        // Se o saldo do usuário chegou a 0 (acabou o crédito grátis de boas-vindas),
+        // abre o modal de oferta tripwire após 3.5 segundos enquanto ele ouve o resultado
+        if (userCredits <= 0) {
+          setTimeout(() => {
+            openWelcomeOfferModal();
+          }, 3500);
+        }
 
         showToast(`🎉 Áudio de ${data.duration}s (~${estMinutes} min) gerado com sucesso em ${data.elapsed}s (${data.speed_factor}x tempo real)!`, 'success');
         displayAudioResult(data);
