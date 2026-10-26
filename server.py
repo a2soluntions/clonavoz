@@ -33,6 +33,7 @@ BGM_TRACKS = {
 
 # Vozes VIP da ElevenLabs mapeadas
 ELEVENLABS_VOICES = {
+    "el_su": {"voice_id": "qE4bxNbWYcb8hs72HJEO", "label": "Su (Ultra-HD Locutora Comercial)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "su", "fallback_semitones": 0.0},
     "el_rachel": {"voice_id": "pFZP5JQG7iQjIQuC4Bku", "label": "Rachel (Ultra-HD Narrativa)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "dii", "fallback_semitones": -0.6},
     "el_adam": {"voice_id": "pNInz6obpgDQGcFmaJgB", "label": "Adam (Ultra-HD Locutor VSL)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "miro", "fallback_semitones": -0.8},
     "el_sarah": {"voice_id": "EXAVITQu4vr4xnSDxMaL", "label": "Sarah (Ultra-HD Cloud VIP)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "sarah", "fallback_semitones": 0.0},
@@ -721,16 +722,18 @@ def get_voices():
     # 3. Custom uploaded voices
     custom_list = tts_engine.get_custom_voices()
     for cv in custom_list:
+        is_el = bool(cv.get("eleven_voice_id"))
         results.append(
             {
                 "key": cv["id"],
-                "label": f"{cv['name']} (Personalizada)",
+                "label": f"{cv['name']} [Clone Ultra-HD]" if is_el else f"{cv['name']} (Personalizada)",
                 "gender": cv["gender"],
-                "quality": f"Clone ({cv.get('pitch_hz', 0)} Hz)",
+                "quality": "ElevenLabs Multilingual v2" if is_el else f"Clone ({cv.get('pitch_hz', 0)} Hz)",
                 "type": "custom",
                 "is_downloaded": True,
                 "sample_url": cv.get("sample_url", ""),
                 "duration": cv.get("duration", 0),
+                "eleven_voice_id": cv.get("eleven_voice_id"),
             }
         )
     return results
@@ -896,9 +899,28 @@ def synthesize(
         import time
         start_time = time.time()
         
+        eleven_voice_id = None
+        fb_voice = "dii"
+        fb_semi = 0.0
+
         if req.voice.startswith("el_") and req.voice in ELEVENLABS_VOICES and ELEVENLABS_API_KEY:
             el_voice = ELEVENLABS_VOICES[req.voice]
-            voice_id = el_voice["voice_id"]
+            eleven_voice_id = el_voice["voice_id"]
+            fb_voice = el_voice.get("fallback_voice", "dii")
+            fb_semi = el_voice.get("fallback_semitones", 0.0)
+        elif req.voice in ["su", "custom_su"] and ELEVENLABS_API_KEY:
+            eleven_voice_id = "qE4bxNbWYcb8hs72HJEO"
+            fb_voice = "su"
+            fb_semi = 0.0
+        elif req.voice.startswith("custom_") and ELEVENLABS_API_KEY:
+            c_meta = tts_engine.load_custom_voices_metadata()
+            if req.voice in c_meta and c_meta[req.voice].get("eleven_voice_id"):
+                eleven_voice_id = c_meta[req.voice]["eleven_voice_id"]
+                fb_voice = c_meta[req.voice].get("base_voice", "dii")
+                fb_semi = c_meta[req.voice].get("semitones_shift", 0.0)
+
+        if eleven_voice_id and ELEVENLABS_API_KEY:
+            voice_id = eleven_voice_id
             timestamp = int(time.time() * 1000)
             mp3_filename = f"synth_{req.voice}_{timestamp}.mp3"
             wav_filename = f"synth_{req.voice}_{timestamp}.wav"

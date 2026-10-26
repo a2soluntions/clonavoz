@@ -2,6 +2,7 @@ import os
 import io
 import time
 import json
+import uuid
 import tarfile
 import urllib.request
 import subprocess
@@ -355,8 +356,42 @@ def save_custom_voices_metadata(meta: dict):
         json.dump(meta, f, ensure_ascii=False, indent=2)
 
 
+def clone_voice_elevenlabs(name: str, audio_bytes: bytes, filename: str) -> str or None:
+    """Clones voice instantly using ElevenLabs Instant Voice Cloning API if ELEVENLABS_API_KEY is configured."""
+    api_key = os.getenv("ELEVENLABS_API_KEY")
+    if not api_key:
+        return None
+    try:
+        boundary = f"----WebKitFormBoundary{uuid.uuid4().hex}"
+        body = (
+            f"--{boundary}\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\n{name}\r\n".encode("utf-8")
+            + f"--{boundary}\r\nContent-Disposition: form-data; name=\"description\"\r\n\r\nClonagem Instantânea Clonavoz\r\n".encode("utf-8")
+            + f"--{boundary}\r\nContent-Disposition: form-data; name=\"files\"; filename=\"{filename}\"\r\nContent-Type: audio/mpeg\r\n\r\n".encode("utf-8")
+            + audio_bytes
+            + f"\r\n--{boundary}--\r\n".encode("utf-8")
+        )
+        req = urllib.request.Request(
+            "https://api.elevenlabs.io/v1/voices/add",
+            data=body,
+            headers={
+                "xi-api-key": api_key,
+                "Content-Type": f"multipart/form-data; boundary={boundary}",
+                "User-Agent": "Clonavoz-Sync"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=35) as resp:
+            res = json.loads(resp.read().decode("utf-8"))
+            vid = res.get("voice_id")
+            print(f"[ElevenLabs Voice Cloning Success] Voice '{name}' cloned with ID: {vid}")
+            return vid
+    except Exception as e:
+        print(f"[ElevenLabs Voice Cloning Warning]: {e}")
+        return None
+
+
 def add_custom_voice(name: str, gender: str, audio_bytes: bytes, filename: str) -> dict:
-    """Decodes, standardizes to WAV, extracts acoustic profile and saves custom voice."""
+    """Decodes, standardizes to WAV, clones to ElevenLabs if key available, extracts acoustic profile and saves custom voice."""
     voice_id = f"custom_{int(time.time() * 1000)}"
     sample_filename = f"{voice_id}.wav"
     sample_path = os.path.join(CUSTOM_VOICES_DIR, sample_filename)
@@ -371,6 +406,9 @@ def add_custom_voice(name: str, gender: str, audio_bytes: bytes, filename: str) 
     semitones = float(12.0 * np.log2(max(pitch, 60.0) / base_pitch))
     semitones = float(np.clip(semitones, -7.0, 7.0))
 
+    # Instant Voice Cloning via ElevenLabs API
+    eleven_voice_id = clone_voice_elevenlabs(name, audio_bytes, filename)
+
     meta = load_custom_voices_metadata()
     voice_entry = {
         "id": voice_id,
@@ -382,6 +420,9 @@ def add_custom_voice(name: str, gender: str, audio_bytes: bytes, filename: str) 
         "pitch_hz": round(pitch, 1),
         "semitones_shift": round(semitones, 2),
         "base_voice": base_voice,
+        "eleven_voice_id": eleven_voice_id,
+        "provider": "elevenlabs" if eleven_voice_id else "local",
+        "model_id": "eleven_multilingual_v2" if eleven_voice_id else None,
         "created_at": time.time(),
     }
     meta[voice_id] = voice_entry
@@ -400,6 +441,20 @@ def delete_custom_voice(voice_id: str) -> bool:
     meta = load_custom_voices_metadata()
     if voice_id in meta:
         entry = meta.pop(voice_id)
+        # Se foi clonada no ElevenLabs, remove da conta ElevenLabs também
+        el_id = entry.get("eleven_voice_id")
+        api_key = os.getenv("ELEVENLABS_API_KEY")
+        if el_id and api_key:
+            try:
+                d_req = urllib.request.Request(
+                    f"https://api.elevenlabs.io/v1/voices/{el_id}",
+                    headers={"xi-api-key": api_key, "User-Agent": "Clonavoz-Sync"},
+                    method="DELETE"
+                )
+                urllib.request.urlopen(d_req, timeout=10)
+            except Exception as ex:
+                print(f"[ElevenLabs Delete Voice Warning]: {ex}")
+
         sample_path = os.path.join(CUSTOM_VOICES_DIR, entry.get("sample_filename", ""))
         if os.path.exists(sample_path):
             try:
