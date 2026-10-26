@@ -24,6 +24,18 @@ os.makedirs(CUSTOM_VOICES_DIR, exist_ok=True)
 
 # Standard Piper Neural voices
 VOICES = {
+    "su": {
+        "label": "Su (Feminina - Locutora Comercial)",
+        "gender": "Feminina",
+        "quality": "Alta (Voz Oficial Su)",
+        "model_id": "vits-piper-pt_BR-dii-high",
+        "onnx_file": "pt_BR-dii-high.onnx",
+        "tar_url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-pt_BR-dii-high.tar.bz2",
+        "base_pitch": 178.0,
+        "pitch_shift": -2.35,
+        "default_speed": 0.98,
+        "dsp_filter": "highpass=f=85,equalizer=f=240:t=q:w=1.1:g=3.2,equalizer=f=2100:t=q:w=1.4:g=-2.5,equalizer=f=3600:t=q:w=1.1:g=2.2,acompressor=threshold=-16dB:ratio=2.8:attack=5:release=55",
+    },
     "sarah": {
         "label": "Sarah (Feminina - Expressiva Natural)",
         "gender": "Feminina",

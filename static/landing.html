@@ -243,6 +243,9 @@
         <div class="space-y-3 pb-6 border-b border-white/10">
           <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider block">1. Selecione o Locutor Neural:</span>
           <div class="flex items-center gap-2 flex-wrap" id="demo-voice-chips">
+            <button onclick="selectDemoVoice('su')" data-voice="su" class="demo-voice-btn px-4 py-2 rounded-xl text-xs font-semibold border transition flex items-center gap-2 cursor-pointer bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white">
+              <span>🎙️ Su (Feminina - Locutora Comercial)</span>
+            </button>
             <button onclick="selectDemoVoice('sarah')" data-voice="sarah" class="demo-voice-btn px-4 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-2 cursor-pointer bg-brand-500/20 text-brand-300 border-brand-500">
               <span>⭐ Sarah (Feminina - Expressiva Natural)</span>
             </button>
@@ -1082,6 +1085,10 @@
     };
 
     const voiceLabels = {
+      su: "Su (Locutora Comercial)",
+      sarah: "Sarah (Feminina Expressiva)",
+      eduarda: "Eduarda (Conversacional)",
+      duda: "Duda (Dinâmica)",
       dii: "Dii (Feminina)",
       faber: "Faber (Narrador)",
       miro: "Miro (Alta Definição)",

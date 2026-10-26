@@ -1,1 +1,14 @@
-{}
+{
+  "custom_su": {
+    "id": "custom_su",
+    "name": "Su",
+    "gender": "Feminina",
+    "sample_filename": "custom_su.wav",
+    "sample_url": "/custom-voices/sample/custom_su.wav",
+    "duration": 22.44,
+    "pitch_hz": 177.8,
+    "semitones_shift": -3.29,
+    "base_voice": "dii",
+    "created_at": 1792983599.67206
+  }
+}
