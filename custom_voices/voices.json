@@ -1,17 +1,1 @@
-{
-  "custom_su": {
-    "id": "custom_su",
-    "name": "Su",
-    "gender": "Feminina",
-    "sample_filename": "custom_su.wav",
-    "sample_url": "/demos/su_sample.mp3",
-    "duration": 9.15,
-    "pitch_hz": 180.0,
-    "semitones_shift": -2.35,
-    "base_voice": "dii",
-    "eleven_voice_id": "qE4bxNbWYcb8hs72HJEO",
-    "provider": "elevenlabs",
-    "model_id": "eleven_multilingual_v2",
-    "created_at": 1792984550.0
-  }
-}
+{}

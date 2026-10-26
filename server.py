@@ -33,12 +33,21 @@ BGM_TRACKS = {
 
 # Vozes VIP da ElevenLabs mapeadas
 ELEVENLABS_VOICES = {
-    "el_su": {"voice_id": "qE4bxNbWYcb8hs72HJEO", "label": "Su (Ultra-HD Locutora Comercial)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "su", "fallback_semitones": 0.0},
-    "el_rachel": {"voice_id": "pFZP5JQG7iQjIQuC4Bku", "label": "Rachel (Ultra-HD Narrativa)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "dii", "fallback_semitones": -0.6},
-    "el_adam": {"voice_id": "pNInz6obpgDQGcFmaJgB", "label": "Adam (Ultra-HD Locutor VSL)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "miro", "fallback_semitones": -0.8},
-    "el_sarah": {"voice_id": "EXAVITQu4vr4xnSDxMaL", "label": "Sarah (Ultra-HD Cloud VIP)", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "sarah", "fallback_semitones": 0.0},
-    "el_charlie": {"voice_id": "IKne3meq5aSn9XLyUdCD", "label": "Charlie (Ultra-HD Jovem)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "cadu", "fallback_semitones": 0.6},
-    "el_george": {"voice_id": "JBFqnCBsd6RMkjVDRZzb", "label": "George (Ultra-HD Storyteller)", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "faber", "fallback_semitones": -1.0},
+    # Femininas
+    "el_su": {"voice_id": "qE4bxNbWYcb8hs72HJEO", "label": "Su", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "sample_url": "/demos/su_sample.mp3", "fallback_voice": "dii", "fallback_semitones": -2.35},
+    "el_bella": {"voice_id": "hpp4J3VqNfWAUOO0d1Us", "label": "Bella", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "eduarda", "fallback_semitones": 0.0},
+    "el_alice": {"voice_id": "Xb7hH8MSUJpSbSDYk0k2", "label": "Alice", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "sarah", "fallback_semitones": 0.0},
+    "el_jessica": {"voice_id": "cgSgspJ2msm6clMCkdW9", "label": "Jessica", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "duda", "fallback_semitones": 0.0},
+    "el_laura": {"voice_id": "FGY2WhTYpPnrIDTdsKH5", "label": "Laura", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "dii", "fallback_semitones": 0.5},
+    "el_rachel": {"voice_id": "pFZP5JQG7iQjIQuC4Bku", "label": "Rachel", "gender": "Feminina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "dii", "fallback_semitones": -0.6},
+    # Masculinas
+    "el_adam": {"voice_id": "pNInz6obpgDQGcFmaJgB", "label": "Adam", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "miro", "fallback_semitones": -0.8},
+    "el_brian": {"voice_id": "nPczCjzI2devNBz1zQrb", "label": "Brian", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "faber", "fallback_semitones": -1.2},
+    "el_daniel": {"voice_id": "onwK4e9ZLuTAKqWW03F9", "label": "Daniel", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "jeff", "fallback_semitones": 0.0},
+    "el_liam": {"voice_id": "TX3LPaxmHKxFdv7VOQHJ", "label": "Liam", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "cadu", "fallback_semitones": 0.5},
+    "el_george": {"voice_id": "JBFqnCBsd6RMkjVDRZzb", "label": "George", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "faber", "fallback_semitones": -1.0},
+    "el_charlie": {"voice_id": "IKne3meq5aSn9XLyUdCD", "label": "Charlie", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "cadu", "fallback_semitones": 0.6},
+    "el_chris": {"voice_id": "iP95p4xoKVk53GoZ742B", "label": "Chris", "gender": "Masculina", "quality": "ElevenLabs Multilingual v2", "fallback_voice": "jeff", "fallback_semitones": -0.4},
 }
 
 def synthesize_elevenlabs(voice_id: str, text: str, output_path: str):
