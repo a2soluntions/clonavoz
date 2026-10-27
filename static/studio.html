@@ -3175,7 +3175,7 @@
       analyzeCadenceAndRecommendPace(text);
     }
 
-    function setSample(type) {
+    function setSample(type, autoPlay = true) {
       currentPreset = type;
       if (sampleTexts[type]) {
         textInput.value = sampleTexts[type];
@@ -3194,7 +3194,9 @@
       }
 
       // Já ativa e reproduz o áudio de exemplo automaticamente
-      playCurrentPresetDemo();
+      if (autoPlay) {
+        playCurrentPresetDemo();
+      }
     }
 
     function playCurrentPresetDemo() {
@@ -4158,7 +4160,7 @@
       updateCreditUI();
       loadVoices();
       loadHistory();
-      setSample('welcome');
+      setSample('welcome', false); // Não toca áudio ao abrir a página
       checkCookieConsent();
       initSaveHistoryPreference();
     });
