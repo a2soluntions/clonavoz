@@ -313,9 +313,7 @@
             <i data-lucide="user-plus" class="w-3.5 h-3.5 text-brand-500"></i>
             <span>+ Clonar Voz</span>
           </button>
-          <span id="voice-status-badge" class="text-xs px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 font-medium">
-            Pronta
-          </span>
+          <span id="voice-status-badge" class="hidden"></span>
           <button
             id="voice-sample-btn"
             onclick="playCurrentVoiceSample()"
@@ -358,19 +356,17 @@
               <i data-lucide="sparkles" class="w-3.5 h-3.5 text-brand-500"></i> Exemplos Prontos:
             </span>
             <div class="flex items-center gap-1.5 flex-wrap">
-              <button onclick="setSample('welcome')" class="text-xs px-2 sm:px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition font-medium cursor-pointer">Boas-vindas</button>
-              <button onclick="setSample('news')" class="text-xs px-2 sm:px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition font-medium cursor-pointer">Notícia<span class="hidden sm:inline"> / Dark</span></button>
-              <button onclick="setSample('vsl')" class="text-xs px-2 sm:px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition font-medium cursor-pointer">Comercial / VSL</button>
-              
-              <!-- Botão de Prévia Rápida Grátis em Cache -->
-              <button
-                id="btn-play-demo"
-                onclick="playCurrentPresetDemo()"
-                class="text-xs px-2 sm:px-2.5 py-1 rounded-lg bg-brand-500/20 hover:bg-brand-500/30 text-brand-300 border border-brand-500/40 transition flex items-center gap-1.5 font-bold cursor-pointer shadow-sm"
-                title="Ouvir este exemplo pré-gravado sem consumir créditos ou API"
-              >
-                <i data-lucide="play-circle" class="w-3.5 h-3.5 text-brand-400"></i>
-                <span>Ouvir Exemplo<span class="hidden sm:inline"> (0 Créditos)</span></span>
+              <button id="btn-preset-welcome" onclick="setSample('welcome')" class="preset-btn text-xs px-2 sm:px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition font-medium cursor-pointer flex items-center gap-1.5" title="Preencher roteiro e ouvir áudio de Boas-vindas">
+                <i data-lucide="play" class="w-3 h-3 text-brand-400"></i>
+                <span>Boas-vindas</span>
+              </button>
+              <button id="btn-preset-news" onclick="setSample('news')" class="preset-btn text-xs px-2 sm:px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition font-medium cursor-pointer flex items-center gap-1.5" title="Preencher roteiro e ouvir áudio de Notícia / Dark">
+                <i data-lucide="play" class="w-3 h-3 text-brand-400"></i>
+                <span>Notícia<span class="hidden sm:inline"> / Dark</span></span>
+              </button>
+              <button id="btn-preset-vsl" onclick="setSample('vsl')" class="preset-btn text-xs px-2 sm:px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition font-medium cursor-pointer flex items-center gap-1.5" title="Preencher roteiro e ouvir áudio Comercial / VSL">
+                <i data-lucide="play" class="w-3 h-3 text-brand-400"></i>
+                <span>Comercial / VSL</span>
               </button>
 
               <!-- Botão de Otimização Gramatical e Fonética para Dicção Perfeita -->
@@ -1588,7 +1584,7 @@
     let currentAudioWav = '';
 
     const sampleTexts = {
-      welcome: "Olá! Seja muito bem-vindo ao Clonavoz. Este áudio foi gerado com rede neural local, 100% no seu computador e com zero latência de servidores.",
+      welcome: "Olá! Seja muito bem-vindo ao Clonavoz. Este áudio foi gerado com nosso motor neural em alta definição, trazendo máxima naturalidade, respiração e clareza para suas produções.",
       news: "A tecnologia de inteligência artificial aplicada à clonagem de voz atingiu um patamar de maturidade impressionante. Hoje é viável gerar locuções ultra-realistas em segundos.",
       vsl: "Atenção: se você cria vídeos de vendas ou canais no YouTube, pare de gastar centenas de reais com locutores tradicionais. Conheça a voz humana que converte em segundos."
     };
@@ -2413,8 +2409,8 @@
       }
 
       if (v.type === 'vip_elevenlabs') {
-        statusBadge.innerText = '⭐ VIP Neural';
-        statusBadge.className = 'text-xs px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold';
+        statusBadge.innerText = '';
+        statusBadge.classList.add('hidden');
         dlBtn.classList.add('hidden');
         dlBtn.classList.remove('flex');
         deleteBtn.classList.add('hidden');
@@ -2431,8 +2427,8 @@
         deleteBtn.classList.remove('flex');
 
         if (v.is_downloaded) {
-          statusBadge.innerText = '✅ Pronta (VPS)';
-          statusBadge.className = 'text-xs px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 font-medium';
+          statusBadge.innerText = '';
+          statusBadge.classList.add('hidden');
           dlBtn.classList.add('hidden');
           dlBtn.classList.remove('flex');
         } else {
@@ -3177,6 +3173,20 @@
         textInput.value = sampleTexts[type];
         updateTextStats();
       }
+
+      // Destaca visualmente o botão do exemplo selecionado
+      document.querySelectorAll('.preset-btn').forEach(b => {
+        b.classList.remove('bg-brand-500/20', 'text-brand-300', 'border-brand-500/40', 'font-bold');
+        b.classList.add('bg-zinc-900', 'text-zinc-300', 'border-zinc-800');
+      });
+      const activeBtn = document.getElementById(`btn-preset-${type}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-zinc-900', 'text-zinc-300', 'border-zinc-800');
+        activeBtn.classList.add('bg-brand-500/20', 'text-brand-300', 'border-brand-500/40', 'font-bold');
+      }
+
+      // Já ativa e reproduz o áudio de exemplo automaticamente
+      playCurrentPresetDemo();
     }
 
     function playCurrentPresetDemo() {
