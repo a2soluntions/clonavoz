@@ -1,0 +1,27 @@
+name: Deploy Automático na VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Atualizar VPS Clonavoz
+    runs-on: ubuntu-latest
+    steps:
+      - name: Executar Git Pull e Atualizar Docker na VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            echo "🚀 [Deploy] Conectado na VPS! Atualizando aplicação..."
+            cd /app
+            git stash
+            git pull origin main
+            docker compose restart
+            echo "✅ [Deploy] Aplicação atualizada e no ar com sucesso!"
