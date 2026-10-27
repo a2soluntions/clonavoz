@@ -852,6 +852,324 @@ class SimulateRechargeRequest(BaseModel):
     price: str = "27,90"
 
 
+
+# -------------------------------------------------------------
+# Sistema de Venda de Áudio Avulso no PIX (Pay-as-you-go)
+# -------------------------------------------------------------
+single_audio_orders = {}
+
+def calculate_single_audio_price(char_count: int) -> float:
+    """Calcula preço dinâmico do áudio avulso com margem segura de lucro."""
+    if char_count <= 300:
+        return 2.49
+    elif char_count <= 700:
+        return 3.90
+    elif char_count <= 1500:
+        return 5.90
+    else:
+        return 9.90
+
+
+def execute_synthesis(
+    text: str,
+    voice: str = "su",
+    speed: float = 1.0,
+    bgm: Optional[str] = "none",
+    bgm_volume: float = 0.15,
+    threads: int = 4
+):
+    """Executa a síntese neural unificada de alta fidelidade para avulso ou créditos."""
+    import time
+    start_time = time.time()
+
+    eleven_voice_id = None
+    fb_voice = "dii"
+    fb_semi = 0.0
+
+    if voice.startswith("el_") and voice in ELEVENLABS_VOICES and ELEVENLABS_API_KEY:
+        el_voice = ELEVENLABS_VOICES[voice]
+        eleven_voice_id = el_voice["voice_id"]
+        fb_voice = el_voice.get("fallback_voice", "dii")
+        fb_semi = el_voice.get("fallback_semitones", 0.0)
+    elif voice in ["su", "custom_su"] and ELEVENLABS_API_KEY:
+        eleven_voice_id = "qE4bxNbWYcb8hs72HJEO"
+        fb_voice = "su"
+        fb_semi = 0.0
+    elif voice.startswith("custom_") and ELEVENLABS_API_KEY:
+        c_meta = tts_engine.load_custom_voices_metadata()
+        if voice in c_meta and c_meta[voice].get("eleven_voice_id"):
+            eleven_voice_id = c_meta[voice]["eleven_voice_id"]
+            fb_voice = c_meta[voice].get("base_voice", "dii")
+            fb_semi = c_meta[voice].get("semitones_shift", 0.0)
+
+    timestamp = int(time.time() * 1000)
+    mp3_filename = f"synth_{voice}_{timestamp}.mp3"
+    wav_filename = f"synth_{voice}_{timestamp}.wav"
+    mp3_path = os.path.join(OUTPUTS_DIR, mp3_filename)
+    wav_path = os.path.join(OUTPUTS_DIR, wav_filename)
+
+    if eleven_voice_id and ELEVENLABS_API_KEY:
+        try:
+            synthesize_elevenlabs(eleven_voice_id, text, mp3_path)
+            try:
+                cmd = ["ffmpeg", "-y", "-i", mp3_path, "-f", "wav", wav_path]
+                subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            except Exception:
+                pass
+        except Exception as el_err:
+            print(f"[ElevenLabs Quota/API Warning - Fallback Local]: {el_err}")
+            fb_res = tts_engine.synthesize_text(
+                text=text,
+                voice_key=fb_voice,
+                speed=speed,
+                num_threads=threads,
+            )
+            os.replace(fb_res["file_path"], wav_path)
+            if abs(fb_semi) > 0.15:
+                tts_engine.pitch_shift_ffmpeg(wav_path, fb_semi, fb_res.get("sample_rate", 22050))
+            convert_wav_to_mp3(wav_path, mp3_path)
+    else:
+        result = tts_engine.synthesize_text(
+            text=text,
+            voice_key=voice,
+            speed=speed,
+            num_threads=threads,
+        )
+        wav_filename = result["filename"]
+        mp3_filename = wav_filename.replace(".wav", ".mp3")
+        wav_path = os.path.join(OUTPUTS_DIR, wav_filename)
+        mp3_path = os.path.join(OUTPUTS_DIR, mp3_filename)
+
+    # Aplica Trilha Sonora de Fundo (BGM) se selecionada
+    if bgm and bgm != "none" and bgm in BGM_TRACKS and os.path.exists(wav_path):
+        bgm_file = os.path.join(STATIC_DIR, "bgm", BGM_TRACKS[bgm]["file"])
+        if os.path.exists(bgm_file):
+            mix_audio_with_bgm(wav_path, bgm_file, bgm_volume or 0.15)
+            try:
+                cmd_mp3 = ["ffmpeg", "-y", "-i", wav_path, "-b:a", "192k", mp3_path]
+                subprocess.run(cmd_mp3, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            except Exception:
+                pass
+
+    if os.path.exists(wav_path) and not os.path.exists(mp3_path):
+        convert_wav_to_mp3(wav_path, mp3_path)
+
+    elapsed = round(time.time() - start_time, 2)
+    est_duration = 2.0
+    if os.path.exists(wav_path):
+        try:
+            import soundfile as sf
+            est_duration = round(sf.info(wav_path).duration, 2)
+        except Exception:
+            word_count = len(text.split())
+            est_duration = max(round(word_count / 2.6, 1), 1.5)
+
+    active_filename = wav_filename if os.path.exists(wav_path) else mp3_filename
+    return {
+        "filename": active_filename,
+        "url": f"/outputs/{active_filename}",
+        "mp3_url": f"/outputs/{mp3_filename}",
+        "duration": est_duration,
+        "elapsed_seconds": elapsed,
+        "voice": voice,
+        "char_count": len(text)
+    }
+
+
+class CreateSinglePixRequest(BaseModel):
+    text: str
+    voice: str = "su"
+    speed: float = 1.0
+    bgm: Optional[str] = "none"
+    bgm_volume: Optional[float] = 0.15
+    email: Optional[str] = None
+
+
+@app.post("/api/pix/create-single")
+def create_single_audio_pix(req: CreateSinglePixRequest, authorization: Optional[str] = Header(None)):
+    """Cria uma cobrança PIX para geração de um único áudio avulso (sem cadastro)."""
+    import time
+    import datetime
+    import uuid
+    import json
+    import urllib.request
+
+    clean_text = req.text.replace("\r\n", "\n").strip()
+    if not clean_text:
+        raise HTTPException(status_code=400, detail="O texto não pode estar vazio.")
+    if len(clean_text) > 3000:
+        raise HTTPException(status_code=400, detail="O texto ultrapassou o limite máximo de 3.000 caracteres.")
+
+    char_count = len(clean_text)
+    amount_num = calculate_single_audio_price(char_count)
+
+    user = get_current_user_from_header(authorization) if supabase_admin and authorization else None
+    user_email = req.email or (getattr(user, "email", None) if user else "cliente@clonavoz.com.br")
+    user_name = "Cliente Avulso"
+
+    payment_id = None
+    qr_code = ""
+    qr_code_base64 = ""
+    is_simulated = True
+
+    if MERCADO_PAGO_ACCESS_TOKEN:
+        try:
+            mp_url = "https://api.mercadopago.com/v1/payments"
+            mp_payload = {
+                "transaction_amount": amount_num,
+                "description": f"Clonavoz - Audio Avulso ({char_count} carac.)",
+                "payment_method_id": "pix",
+                "payer": {
+                    "email": user_email,
+                    "first_name": user_name
+                },
+                "notification_url": f"{BASE_URL}/api/pix/webhook"
+            }
+            req_headers = {
+                "Authorization": f"Bearer {MERCADO_PAGO_ACCESS_TOKEN}",
+                "Content-Type": "application/json",
+                "X-Idempotency-Key": str(uuid.uuid4())
+            }
+            req_obj = urllib.request.Request(
+                mp_url,
+                data=json.dumps(mp_payload).encode("utf-8"),
+                headers=req_headers,
+                method="POST"
+            )
+            with urllib.request.urlopen(req_obj, timeout=10) as resp:
+                resp_data = json.loads(resp.read().decode("utf-8"))
+                payment_id = str(resp_data.get("id"))
+                tx_data = resp_data.get("point_of_interaction", {}).get("transaction_data", {})
+                qr_code = tx_data.get("qr_code", "")
+                qr_code_base64 = tx_data.get("qr_code_base64", "")
+                is_simulated = False
+        except Exception as mp_err:
+            print(f"[Mercado Pago Single Audio Warning]: {mp_err}")
+
+    if not payment_id:
+        payment_id = f"sim_single_{int(time.time() * 1000)}"
+        qr_code = f"00020126580014br.gov.bcb.pix0136clonavoz-avulso-{payment_id}520400005303986540{len(str(amount_num)):02d}{amount_num:.2f}5802BR5916CLONAVOZ STUDIO6009SAO PAULO62070503***6304"
+        is_simulated = True
+
+    # Registra o pedido avulso em memória
+    single_audio_orders[payment_id] = {
+        "text": clean_text,
+        "voice": req.voice,
+        "speed": req.speed,
+        "bgm": req.bgm,
+        "bgm_volume": req.bgm_volume,
+        "amount": amount_num,
+        "char_count": char_count,
+        "status": "pending",
+        "created_at": time.time(),
+        "audio_result": None
+    }
+
+    # Registra no Supabase para métricas financeiras se ativo
+    if supabase_admin:
+        try:
+            supabase_admin.table("pix_transactions").insert({
+                "user_id": user.id if user else "00000000-0000-0000-0000-000000000000",
+                "gateway_txid": payment_id,
+                "package_id": f"single_{char_count}c",
+                "credits_amount": 1,
+                "amount_brl": amount_num,
+                "status": "pending",
+                "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+            }).execute()
+        except Exception as ex:
+            print(f"[PIX Single Supabase Insert Warning]: {ex}")
+
+    return {
+        "success": True,
+        "payment_id": payment_id,
+        "qr_code": qr_code,
+        "qr_code_base64": qr_code_base64,
+        "amount": amount_num,
+        "char_count": char_count,
+        "is_simulated": is_simulated,
+        "status": "pending"
+    }
+
+
+@app.get("/api/pix/status-single/{payment_id}")
+def check_single_audio_pix_status(payment_id: str):
+    """Consulta se o pagamento do áudio avulso foi aprovado e entrega o áudio sintetizado."""
+    order = single_audio_orders.get(payment_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido avulso não encontrado.")
+
+    is_approved = False
+
+    if not payment_id.startswith("sim_") and MERCADO_PAGO_ACCESS_TOKEN:
+        try:
+            import urllib.request
+            import json
+            req_obj = urllib.request.Request(
+                f"https://api.mercadopago.com/v1/payments/{payment_id}",
+                headers={"Authorization": f"Bearer {MERCADO_PAGO_ACCESS_TOKEN}"}
+            )
+            with urllib.request.urlopen(req_obj, timeout=8) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                if data.get("status") == "approved":
+                    is_approved = True
+        except Exception as e:
+            print(f"[MP Single Status Query Error]: {e}")
+    elif order.get("status") == "approved":
+        is_approved = True
+
+    if is_approved:
+        order["status"] = "approved"
+        # Se ainda não sintetizou o áudio do pedido, sintetiza agora!
+        if not order.get("audio_result"):
+            audio_res = execute_synthesis(
+                text=order["text"],
+                voice=order["voice"],
+                speed=order["speed"],
+                bgm=order.get("bgm"),
+                bgm_volume=order.get("bgm_volume", 0.15)
+            )
+            order["audio_result"] = audio_res
+
+            # Atualiza no Supabase se existir
+            if supabase_admin:
+                try:
+                    import datetime
+                    supabase_admin.table("pix_transactions").update({
+                        "status": "paid",
+                        "paid_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                    }).eq("gateway_txid", payment_id).execute()
+                except Exception:
+                    pass
+
+        return {
+            "status": "approved",
+            "audio": order["audio_result"],
+            "amount": order["amount"],
+            "char_count": order["char_count"]
+        }
+
+    return {"status": "pending", "amount": order["amount"]}
+
+
+@app.post("/api/pix/simulate-single/{payment_id}")
+def simulate_single_audio_pix(payment_id: str):
+    """Simula a aprovação imediata do áudio avulso em ambiente de testes/desenvolvimento."""
+    order = single_audio_orders.get(payment_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido avulso não encontrado.")
+    order["status"] = "approved"
+    if not order.get("audio_result"):
+        order["audio_result"] = execute_synthesis(
+            text=order["text"],
+            voice=order["voice"],
+            speed=order["speed"],
+            bgm=order.get("bgm"),
+            bgm_volume=order.get("bgm_volume", 0.15)
+        )
+    return {"status": "approved", "audio": order["audio_result"]}
+
+
 @app.post("/api/recharge/simulate")
 def simulate_recharge(req: SimulateRechargeRequest, authorization: Optional[str] = Header(None)):
     """Simula a confirmação de pagamento PIX e credita o saldo diretamente no Supabase."""
