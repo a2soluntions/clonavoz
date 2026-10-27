@@ -368,6 +368,10 @@
                 <i data-lucide="play" class="w-3 h-3 text-brand-400"></i>
                 <span>Comercial / VSL</span>
               </button>
+              <button id="btn-preset-long" onclick="setSample('long')" class="preset-btn text-xs px-2 sm:px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-brand-300 border border-brand-500/30 transition font-bold cursor-pointer flex items-center gap-1.5" title="Preencher e ouvir narração longa de 1.554 caracteres (~2 min)">
+                <i data-lucide="play" class="w-3 h-3 text-brand-400"></i>
+                <span>Texto Longo (1.500 carac.)</span>
+              </button>
 
               <!-- Botão de Otimização Gramatical e Fonética para Dicção Perfeita -->
               <button
@@ -1586,7 +1590,8 @@
     const sampleTexts = {
       welcome: "Olá! Seja muito bem-vindo ao Clonavoz. Este áudio foi gerado com nosso motor neural em alta definição, trazendo máxima naturalidade, respiração e clareza para suas produções.",
       news: "A tecnologia de inteligência artificial aplicada à clonagem de voz atingiu um patamar de maturidade impressionante. Hoje é viável gerar locuções ultra-realistas em segundos.",
-      vsl: "Atenção: se você cria vídeos de vendas ou canais no YouTube, pare de gastar centenas de reais com locutores tradicionais. Conheça a voz humana que converte em segundos."
+      vsl: "Atenção: se você cria vídeos de vendas ou canais no YouTube, pare de gastar centenas de reais com locutores tradicionais. Conheça a voz humana que converte em segundos.",
+      long: "Você já parou para pensar no que realmente acontece nos recantos mais isolados e silenciosos do nosso planeta? Durante séculos, exploradores e cientistas desbravaram oceanos tempestuosos, florestas impenetráveis e cordilheiras cobertas por gelo perpétuo em busca de respostas que a mente humana mal conseguia compreender. Em muitas dessas expedições, homens corajosos registraram fenômenos inexplicáveis: sussurros que pareciam emanar do próprio solo rochoso, luzes misteriosas que dançavam sobre o horizonte deserto e formações ancestrais erguidas com uma precisão matemática que desafia a engenharia moderna.\n\nCom o avanço da tecnologia e o advento da inteligência artificial, começamos a decifrar alguns desses segredos ancestrais. Mapas digitais de satélite revelaram ruínas soterradas sob densas camadas de vegetação na Amazônia, estradas milenares esculpidas em desfiladeiros vertiginosos e vestígios de civilizações que prosperaram muito antes do surgimento da nossa história documentada. O que torna essa descoberta verdadeiramente fascinante não é apenas a magnitude das construções, mas a mensagem que elas deixaram para as futuras gerações: o conhecimento humano é um rio em constante movimento, onde cada resposta abre as portas para dez novas perguntas.\n\nAo criar narrativas profundas e envolventes como esta, você transporta o espectador para dentro do documentário. A entonação correta, as pausas intencionais de respiração e a cadência fluida de uma voz neural transformam simples palavras em uma experiência cinematográfica inesquecível."
     };
 
     function updateCreditUI() {
@@ -3196,7 +3201,7 @@
       const presetKey = currentPreset || 'welcome';
       // Mapeamento correto: no frontend da Vercel, a pasta static é a raiz, então os demos ficam em /demos/
       const presetUrl = `/demos/${demoKey}_${presetKey}.mp3`;
-      const fallbackSampleUrl = `/demos/${demoKey}_sample.mp3`;
+      const fallbackSampleUrl = (presetKey === 'long') ? '/demos/long_sample.mp3' : `/demos/${demoKey}_sample.mp3`;
 
       const v = voices.find(item => item.key === selectedVoiceKey);
       const vName = v ? getCleanVoiceName(v) : demoKey.toUpperCase();
