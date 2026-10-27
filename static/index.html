@@ -1407,6 +1407,7 @@
       const labels = dataList.map(item => item.label);
       const viewsData = dataList.map(item => item.views);
       const uniquesData = dataList.map(item => item.uniques || 0);
+      const revenueData = dataList.map(item => item.revenue || 0.0);
 
       if (analyticsChartInstance) {
         analyticsChartInstance.destroy();
@@ -1448,6 +1449,18 @@
               pointBorderColor: '#ffffff',
               pointRadius: 3,
               pointHoverRadius: 5
+            },
+            {
+              label: 'Vendas (R$)',
+              data: revenueData,
+              borderColor: '#10B981',
+              backgroundColor: 'transparent',
+              tension: 0.35,
+              borderWidth: 2,
+              pointBackgroundColor: '#10B981',
+              pointBorderColor: '#ffffff',
+              pointRadius: 3.5,
+              pointHoverRadius: 6
             }
           ]
         },
@@ -1468,6 +1481,9 @@
               displayColors: true,
               callbacks: {
                 label: function(context) {
+                  if (context.dataset.label.includes('R$')) {
+                    return ` Vendas: R$ ${Number(context.parsed.y).toFixed(2)}`;
+                  }
                   return ` ${context.dataset.label}: ${context.parsed.y}`;
                 }
               }
@@ -1520,6 +1536,20 @@
           if (uniqueEl) uniqueEl.innerText = stats.unique_visitors.toLocaleString('pt-BR');
           if (todayEl) todayEl.innerText = stats.today_views.toLocaleString('pt-BR');
           if (lastEl) lastEl.innerText = stats.last_visit;
+
+          const salesTotalEl = document.getElementById('stat-sales-total');
+          const salesCountEl = document.getElementById('stat-sales-count');
+          const salesTodayEl = document.getElementById('stat-sales-today');
+
+          const revTotal = typeof stats.sales_total_brl !== 'undefined' ? stats.sales_total_brl : 0.0;
+          const countTotal = stats.sales_count || 0;
+          const revToday = typeof stats.sales_today_brl !== 'undefined' ? stats.sales_today_brl : 0.0;
+          const countToday = stats.sales_today_count || 0;
+          const convRate = stats.conversion_rate || 0.0;
+
+          if (salesTotalEl) salesTotalEl.innerText = `R$ ${revTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          if (salesCountEl) salesCountEl.innerText = `${countTotal} ${countTotal === 1 ? 'venda' : 'vendas'} (${convRate}% conv)`;
+          if (salesTodayEl) salesTodayEl.innerText = `R$ ${revToday.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${countToday} v.)`;
 
           renderAnalyticsChart(currentAnalyticsPeriod);
         }
@@ -1608,19 +1638,25 @@
       </div>
     </div>
     
-    <!-- 3 Mini KPI Cards -->
-    <div class="grid grid-cols-3 gap-2 mb-3">
-      <div class="bg-zinc-900/80 p-2.5 rounded-xl border border-white/5 text-center">
-        <span class="text-[10px] text-zinc-400 uppercase font-bold block">Visitas</span>
-        <strong id="stat-total-views" class="text-base font-black text-white font-mono">--</strong>
+    <!-- 4 KPI Cards (Visitas, Únicos, Faturamento Total, Hoje) -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+      <div class="bg-zinc-900/80 p-2 rounded-xl border border-white/5 text-center">
+        <span class="text-[9px] text-zinc-400 uppercase font-bold block">Visitas</span>
+        <strong id="stat-total-views" class="text-sm sm:text-base font-black text-white font-mono">--</strong>
       </div>
-      <div class="bg-zinc-900/80 p-2.5 rounded-xl border border-white/5 text-center">
-        <span class="text-[10px] text-brand-400 uppercase font-bold block">Únicos</span>
-        <strong id="stat-unique-visitors" class="text-base font-black text-brand-300 font-mono">--</strong>
+      <div class="bg-zinc-900/80 p-2 rounded-xl border border-white/5 text-center">
+        <span class="text-[9px] text-brand-400 uppercase font-bold block">Únicos</span>
+        <strong id="stat-unique-visitors" class="text-sm sm:text-base font-black text-brand-300 font-mono">--</strong>
       </div>
-      <div class="bg-zinc-900/80 p-2.5 rounded-xl border border-white/5 text-center">
-        <span class="text-[10px] text-emerald-400 uppercase font-bold block">Hoje</span>
-        <strong id="stat-today-views" class="text-base font-black text-emerald-400 font-mono">--</strong>
+      <div class="bg-zinc-900/80 p-2 rounded-xl border border-emerald-500/20 text-center">
+        <span class="text-[9px] text-emerald-400 uppercase font-bold block">Vendas (R$)</span>
+        <strong id="stat-sales-total" class="text-sm sm:text-base font-black text-emerald-400 font-mono">R$ 0,00</strong>
+        <span id="stat-sales-count" class="text-[8px] text-zinc-400 block truncate">0 vendas</span>
+      </div>
+      <div class="bg-zinc-900/80 p-2 rounded-xl border border-white/5 text-center">
+        <span class="text-[9px] text-amber-400 uppercase font-bold block">Hoje</span>
+        <strong id="stat-today-views" class="text-sm sm:text-base font-black text-white font-mono">--</strong>
+        <span id="stat-sales-today" class="text-[8px] text-emerald-400 block font-bold truncate">R$ 0,00</span>
       </div>
     </div>
 
@@ -1644,6 +1680,7 @@
         <span class="flex items-center gap-2">
           <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-500"></span> Visitas</span>
           <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Únicos</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Vendas</span>
         </span>
       </div>
       <div class="h-36 w-full relative">

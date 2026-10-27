@@ -128,8 +128,11 @@ def get_brasil_now():
     tz_br = datetime.timezone(datetime.timedelta(hours=-3))
     return datetime.datetime.now(tz_br)
 
-def get_analytics_series(daily_history: dict, br_now: datetime.datetime) -> dict:
-    """Gera séries temporais agregadas para os gráficos de Dia, Mês e Ano."""
+def get_analytics_series(daily_history: dict, br_now: datetime.datetime, sales_by_day: dict = None) -> dict:
+    """Gera séries temporais agregadas para os gráficos de Dia, Mês e Ano com visitas, únicos e vendas (R$)."""
+    if sales_by_day is None:
+        sales_by_day = {}
+
     month_names_pt = {
         1: "Jan", 2: "Fev", 3: "Mar", 4: "Abr", 5: "Mai", 6: "Jun",
         7: "Jul", 8: "Ago", 9: "Set", 10: "Out", 11: "Nov", 12: "Dez"
@@ -145,7 +148,8 @@ def get_analytics_series(daily_history: dict, br_now: datetime.datetime) -> dict
             "date": d_str,
             "label": d.strftime("%d/%m"),
             "views": entry.get("views", 0),
-            "uniques": entry.get("uniques", 0)
+            "uniques": entry.get("uniques", 0),
+            "revenue": round(sales_by_day.get(d_str, 0.0), 2)
         })
 
     # 2. Meses: últimos 6 meses
@@ -161,7 +165,8 @@ def get_analytics_series(daily_history: dict, br_now: datetime.datetime) -> dict
             "month": m_key,
             "label": f"{month_names_pt[m]}/{str(y)[2:]}",
             "views": 0,
-            "uniques": 0
+            "uniques": 0,
+            "revenue": 0.0
         }
 
     for d_str, entry in daily_history.items():
@@ -169,6 +174,11 @@ def get_analytics_series(daily_history: dict, br_now: datetime.datetime) -> dict
         if m_key in months_map:
             months_map[m_key]["views"] += entry.get("views", 0)
             months_map[m_key]["uniques"] += entry.get("uniques", 0)
+
+    for d_str, rev in sales_by_day.items():
+        m_key = d_str[:7]
+        if m_key in months_map:
+            months_map[m_key]["revenue"] = round(months_map[m_key]["revenue"] + rev, 2)
 
     months = list(months_map.values())
 
@@ -180,7 +190,8 @@ def get_analytics_series(daily_history: dict, br_now: datetime.datetime) -> dict
             "year": y_key,
             "label": y_key,
             "views": 0,
-            "uniques": 0
+            "uniques": 0,
+            "revenue": 0.0
         }
 
     for d_str, entry in daily_history.items():
@@ -188,6 +199,11 @@ def get_analytics_series(daily_history: dict, br_now: datetime.datetime) -> dict
         if y_key in years_map:
             years_map[y_key]["views"] += entry.get("views", 0)
             years_map[y_key]["uniques"] += entry.get("uniques", 0)
+
+    for d_str, rev in sales_by_day.items():
+        y_key = d_str[:4]
+        if y_key in years_map:
+            years_map[y_key]["revenue"] = round(years_map[y_key]["revenue"] + rev, 2)
 
     years = list(years_map.values())
 
@@ -335,13 +351,51 @@ def get_stats():
     if today_str not in daily_hist and today_views > 0:
         daily_hist[today_str] = {"views": today_views, "uniques": today_uniques}
 
-    series = get_analytics_series(daily_hist, br_now)
+    # Consulta vendas reais aprovadas no Supabase (pix_transactions)
+    sales_total_brl = 0.0
+    sales_count = 0
+    sales_today_brl = 0.0
+    sales_today_count = 0
+    sales_by_day = {}
+
+    if supabase_admin:
+        try:
+            tx_res = supabase_admin.table("pix_transactions").select("amount_brl,status,paid_at,created_at").eq("status", "paid").execute()
+            if tx_res.data:
+                tz_br = datetime.timezone(datetime.timedelta(hours=-3))
+                for tx in tx_res.data:
+                    amt = float(tx.get("amount_brl") or 0.0)
+                    sales_total_brl += amt
+                    sales_count += 1
+
+                    paid_ts = tx.get("paid_at") or tx.get("created_at")
+                    if paid_ts:
+                        try:
+                            dt = datetime.datetime.fromisoformat(paid_ts.replace("Z", "+00:00")).astimezone(tz_br)
+                            d_key = dt.date().isoformat()
+                            sales_by_day[d_key] = sales_by_day.get(d_key, 0.0) + amt
+                            if d_key == today_str:
+                                sales_today_brl += amt
+                                sales_today_count += 1
+                        except Exception:
+                            pass
+        except Exception as ex:
+            print(f"[Stats Sales Query Warning] {ex}")
+
+    series = get_analytics_series(daily_hist, br_now, sales_by_day)
+    unique_total = len(data.get("unique_visitors", []))
+    conversion_rate = round((sales_count / max(unique_total, 1)) * 100, 1) if unique_total > 0 else 0.0
 
     return {
         "total_views": data.get("total_views", 0),
-        "unique_visitors": len(data.get("unique_visitors", [])),
+        "unique_visitors": unique_total,
         "today_views": today_views,
         "today_uniques": today_uniques,
+        "sales_total_brl": round(sales_total_brl, 2),
+        "sales_count": sales_count,
+        "sales_today_brl": round(sales_today_brl, 2),
+        "sales_today_count": sales_today_count,
+        "conversion_rate": conversion_rate,
         "last_visit": data.get("last_visit", "Nenhuma visita registrada ainda"),
         "date": today_str,
         "series": series
