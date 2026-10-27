@@ -70,6 +70,9 @@
   
   <!-- WaveSurfer.js para Player Interativo ao Vivo -->
   <script src="https://unpkg.com/wavesurfer.js@7"></script>
+  
+  <!-- Chart.js para Métricas Analíticas do Dono -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
     tailwind.config = {
@@ -1361,6 +1364,139 @@
       }
     });
 
+    let analyticsChartInstance = null;
+    let analyticsDataCache = null;
+    let currentAnalyticsPeriod = 'days';
+
+    function renderAnalyticsChart(period = 'days') {
+      currentAnalyticsPeriod = period;
+      if (!analyticsDataCache || !analyticsDataCache.series) return;
+
+      const series = analyticsDataCache.series;
+      let dataList = [];
+      let periodTitle = '';
+
+      if (period === 'days') {
+        dataList = series.days || [];
+        periodTitle = 'Evolução Diária (Últimos 7 dias)';
+      } else if (period === 'months') {
+        dataList = series.months || [];
+        periodTitle = 'Evolução Mensal (Últimos 6 meses)';
+      } else if (period === 'years') {
+        dataList = series.years || [];
+        periodTitle = 'Evolução Anual';
+      }
+
+      const titleEl = document.getElementById('chart-period-title');
+      if (titleEl) titleEl.innerText = periodTitle;
+
+      // Atualiza estilo das abas
+      ['days', 'months', 'years'].forEach(p => {
+        const tab = document.getElementById(`tab-chart-${p}`);
+        if (!tab) return;
+        if (p === period) {
+          tab.className = 'flex-1 py-1 rounded-lg text-[11px] font-bold transition bg-brand-500 text-black shadow-sm cursor-pointer text-center';
+        } else {
+          tab.className = 'flex-1 py-1 rounded-lg text-[11px] font-semibold transition text-zinc-400 hover:text-white cursor-pointer text-center';
+        }
+      });
+
+      const canvas = document.getElementById('admin-chart-canvas');
+      if (!canvas || typeof Chart === 'undefined') return;
+
+      const labels = dataList.map(item => item.label);
+      const viewsData = dataList.map(item => item.views);
+      const uniquesData = dataList.map(item => item.uniques || 0);
+
+      if (analyticsChartInstance) {
+        analyticsChartInstance.destroy();
+        analyticsChartInstance = null;
+      }
+
+      const ctx = canvas.getContext('2d');
+      const gradientViews = ctx.createLinearGradient(0, 0, 0, 140);
+      gradientViews.addColorStop(0, 'rgba(255, 77, 0, 0.45)');
+      gradientViews.addColorStop(1, 'rgba(255, 77, 0, 0.0)');
+
+      analyticsChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Visitas',
+              data: viewsData,
+              borderColor: '#FF4D00',
+              backgroundColor: gradientViews,
+              fill: true,
+              tension: 0.35,
+              borderWidth: 2.5,
+              pointBackgroundColor: '#FF4D00',
+              pointBorderColor: '#ffffff',
+              pointRadius: 3.5,
+              pointHoverRadius: 5.5
+            },
+            {
+              label: 'Únicos',
+              data: uniquesData,
+              borderColor: '#FBBF24',
+              backgroundColor: 'transparent',
+              borderDash: [4, 4],
+              tension: 0.35,
+              borderWidth: 2,
+              pointBackgroundColor: '#FBBF24',
+              pointBorderColor: '#ffffff',
+              pointRadius: 3,
+              pointHoverRadius: 5
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 400 },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#09090b',
+              titleColor: '#ffffff',
+              bodyColor: '#d4d4d8',
+              borderColor: 'rgba(255, 77, 0, 0.4)',
+              borderWidth: 1,
+              padding: 8,
+              cornerRadius: 8,
+              displayColors: true,
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.dataset.label}: ${context.parsed.y}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#a1a1aa', font: { size: 10 } }
+            },
+            y: {
+              beginAtZero: true,
+              grace: 1,
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: {
+                color: '#a1a1aa',
+                font: { size: 10 },
+                precision: 0
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function switchAnalyticsPeriod(period) {
+      renderAnalyticsChart(period);
+    }
+
     async function initAdminAnalytics() {
       if (localStorage.getItem('clonavoz_owner_access') !== 'true') return;
 
@@ -1373,6 +1509,8 @@
         const res = await fetch(`${API_ANALYTICS_BASE}/api/stats`);
         if (res.ok) {
           const stats = await res.json();
+          analyticsDataCache = stats;
+
           const totalEl = document.getElementById('stat-total-views');
           const uniqueEl = document.getElementById('stat-unique-visitors');
           const todayEl = document.getElementById('stat-today-views');
@@ -1382,6 +1520,8 @@
           if (uniqueEl) uniqueEl.innerText = stats.unique_visitors.toLocaleString('pt-BR');
           if (todayEl) todayEl.innerText = stats.today_views.toLocaleString('pt-BR');
           if (lastEl) lastEl.innerText = stats.last_visit;
+
+          renderAnalyticsChart(currentAnalyticsPeriod);
         }
       } catch (e) {
         console.warn('[Analytics Error]', e);
@@ -1445,52 +1585,88 @@
       }
     });
   </script>
-  <!-- Painel Secreto de Visitas do Dono (Totalmente Invisível para Visitantes Comuns) -->
-  <div id="admin-analytics-badge" class="hidden fixed bottom-5 right-5 z-[9999] p-4 rounded-2xl panel-glass border border-brand-500/40 shadow-2xl backdrop-blur-2xl bg-zinc-950/95 text-white font-sans text-xs w-72 animate-fadeIn transition-all">
-    <div class="flex items-center justify-between pb-2 border-b border-white/10 mb-2.5">
-      <div class="flex items-center gap-1.5 font-black text-brand-400 uppercase tracking-wider text-[11px]">
-        <i data-lucide="bar-chart-3" class="w-4 h-4 text-brand-500"></i> Painel do Dono
+  <!-- Painel Secreto de Visitas do Dono com Gráficos Dia / Mês / Ano -->
+  <div id="admin-analytics-badge" class="hidden fixed bottom-4 right-4 z-[9999] p-4 sm:p-5 rounded-3xl panel-glass border-2 border-brand-500/40 shadow-2xl backdrop-blur-2xl bg-zinc-950/95 text-white font-sans text-xs w-[340px] sm:w-[410px] max-w-[calc(100vw-24px)] animate-fadeIn transition-all">
+    
+    <!-- Top Bar -->
+    <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+          <i data-lucide="bar-chart-3" class="w-4 h-4 text-brand-400"></i>
+        </div>
+        <div>
+          <span class="font-black text-white text-xs uppercase tracking-wider block">Métricas do Dono</span>
+          <span class="text-[10px] text-zinc-400 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Tempo Real (Brasília)
+          </span>
+        </div>
       </div>
-      <div class="flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Rastreando em tempo real"></span>
-        <button onclick="minimizeAdminBadge()" class="text-zinc-400 hover:text-white p-0.5 rounded cursor-pointer" title="Minimizar">
-          <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+      <div class="flex items-center gap-1">
+        <button onclick="minimizeAdminBadge()" class="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition cursor-pointer" title="Minimizar">
+          <i data-lucide="minus" class="w-4 h-4"></i>
         </button>
       </div>
     </div>
     
-    <div class="space-y-2 font-medium">
-      <div class="flex items-center justify-between">
-        <span class="text-zinc-400 flex items-center gap-1.5">
-          <i data-lucide="eye" class="w-3.5 h-3.5 text-zinc-500"></i> Visitas Totais:
-        </span>
-        <strong id="stat-total-views" class="text-white font-mono font-bold text-sm">--</strong>
+    <!-- 3 Mini KPI Cards -->
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <div class="bg-zinc-900/80 p-2.5 rounded-xl border border-white/5 text-center">
+        <span class="text-[10px] text-zinc-400 uppercase font-bold block">Visitas</span>
+        <strong id="stat-total-views" class="text-base font-black text-white font-mono">--</strong>
       </div>
-      <div class="flex items-center justify-between">
-        <span class="text-zinc-400 flex items-center gap-1.5">
-          <i data-lucide="users" class="w-3.5 h-3.5 text-zinc-500"></i> Visitantes Únicos:
-        </span>
-        <strong id="stat-unique-visitors" class="text-brand-300 font-mono font-bold text-sm">--</strong>
+      <div class="bg-zinc-900/80 p-2.5 rounded-xl border border-white/5 text-center">
+        <span class="text-[10px] text-brand-400 uppercase font-bold block">Únicos</span>
+        <strong id="stat-unique-visitors" class="text-base font-black text-brand-300 font-mono">--</strong>
       </div>
-      <div class="flex items-center justify-between">
-        <span class="text-zinc-400 flex items-center gap-1.5">
-          <i data-lucide="calendar" class="w-3.5 h-3.5 text-zinc-500"></i> Visitas Hoje:
-        </span>
-        <strong id="stat-today-views" class="text-emerald-400 font-mono font-bold text-sm">--</strong>
+      <div class="bg-zinc-900/80 p-2.5 rounded-xl border border-white/5 text-center">
+        <span class="text-[10px] text-emerald-400 uppercase font-bold block">Hoje</span>
+        <strong id="stat-today-views" class="text-base font-black text-emerald-400 font-mono">--</strong>
       </div>
-      <div class="flex items-center justify-between text-[10px] text-zinc-500 pt-1.5 border-t border-white/5">
+    </div>
+
+    <!-- Period Selector Tabs -->
+    <div class="flex items-center justify-between bg-zinc-900/90 p-1 rounded-xl border border-white/10 mb-2.5">
+      <button id="tab-chart-days" onclick="switchAnalyticsPeriod('days')" class="flex-1 py-1 rounded-lg text-[11px] font-bold transition bg-brand-500 text-black shadow-sm cursor-pointer text-center">
+        📅 Dia
+      </button>
+      <button id="tab-chart-months" onclick="switchAnalyticsPeriod('months')" class="flex-1 py-1 rounded-lg text-[11px] font-semibold transition text-zinc-400 hover:text-white cursor-pointer text-center">
+        📆 Mês
+      </button>
+      <button id="tab-chart-years" onclick="switchAnalyticsPeriod('years')" class="flex-1 py-1 rounded-lg text-[11px] font-semibold transition text-zinc-400 hover:text-white cursor-pointer text-center">
+        📈 Ano
+      </button>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="relative bg-zinc-900/50 p-2.5 rounded-2xl border border-white/5">
+      <div class="flex items-center justify-between text-[10px] text-zinc-400 px-1 mb-1.5">
+        <span id="chart-period-title" class="font-bold text-zinc-300">Evolução Diária (Últimos 7 dias)</span>
+        <span class="flex items-center gap-2">
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-500"></span> Visitas</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Únicos</span>
+        </span>
+      </div>
+      <div class="h-36 w-full relative">
+        <canvas id="admin-chart-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Bottom Info -->
+    <div class="mt-3 pt-2 border-t border-white/10 space-y-1.5 text-[10px]">
+      <div class="flex items-center justify-between text-zinc-400">
         <span>Último acesso:</span>
-        <span id="stat-last-visit" class="font-mono text-zinc-400 truncate max-w-[130px]">--</span>
+        <strong id="stat-last-visit" class="font-mono text-zinc-300">--</strong>
       </div>
-      <div class="flex items-center justify-between text-[10px] pt-2 border-t border-white/10">
+      <div class="flex items-center justify-between pt-1">
         <span class="text-emerald-400 flex items-center gap-1">
-          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Seus acessos não contam
+          <i data-lucide="shield-check" class="w-3 h-3"></i> Seus acessos são ignorados
         </span>
-        <button onclick="resetAdminAnalytics()" class="text-zinc-500 hover:text-red-400 transition underline cursor-pointer" title="Zerar dados de testes">
+        <button onclick="resetAdminAnalytics()" class="text-zinc-500 hover:text-red-400 transition underline cursor-pointer">
           Zerar testes
         </button>
       </div>
     </div>
+
   </div>
 
   <!-- Botão Flutuante quando Minimizado -->

@@ -128,13 +128,81 @@ def get_brasil_now():
     tz_br = datetime.timezone(datetime.timedelta(hours=-3))
     return datetime.datetime.now(tz_br)
 
+def get_analytics_series(daily_history: dict, br_now: datetime.datetime) -> dict:
+    """Gera séries temporais agregadas para os gráficos de Dia, Mês e Ano."""
+    month_names_pt = {
+        1: "Jan", 2: "Fev", 3: "Mar", 4: "Abr", 5: "Mai", 6: "Jun",
+        7: "Jul", 8: "Ago", 9: "Set", 10: "Out", 11: "Nov", 12: "Dez"
+    }
+
+    # 1. Dias: últimos 7 dias
+    days = []
+    for i in range(6, -1, -1):
+        d = br_now.date() - datetime.timedelta(days=i)
+        d_str = d.isoformat()
+        entry = daily_history.get(d_str, {})
+        days.append({
+            "date": d_str,
+            "label": d.strftime("%d/%m"),
+            "views": entry.get("views", 0),
+            "uniques": entry.get("uniques", 0)
+        })
+
+    # 2. Meses: últimos 6 meses
+    months_map = {}
+    for i in range(5, -1, -1):
+        y = br_now.year
+        m = br_now.month - i
+        while m <= 0:
+            m += 12
+            y -= 1
+        m_key = f"{y:04d}-{m:02d}"
+        months_map[m_key] = {
+            "month": m_key,
+            "label": f"{month_names_pt[m]}/{str(y)[2:]}",
+            "views": 0,
+            "uniques": 0
+        }
+
+    for d_str, entry in daily_history.items():
+        m_key = d_str[:7]
+        if m_key in months_map:
+            months_map[m_key]["views"] += entry.get("views", 0)
+            months_map[m_key]["uniques"] += entry.get("uniques", 0)
+
+    months = list(months_map.values())
+
+    # 3. Anos: últimos 3 anos
+    years_map = {}
+    for y in range(br_now.year - 2, br_now.year + 1):
+        y_key = str(y)
+        years_map[y_key] = {
+            "year": y_key,
+            "label": y_key,
+            "views": 0,
+            "uniques": 0
+        }
+
+    for d_str, entry in daily_history.items():
+        y_key = d_str[:4]
+        if y_key in years_map:
+            years_map[y_key]["views"] += entry.get("views", 0)
+            years_map[y_key]["uniques"] += entry.get("uniques", 0)
+
+    years = list(years_map.values())
+
+    return {
+        "days": days,
+        "months": months,
+        "years": years
+    }
+
 def load_analytics() -> dict:
     if os.path.exists(ANALYTICS_FILE):
         try:
             with open(ANALYTICS_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 
-                # Auto-correção para histórico que havia sido gravado no UTC antigo
                 changed = False
                 lv = data.get("last_visit", "")
                 if "27/10/2026 00:" in lv:
@@ -149,6 +217,18 @@ def load_analytics() -> dict:
                         data["today_uniques"] = data.get("unique_visitors", [])
                     changed = True
 
+                # Garante que daily_history exista e contenha as visitas atuais
+                if "daily_history" not in data:
+                    data["daily_history"] = {}
+                    changed = True
+
+                if not data["daily_history"] and data.get("total_views", 0) > 0:
+                    data["daily_history"][br_today] = {
+                        "views": data.get("total_views", 0),
+                        "uniques": len(data.get("unique_visitors", []))
+                    }
+                    changed = True
+
                 if changed:
                     try:
                         with open(ANALYTICS_FILE, "w", encoding="utf-8") as wf:
@@ -159,13 +239,18 @@ def load_analytics() -> dict:
                 return data
         except Exception:
             pass
+
+    br_today = get_brasil_now().date().isoformat()
     return {
         "total_views": 0,
         "unique_visitors": [],
-        "today": get_brasil_now().date().isoformat(),
+        "today": br_today,
         "today_views": 0,
         "today_uniques": [],
-        "last_visit": "Nenhuma visita registrada ainda"
+        "last_visit": "Nenhuma visita registrada ainda",
+        "daily_history": {
+            br_today: {"views": 0, "uniques": 0}
+        }
     }
 
 def save_analytics(data: dict):
@@ -220,6 +305,19 @@ async def track_visit(request: Request):
         data["today_uniques"] = list(today_uniques)[-1000:]
         data["last_visit"] = br_now.strftime("%d/%m/%Y %H:%M:%S")
 
+        # Atualiza histórico diário para os gráficos
+        daily_hist = data.setdefault("daily_history", {})
+        if today_str not in daily_hist:
+            daily_hist[today_str] = {"views": 0, "uniques": 0, "unique_ips": []}
+        
+        day_entry = daily_hist[today_str]
+        day_entry["views"] = day_entry.get("views", 0) + 1
+        
+        day_ips = set(day_entry.get("unique_ips", []))
+        day_ips.add(ip_hash)
+        day_entry["unique_ips"] = list(day_ips)[-1000:]
+        day_entry["uniques"] = len(day_entry["unique_ips"])
+
         save_analytics(data)
         return {"success": True}
     except Exception as e:
@@ -233,26 +331,37 @@ def get_stats():
     today_views = data.get("today_views", 0) if data.get("today") == today_str else 0
     today_uniques = len(data.get("today_uniques", [])) if data.get("today") == today_str else 0
 
+    daily_hist = data.get("daily_history", {})
+    if today_str not in daily_hist and today_views > 0:
+        daily_hist[today_str] = {"views": today_views, "uniques": today_uniques}
+
+    series = get_analytics_series(daily_hist, br_now)
+
     return {
         "total_views": data.get("total_views", 0),
         "unique_visitors": len(data.get("unique_visitors", [])),
         "today_views": today_views,
         "today_uniques": today_uniques,
         "last_visit": data.get("last_visit", "Nenhuma visita registrada ainda"),
-        "date": today_str
+        "date": today_str,
+        "series": series
     }
 
 @app.post("/api/reset-stats")
 def reset_stats():
     """Zera os contadores analíticos para iniciar uma contagem limpa de visitas reais."""
     br_now = get_brasil_now()
+    br_today = br_now.date().isoformat()
     data = {
         "total_views": 0,
         "unique_visitors": [],
-        "today": br_now.date().isoformat(),
+        "today": br_today,
         "today_views": 0,
         "today_uniques": [],
-        "last_visit": "Nenhuma visita registrada ainda"
+        "last_visit": "Nenhuma visita registrada ainda",
+        "daily_history": {
+            br_today: {"views": 0, "uniques": 0, "unique_ips": []}
+        }
     }
     save_analytics(data)
     return {"success": True, "message": "Contadores zerados com sucesso."}
