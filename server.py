@@ -132,7 +132,31 @@ def load_analytics() -> dict:
     if os.path.exists(ANALYTICS_FILE):
         try:
             with open(ANALYTICS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+                
+                # Auto-correção para histórico que havia sido gravado no UTC antigo
+                changed = False
+                lv = data.get("last_visit", "")
+                if "27/10/2026 00:" in lv:
+                    data["last_visit"] = lv.replace("27/10/2026 00:", "26/10/2026 21:")
+                    changed = True
+                
+                br_today = get_brasil_now().date().isoformat()
+                if data.get("today") == "2026-10-27" and br_today == "2026-10-26":
+                    data["today"] = "2026-10-26"
+                    if data.get("today_views", 0) == 0:
+                        data["today_views"] = data.get("total_views", 0)
+                        data["today_uniques"] = data.get("unique_visitors", [])
+                    changed = True
+
+                if changed:
+                    try:
+                        with open(ANALYTICS_FILE, "w", encoding="utf-8") as wf:
+                            json.dump(data, wf, ensure_ascii=False, indent=2)
+                    except Exception:
+                        pass
+
+                return data
         except Exception:
             pass
     return {
