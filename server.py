@@ -119,8 +119,14 @@ def get_favicon():
 
 # -------------------------------------------------------------
 # Analytics & Visit Tracker (Armazenado com persistência em OUTPUTS_DIR/analytics.json)
+# Fuso horário padronizado no Horário Oficial de Brasília (UTC-3)
 # -------------------------------------------------------------
 ANALYTICS_FILE = os.path.join(OUTPUTS_DIR, "analytics.json")
+
+def get_brasil_now():
+    """Retorna datetime no fuso horário oficial de Brasília (UTC-3)."""
+    tz_br = datetime.timezone(datetime.timedelta(hours=-3))
+    return datetime.datetime.now(tz_br)
 
 def load_analytics() -> dict:
     if os.path.exists(ANALYTICS_FILE):
@@ -132,7 +138,7 @@ def load_analytics() -> dict:
     return {
         "total_views": 0,
         "unique_visitors": [],
-        "today": datetime.date.today().isoformat(),
+        "today": get_brasil_now().date().isoformat(),
         "today_views": 0,
         "today_uniques": [],
         "last_visit": "Nenhuma visita registrada ainda"
@@ -168,10 +174,11 @@ async def track_visit(request: Request):
         # Anonimiza o IP com SHA-256 (conformidade total com LGPD)
         ip_hash = hashlib.sha256(f"clonavoz_salt_{ip}".encode()).hexdigest()[:16]
 
-        today_str = datetime.date.today().isoformat()
+        br_now = get_brasil_now()
+        today_str = br_now.date().isoformat()
         data = load_analytics()
 
-        # Reseta contador diário na virada do dia
+        # Reseta contador diário na virada do dia (Horário de Brasília)
         if data.get("today") != today_str:
             data["today"] = today_str
             data["today_views"] = 0
@@ -187,7 +194,7 @@ async def track_visit(request: Request):
         today_uniques = set(data.get("today_uniques", []))
         today_uniques.add(ip_hash)
         data["today_uniques"] = list(today_uniques)[-1000:]
-        data["last_visit"] = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        data["last_visit"] = br_now.strftime("%d/%m/%Y %H:%M:%S")
 
         save_analytics(data)
         return {"success": True}
@@ -197,7 +204,8 @@ async def track_visit(request: Request):
 @app.get("/api/stats")
 def get_stats():
     data = load_analytics()
-    today_str = datetime.date.today().isoformat()
+    br_now = get_brasil_now()
+    today_str = br_now.date().isoformat()
     today_views = data.get("today_views", 0) if data.get("today") == today_str else 0
     today_uniques = len(data.get("today_uniques", [])) if data.get("today") == today_str else 0
 
@@ -213,10 +221,11 @@ def get_stats():
 @app.post("/api/reset-stats")
 def reset_stats():
     """Zera os contadores analíticos para iniciar uma contagem limpa de visitas reais."""
+    br_now = get_brasil_now()
     data = {
         "total_views": 0,
         "unique_visitors": [],
-        "today": datetime.date.today().isoformat(),
+        "today": br_now.date().isoformat(),
         "today_views": 0,
         "today_uniques": [],
         "last_visit": "Nenhuma visita registrada ainda"
