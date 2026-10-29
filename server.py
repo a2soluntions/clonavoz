@@ -1384,6 +1384,43 @@ def mix_audio_with_bgm(voice_wav_path: str, bgm_file_path: str, volume: float = 
     return False
 
 
+class PreviewRequest(BaseModel):
+    text: str
+    voice: str = "su"
+    speed: float = 1.0
+
+
+@app.post("/api/preview")
+def generate_preview(req: PreviewRequest):
+    """Gera uma prévia rápida e gratuita dos primeiros 120 caracteres do texto do visitante para encantar antes da compra."""
+    clean_text = req.text.replace("\r\n", "\n").strip()
+    if not clean_text:
+        raise HTTPException(status_code=400, detail="Digite algum texto para ouvir a prévia.")
+
+    # Degustação focada em até 120 caracteres para gerar o efeito Uau
+    preview_text = clean_text[:120].strip()
+    if len(clean_text) > 120:
+        last_space = preview_text.rfind(" ")
+        if last_space > 80:
+            preview_text = preview_text[:last_space] + "..."
+        else:
+            preview_text = preview_text + "..."
+
+    audio_res = execute_synthesis(
+        text=preview_text,
+        voice=req.voice,
+        speed=req.speed,
+        bgm="none",
+        bgm_volume=0.0
+    )
+
+    return {
+        "success": True,
+        "preview_text": preview_text,
+        "audio": audio_res
+    }
+
+
 @app.post("/api/synthesize")
 def synthesize(
     req: SynthesizeRequest,

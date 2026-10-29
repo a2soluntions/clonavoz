@@ -348,6 +348,31 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:items-stretch flex-1 min-h-0">
       
       <!-- Left: Editor de Texto Principal -->
+        <!-- Top Hook Banner: Experimente Grátis & 1 Áudio de Boas-Vindas -->
+          <div id="studio-visitor-hook-banner" class="mb-2 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-brand-500/20 via-emerald-500/15 to-brand-500/10 border border-brand-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0">
+            <div class="flex items-center gap-2.5">
+              <span class="w-8 h-8 rounded-xl bg-brand-500/25 text-brand-400 flex items-center justify-center font-black text-sm shrink-0 border border-brand-500/40">🎁</span>
+              <div>
+                <p class="text-xs font-bold text-white">
+                  Experimente Grátis: Digite qualquer texto e clique em <span class="text-emerald-400">"🎧 Ouvir Prévia Grátis"</span>!
+                </p>
+                <p class="text-[11px] text-zinc-300">
+                  Crie sua conta em 10 segundos e ganhe <strong class="text-emerald-400">1 Áudio Completo Grátis</strong> para baixar em MP3.
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onclick="openAuthModal('signup')"
+                class="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-black text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-md"
+              >
+                Criar Conta Grátis
+              </button>
+            </div>
+          </div>
+
+          
       <section class="lg:col-span-7 flex flex-col h-full min-h-0">
         <div class="panel-glass p-3.5 sm:p-4 rounded-2xl border border-white/10 shadow-2xl flex flex-col gap-2.5 h-full min-h-0">
           
@@ -469,15 +494,30 @@
             <span id="save-history-hint" class="text-[10px] text-zinc-500 hidden sm:inline">Desmarque para apenas baixar</span>
           </div>
 
-          <!-- Master Action Button (Pílula Laranja Vibrante) -->
-          <button
-            id="btn-generate"
-            onclick="generateVoice()"
-            class="w-full mt-2 py-3 px-5 rounded-xl font-black text-white uppercase tracking-wider text-xs sm:text-sm btn-fire flex items-center justify-center gap-2 group cursor-pointer shrink-0"
-          >
-            <i data-lucide="play" class="w-4 h-4 fill-current transition group-hover:scale-110"></i>
-            <span id="btn-text">GERAR ÁUDIO AGORA</span>
-          </button>
+<!-- Master Action Buttons (Prévia Grátis & Geração Completa) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 shrink-0">
+            <!-- Botão 1: Degustação Gratuita Imediata da Voz -->
+            <button
+              type="button"
+              id="btn-preview-audio"
+              onclick="generateFreePreview()"
+              class="py-3 px-3.5 rounded-xl font-bold text-xs uppercase tracking-wider bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/40 hover:border-emerald-400 transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md group active:scale-95"
+              title="Ouvir uma demonstração falada gratuita dos primeiros 120 caracteres do seu texto"
+            >
+              <i data-lucide="headphones" class="w-4 h-4 text-emerald-400 group-hover:scale-110 transition"></i>
+              <span id="btn-preview-text">🎧 Ouvir Prévia Grátis</span>
+            </button>
+
+            <!-- Botão 2: Gerar Áudio Completo / Download -->
+            <button
+              id="btn-generate"
+              onclick="generateVoice()"
+              class="py-3 px-3.5 rounded-xl font-black text-white uppercase tracking-wider text-xs btn-fire flex items-center justify-center gap-1.5 group cursor-pointer shadow-lg active:scale-95"
+            >
+              <i data-lucide="play" class="w-4 h-4 fill-current transition group-hover:scale-110"></i>
+              <span id="btn-text">GERAR ÁUDIO COMPLETO</span>
+            </button>
+          </div>
         </div>
       </section>
 
@@ -1897,10 +1937,6 @@
 
           const { data: { session } } = await supabaseClient.auth.getSession();
           await handleAuthSession(session);
-          if (!session) {
-            // Visitante não autenticado: exige cadastro/login para acessar o estúdio
-            openAuthModal('signup');
-          }
         }
       } catch (err) {
         console.warn('[Supabase Init Warning]', err);
@@ -1921,7 +1957,9 @@
       const loggedOutNav = document.getElementById('nav-auth-logged-out');
       const loggedInNav = document.getElementById('nav-auth-logged-in');
 
+      const hookBanner = document.getElementById('studio-visitor-hook-banner');
       if (session && session.user) {
+        if (hookBanner) hookBanner.classList.add('hidden');
         let profileLoaded = false;
         try {
           const res = await fetch(`${API_BASE}/api/me`, {
@@ -3717,6 +3755,69 @@
     }
 
 
+    // Lógica de Prévia Gratuita com Degustação da IA (Efeito Uau)
+    function openPreviewConversionModal(voiceName) {
+      document.getElementById('modal-preview-conversion').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closePreviewConversionModal() {
+      document.getElementById('modal-preview-conversion').classList.add('hidden');
+    }
+
+    async function generateFreePreview() {
+      const text = textInput.value.trim();
+      if (!text) {
+        showToast('Digite ou cole algum texto no editor para ouvir a prévia.', 'error');
+        textInput.focus();
+        return;
+      }
+
+      const btn = document.getElementById('btn-preview-audio');
+      const btnText = document.getElementById('btn-preview-text');
+      btn.disabled = true;
+      btn.classList.add('opacity-75');
+      btnText.innerHTML = '<span class="animate-spin inline-block mr-1">⏳</span> Gerando Prévia...';
+
+      const vObj = voices.find(item => item.key === selectedVoiceKey);
+      const vLabel = vObj ? getCleanVoiceName(vObj) : (selectedVoiceKey || 'Su');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/preview`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            voice: selectedVoiceKey || 'su',
+            speed: selectedSpeed || 1.0
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.detail || 'Não foi possível gerar a prévia');
+        }
+
+        // Toca no player com Wavesurfer
+        displayAudioResult(data.audio);
+        showToast(`🎉 Prévia de "${vLabel}" reproduzida com sucesso!`, 'success');
+
+        // Se visitante não logado, abre modal convidativo após 4 segundos
+        if (!currentSession) {
+          setTimeout(() => {
+            openPreviewConversionModal(vLabel);
+          }, 3500);
+        }
+      } catch (err) {
+        showToast(err.message || 'Erro ao gerar prévia', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-75');
+        btnText.innerHTML = '🎧 Ouvir Prévia Grátis';
+        lucide.createIcons();
+      }
+    }
+
     // Lógica de Compra e Execução de Áudio Avulso no PIX (Pay-as-you-go)
     let singlePixPaymentId = null;
     let singlePixPollInterval = null;
@@ -3930,8 +4031,8 @@
       }
 
       if (supabaseClient && !currentSession) {
-        // Usuário não autenticado: oferece gerar avulso no PIX de imediato
-        initiateSingleAudioPayment();
+        // Usuário não autenticado: abre modal com opção de criar conta grátis (1 crédito) ou PIX avulso
+        openPreviewConversionModal();
         return;
       }
 
@@ -4521,6 +4622,62 @@
     });
   </script>
 
+  <!-- MODAL DE CONVERSÃO PÓS-PRÉVIA (EFEITO UAU) -->
+  <div id="modal-preview-conversion" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="panel-glass border border-brand-500/40 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+      
+      <div class="text-center space-y-2">
+        <div class="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center mx-auto text-xl border border-brand-500/30">
+          🎉
+        </div>
+        <h3 class="text-lg font-black text-white uppercase tracking-wider">Gostou da Voz?</h3>
+        <p class="text-xs text-zinc-300">
+          Você acabou de ouvir a prévia neural com qualidade de estúdio! Para gerar seu áudio completo de até 3.000 caracteres e baixar o arquivo .MP3:
+        </p>
+      </div>
+
+      <div class="space-y-2.5 pt-1">
+        <!-- Opção 1: Criar Conta Grátis e Ganhar 1 Crédito -->
+        <button
+          onclick="closePreviewConversionModal(); openAuthModal('signup');"
+          class="w-full py-3 px-4 rounded-xl btn-fire text-white text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-between shadow-lg group"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-base">🎁</span>
+            <div class="text-left">
+              <span class="block text-xs font-black">Criar Conta Grátis</span>
+              <span class="block text-[10px] text-zinc-200 font-normal">Ganhe 1 Áudio Completo de Boas-Vindas</span>
+            </div>
+          </div>
+          <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition"></i>
+        </button>
+
+        <!-- Opção 2: Gerar Avulso no PIX por R$ 2,49 -->
+        <button
+          onclick="closePreviewConversionModal(); initiateSingleAudioPayment();"
+          class="w-full py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/30 text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-between shadow-sm group"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-base">⚡</span>
+            <div class="text-left">
+              <span class="block text-xs font-black">Pagar no PIX (a partir de R$ 2,49)</span>
+              <span class="block text-[10px] text-zinc-400 font-normal">Baixe o áudio completo agora</span>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 group-hover:translate-x-1 transition text-emerald-400"></i>
+        </button>
+      </div>
+
+      <div class="text-center pt-2 border-t border-white/5">
+        <button onclick="closePreviewConversionModal()" class="text-xs text-zinc-500 hover:text-zinc-300 cursor-pointer">
+          Continuar experimentando outras vozes
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  
   <!-- Modal Assistente de Dicção & Gramática (Isenção e Correções) -->
   <div id="modal-diction-advisor" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-4">
     <div class="panel-glass bg-zinc-950 border border-amber-500/40 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
