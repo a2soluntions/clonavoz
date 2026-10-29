@@ -171,6 +171,15 @@
             <span>Ganhe 1 Áudio Grátis</span>
           </div>
           <button
+            type="button"
+            onclick="openStudioFaqModal()"
+            class="px-2.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 text-xs font-medium transition cursor-pointer flex items-center gap-1"
+            title="Dúvidas Frequentes"
+          >
+            <i data-lucide="help-circle" class="w-3.5 h-3.5 text-brand-400"></i>
+            <span class="hidden sm:inline">Dúvidas</span>
+          </button>
+          <button
             onclick="openAuthModal('login')"
             class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-xs font-bold transition cursor-pointer"
           >
@@ -450,6 +459,7 @@
                 <div class="flex items-center gap-1.5 flex-wrap">
                   <span class="text-white font-bold">Áudio Avulso no PIX:</span>
                   <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded border border-emerald-500/30">Sem Cadastro</span>
+                  <button type="button" onclick="openStudioFaqModal()" class="text-[10px] text-zinc-400 hover:text-emerald-400 transition underline underline-offset-2 ml-1 cursor-pointer">Como funciona?</button>
                 </div>
                 <p id="single-audio-tier-hint" class="text-zinc-400 text-[11px] mt-0.5">
                   Inicia em R$ 2,49 (até 300c) e varia pelo texto • Download imediato
@@ -4837,6 +4847,107 @@
 
     </div>
   </div>
+
+
+  <!-- MODAL DE DÚVIDAS FREQUENTES (FAQ) NO ESTÚDIO -->
+  <div id="modal-studio-faq" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="panel-glass border border-white/10 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Header -->
+      <div class="p-4 sm:p-5 border-b border-zinc-800/80 flex items-center justify-between shrink-0 bg-zinc-950/70">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center text-sm font-black border border-brand-500/30">
+            ❓
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-white">Dúvidas Frequentes</h3>
+            <p class="text-[11px] text-zinc-400">Entenda o uso sem cadastro e as vantagens de criar conta</p>
+          </div>
+        </div>
+        <button onclick="closeStudioFaqModal()" class="w-8 h-8 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition cursor-pointer border border-zinc-800">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- FAQ Content Body -->
+      <div class="p-4 sm:p-6 overflow-y-auto custom-scrollbar space-y-3.5 text-left text-xs">
+        
+        <!-- FAQ 1: Sem Cadastro -->
+        <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-emerald-500/30 space-y-1.5">
+          <h4 class="text-white font-bold flex items-center gap-2">
+            <span class="text-emerald-400 font-extrabold text-[10px] uppercase tracking-wider bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">Sem Cadastro</span>
+            <span>Como funciona a geração direta no PIX sem cadastro?</span>
+          </h4>
+          <p class="text-zinc-300 leading-relaxed">
+            Você digita ou cola seu texto no estúdio, ouve a <strong>Prévia Grátis</strong> para conferir o timbre da voz e clica em <strong>"Pagar no PIX e Gerar"</strong>. Os valores iniciam em <strong>R$ 2,49</strong> (até 300 caracteres) e aumentam proporcionalmente ao tamanho do texto. Você não precisa criar conta, cadastrar e-mail nem lembrar senha. Ao pagar o QR Code no app do seu banco, nosso servidor sintetiza seu áudio e faz o <strong>download automático do arquivo .MP3</strong> na hora!
+          </p>
+        </div>
+
+        <!-- FAQ 2: Vantagens de Cadastrar -->
+        <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-brand-500/30 space-y-1.5">
+          <h4 class="text-white font-bold flex items-center gap-2">
+            <span class="text-brand-400 font-extrabold text-[10px] uppercase tracking-wider bg-brand-500/10 px-1.5 py-0.5 rounded border border-brand-500/30">Com Conta</span>
+            <span>Quais são as vantagens de criar uma conta gratuita?</span>
+          </h4>
+          <div class="text-zinc-300 leading-relaxed space-y-1.5">
+            <p>Se você gera áudios com frequência, criar sua conta grátis oferece economia e recursos profissionais:</p>
+            <ul class="list-disc list-inside space-y-1 text-zinc-400 pl-1">
+              <li><strong class="text-white">Economia Brutal nos Pacotes:</strong> Compre pacotes de créditos com áudios a partir de apenas <strong class="text-emerald-400">R$ 0,66 cada</strong> (Oferta Boas-Vindas: 30 áudios por R$ 19,90).</li>
+              <li><strong class="text-white">Histórico em Nuvem Permanente:</strong> Seus áudios ficam salvos na sua biblioteca para você reouvir e baixar novamente em qualquer dispositivo.</li>
+              <li><strong class="text-white">Download em WAV Master:</strong> Arquivos profissionais sem perda de qualidade (44.1kHz) para edição em vídeo (Premiere, CapCut, DaVinci).</li>
+              <li><strong class="text-white">Clonagem de Voz Própria:</strong> Envie amostras de áudio e clone sua própria voz com IA.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- FAQ 3: Garantia Anti-Perda -->
+        <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-1.5">
+          <h4 class="text-white font-bold">É garantido que receberei meu áudio se eu pagar sem cadastro? E se a página fechar?</h4>
+          <p class="text-zinc-400 leading-relaxed">
+            <strong>100% garantido!</strong> Cada pagamento PIX tem um ID exclusivo rastreado pelo seu navegador. Mesmo se você minimizar o navegador para abrir o app do banco no celular, o sistema conta com <strong>auto-recuperação inteligente</strong>: ao reabrir a página, o áudio pago é entregue automaticamente. Você também pode informar opcionalmente seu WhatsApp ou e-mail na tela do PIX para receber o link de backup.
+          </p>
+        </div>
+
+        <!-- FAQ 4: Monetização -->
+        <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-1.5">
+          <h4 class="text-white font-bold">Posso monetizar os áudios no YouTube, TikTok e Anúncios?</h4>
+          <p class="text-zinc-400 leading-relaxed">
+            Sim, 100%! Todos os áudios gerados pelo Clonavoz são livres de royalties com licença comercial total para vídeos no YouTube, TikTok, Reels, VSLs e campanhas de anúncios pagos.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Footer CTA -->
+      <div class="p-3.5 sm:p-4 border-t border-zinc-800/80 bg-zinc-950/70 flex items-center justify-between shrink-0">
+        <button onclick="closeStudioFaqModal()" class="text-xs text-zinc-400 hover:text-white cursor-pointer">
+          Fechar
+        </button>
+        <button
+          onclick="closeStudioFaqModal(); openAuthModal('signup');"
+          class="px-4 py-2 rounded-xl btn-fire text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer shadow-md flex items-center gap-1.5"
+        >
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>Criar Conta Grátis</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function openStudioFaqModal() {
+      const modal = document.getElementById('modal-studio-faq');
+      if (modal) {
+        modal.classList.remove('hidden');
+        lucide.createIcons();
+      }
+    }
+    function closeStudioFaqModal() {
+      const modal = document.getElementById('modal-studio-faq');
+      if (modal) modal.classList.add('hidden');
+    }
+  </script>
 
 </body>
 </html>

@@ -872,57 +872,104 @@
 
       <div class="space-y-4">
         
-        <!-- FAQ Item 1 -->
-        <div class="card-glass rounded-2xl p-5 cursor-pointer" onclick="toggleFaq(1)">
+        <!-- FAQ Item 1: Uso Direto Sem Cadastro -->
+        <div class="card-glass rounded-2xl p-5 cursor-pointer border border-emerald-500/30 hover:border-emerald-500/60 transition" onclick="toggleFaq(1)">
           <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white">Posso monetizar os áudios no YouTube, TikTok e Meta Ads?</h3>
-            <i id="faq-icon-1" data-lucide="chevron-down" class="w-4 h-4 text-brand-500 transition-transform"></i>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span class="text-emerald-400 font-extrabold text-[10px] uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">Sem Cadastro</span>
+              <span>Como funciona a geração direta no PIX sem precisar de cadastro?</span>
+            </h3>
+            <i id="faq-icon-1" data-lucide="chevron-down" class="w-4 h-4 text-emerald-400 transition-transform"></i>
           </div>
-          <p id="faq-ans-1" class="text-xs text-zinc-400 mt-3 hidden leading-relaxed">
-            Sim, 100%! Todos os áudios gerados pelo Clonavoz são livres de royalties e possuem direitos comerciais totais. Você pode utilizar livremente em vídeos monetizados no YouTube, TikTok, campanhas de tráfego pago, podcasts e infoprodutos.
+          <p id="faq-ans-1" class="text-xs text-zinc-300 mt-3 hidden leading-relaxed">
+            É o jeito mais rápido e prático de criar suas narrações: você entra direto no <strong>Estúdio</strong>, digita ou cola seu texto e pode ouvir uma <strong>demonstração falada gratuita</strong> para testar a voz. Para gerar o áudio completo e baixar o arquivo .MP3, basta clicar em <strong>"Pagar no PIX e Gerar"</strong> (valores a partir de <strong>R$ 2,49</strong> para até 300 caracteres, aumentando proporcionalmente ao tamanho do texto). <strong>Não precisa criar conta, cadastrar e-mail nem lembrar senhas.</strong> Assim que o PIX é pago no app do seu banco, nosso motor neural sintetiza a locução e inicia o download do arquivo .MP3 imediatamente!
           </p>
         </div>
 
-        <!-- FAQ Item 2 -->
-        <div class="card-glass rounded-2xl p-5 cursor-pointer" onclick="toggleFaq(2)">
+        <!-- FAQ Item 2: Vantagens de Criar Conta -->
+        <div class="card-glass rounded-2xl p-5 cursor-pointer border border-brand-500/30 hover:border-brand-500/60 transition" onclick="toggleFaq(2)">
           <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white">Como funciona o pagamento via PIX?</h3>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span class="text-brand-400 font-extrabold text-[10px] uppercase tracking-wider bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/30">Com Conta</span>
+              <span>Quais são as vantagens de criar uma conta gratuita no Clonavoz?</span>
+            </h3>
             <i id="faq-icon-2" data-lucide="chevron-down" class="w-4 h-4 text-brand-500 transition-transform"></i>
           </div>
-          <p id="faq-ans-2" class="text-xs text-zinc-400 mt-3 hidden leading-relaxed">
-            Ao clicar em recarregar ou selecionar um pacote no estúdio, você recebe um QR Code PIX e o código Copia e Cola. O processamento é instantâneo e os créditos são adicionados automaticamente ao seu saldo assim que o pagamento é aprovado.
-          </p>
+          <div id="faq-ans-2" class="text-xs text-zinc-300 mt-3 hidden leading-relaxed space-y-2">
+            <p>
+              Embora você possa sempre comprar áudios avulsos rápidos sem cadastro, criar sua conta gratuita oferece <strong>4 grandes vantagens</strong>:
+            </p>
+            <ul class="space-y-1.5 list-disc list-inside text-zinc-400 pt-1">
+              <li><strong class="text-white">Economia Máxima nos Pacotes (até R$ 0,66 por áudio):</strong> Usuários cadastrados têm acesso aos pacotes de créditos promocionais (como o de Boas-Vindas com 30 áudios por apenas R$ 19,90), economizando mais de 70% comparado à compra avulsa.</li>
+              <li><strong class="text-white">Histórico em Nuvem Permanente:</strong> Todos os seus áudios gerados ficam salvos com segurança para você reouvir e baixar novamente em qualquer dispositivo quando quiser.</li>
+              <li><strong class="text-white">Download em WAV Master de Estúdio:</strong> Acesso aos arquivos em qualidade de estúdio profissional (44.1kHz sem perda) para edição direta em softwares como Premiere, DaVinci e CapCut.</li>
+              <li><strong class="text-white">Clonagem de Voz Própria:</strong> Envie amostras de áudio e clone sua própria voz ou vozes exclusivas para usar em qualquer projeto.</li>
+            </ul>
+          </div>
         </div>
 
-        <!-- FAQ Item 3 -->
+        <!-- FAQ Item 3: Garantia Anti-Perda Sem Cadastro -->
         <div class="card-glass rounded-2xl p-5 cursor-pointer" onclick="toggleFaq(3)">
           <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white">Os créditos comprados têm prazo de validade?</h3>
+            <h3 class="text-sm font-bold text-white">É garantido que receberei meu áudio se eu pagar sem cadastro? E se a página fechar?</h3>
             <i id="faq-icon-3" data-lucide="chevron-down" class="w-4 h-4 text-brand-500 transition-transform"></i>
           </div>
           <p id="faq-ans-3" class="text-xs text-zinc-400 mt-3 hidden leading-relaxed">
-            Não! Seus créditos não expiram no final do mês. Você pode usá-los no seu próprio ritmo, sem pressão de prazos ou desperdício do seu dinheiro.
+            <strong>100% garantido!</strong> Cada cobrança PIX gerada possui um código exclusivo vinculado diretamente ao seu navegador. Assim que seu banco confirma o pagamento, o áudio é sintetizado e entregue na tela com download automático. E mesmo que você feche a aba sem querer ou alterne para o app do seu banco no celular, o sistema conta com <strong>auto-recuperação inteligente</strong>: ao reabrir o site, seu áudio pago é identificado e liberado na hora! Além disso, oferecemos um campo opcional de WhatsApp ou e-mail na tela do PIX para quem quiser garantia extra por mensagem.
           </p>
         </div>
 
         <!-- FAQ Item 4 -->
         <div class="card-glass rounded-2xl p-5 cursor-pointer" onclick="toggleFaq(4)">
           <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white">Qual a diferença entre baixar em WAV Master e MP3 Leve?</h3>
+            <h3 class="text-sm font-bold text-white">Posso monetizar os áudios no YouTube, TikTok e Meta Ads?</h3>
             <i id="faq-icon-4" data-lucide="chevron-down" class="w-4 h-4 text-brand-500 transition-transform"></i>
           </div>
           <p id="faq-ans-4" class="text-xs text-zinc-400 mt-3 hidden leading-relaxed">
-            O WAV Master é o formato de estúdio profissional em 44.1kHz sem perda de qualidade, ideal para colocar na timeline de editores de vídeo (Premiere, DaVinci, Final Cut, CapCut). O MP3 Leve é codificado em alta taxa (192kbps) e ocupa até 80% menos espaço, ideal para mensagens, prévias e redes sociais.
+            Sim, 100%! Todos os áudios gerados pelo Clonavoz são livres de royalties e possuem direitos comerciais totais. Você pode utilizar livremente em vídeos monetizados no YouTube, TikTok, campanhas de tráfego pago, podcasts e infoprodutos.
           </p>
         </div>
 
         <!-- FAQ Item 5 -->
         <div class="card-glass rounded-2xl p-5 cursor-pointer" onclick="toggleFaq(5)">
           <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white">A plataforma está em conformidade com a LGPD?</h3>
+            <h3 class="text-sm font-bold text-white">Como funciona o pagamento via PIX para pacotes e recargas?</h3>
             <i id="faq-icon-5" data-lucide="chevron-down" class="w-4 h-4 text-brand-500 transition-transform"></i>
           </div>
           <p id="faq-ans-5" class="text-xs text-zinc-400 mt-3 hidden leading-relaxed">
+            Ao clicar em recarregar ou selecionar um pacote no estúdio, você recebe um QR Code PIX e o código Copia e Cola. O processamento é instantâneo e os créditos são adicionados automaticamente ao saldo da sua conta assim que o pagamento é aprovado.
+          </p>
+        </div>
+
+        <!-- FAQ Item 6 -->
+        <div class="card-glass rounded-2xl p-5 cursor-pointer" onclick="toggleFaq(6)">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Os créditos comprados na conta têm prazo de validade?</h3>
+            <i id="faq-icon-6" data-lucide="chevron-down" class="w-4 h-4 text-brand-500 transition-transform"></i>
+          </div>
+          <p id="faq-ans-6" class="text-xs text-zinc-400 mt-3 hidden leading-relaxed">
+            Não! Seus créditos não expiram no final do mês. Você pode usá-los no seu próprio ritmo, sem pressão de prazos ou risco de perder saldo.
+          </p>
+        </div>
+
+        <!-- FAQ Item 7 -->
+        <div class="card-glass rounded-2xl p-5 cursor-pointer" onclick="toggleFaq(7)">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Qual a diferença entre baixar em WAV Master e MP3 Leve?</h3>
+            <i id="faq-icon-7" data-lucide="chevron-down" class="w-4 h-4 text-brand-500 transition-transform"></i>
+          </div>
+          <p id="faq-ans-7" class="text-xs text-zinc-400 mt-3 hidden leading-relaxed">
+            O WAV Master é o formato de estúdio profissional em 44.1kHz sem perda de qualidade, ideal para colocar na timeline de editores de vídeo (Premiere, DaVinci, Final Cut, CapCut). O MP3 Leve é codificado em alta taxa (192kbps) e ocupa até 80% menos espaço, ideal para mensagens, prévias e redes sociais.
+          </p>
+        </div>
+
+        <!-- FAQ Item 8 -->
+        <div class="card-glass rounded-2xl p-5 cursor-pointer" onclick="toggleFaq(8)">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">A plataforma está em conformidade com a LGPD?</h3>
+            <i id="faq-icon-8" data-lucide="chevron-down" class="w-4 h-4 text-brand-500 transition-transform"></i>
+          </div>
+          <p id="faq-ans-8" class="text-xs text-zinc-400 mt-3 hidden leading-relaxed">
             Com certeza. Nós seguimos rigorosamente as diretrizes da Lei Geral de Proteção de Dados (Lei 13.709/2018) e do Marco Civil da Internet (Lei 12.965/2014). Seus arquivos de áudio e vozes clonadas são privados e podem ser excluídos permanentemente por você a qualquer momento com apenas 1 clique.
           </p>
         </div>
