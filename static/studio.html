@@ -344,26 +344,27 @@
       </div>
     </section>
 
-    <!-- Top Hook Banner: Experimente Grátis & 1 Áudio de Boas-Vindas (Largura Total Fora do Grid) -->
-    <div id="studio-visitor-hook-banner" class="mb-2.5 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-brand-500/20 via-emerald-500/15 to-brand-500/10 border border-brand-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0">
+    <!-- Top Hook Banner: Áudio Avulso Instantâneo Sem Cadastro (Largura Total Fora do Grid) -->
+    <div id="studio-visitor-hook-banner" class="mb-2.5 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-zinc-900 to-zinc-900 border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0">
       <div class="flex items-center gap-2.5">
-        <span class="w-8 h-8 rounded-xl bg-brand-500/25 text-brand-400 flex items-center justify-center font-black text-sm shrink-0 border border-brand-500/40">🎁</span>
+        <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-sm shrink-0 border border-emerald-500/40">⚡</span>
         <div>
-          <p class="text-xs font-bold text-white">
-            Experimente Grátis: Digite qualquer texto e clique em <span class="text-emerald-400">"🎧 Ouvir Prévia Grátis"</span>!
+          <p class="text-xs font-bold text-white flex items-center gap-1.5">
+            Áudio Avulso no PIX <span class="text-[10px] text-emerald-400 font-extrabold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">Sem Cadastro</span>
           </p>
           <p class="text-[11px] text-zinc-300">
-            Crie sua conta em 10 segundos e ganhe <strong class="text-emerald-400">1 Áudio Completo Grátis</strong> para baixar em MP3.
+            Digite seu roteiro, ouça a <span class="text-emerald-400 font-semibold">Prévia Grátis</span> e pague apenas <strong class="text-emerald-400">R$ 2,49</strong> para baixar o MP3 na hora!
           </p>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <button
           type="button"
-          onclick="openAuthModal('signup')"
-          class="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-black text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-md"
+          onclick="initiateSingleAudioPayment()"
+          class="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-md flex items-center justify-center gap-1 active:scale-95"
         >
-          Criar Conta Grátis
+          <i data-lucide="zap" class="w-3.5 h-3.5 fill-current"></i>
+          <span>Pagar e Baixar no PIX</span>
         </button>
       </div>
     </div>
@@ -1961,7 +1962,7 @@
       // Se a URL tiver parâmetro ?auth=signup, login, forgot ou reset, abre na aba correta
       const urlParams = new URLSearchParams(window.location.search);
       const authParam = urlParams.get('auth');
-      if (authParam && ['signup', 'login', 'forgot', 'reset'].includes(authParam)) {
+      if (authParam && ['login', 'forgot', 'reset'].includes(authParam)) {
         if (!currentSession || authParam === 'reset') {
           openAuthModal(authParam);
         }
@@ -3390,6 +3391,17 @@
         }
       }
 
+            const btnText = document.getElementById('btn-text');
+      if (btnText) {
+        if (!currentSession) {
+          btnText.innerText = `PAGAR NO PIX E GERAR (R$ ${singlePrice.toFixed(2).replace('.', ',')})`;
+        } else if (typeof userCredits !== 'undefined' && userCredits > 0) {
+          btnText.innerText = `GERAR ÁUDIO COMPLETO (${userCredits} CRÉDITO${userCredits > 1 ? 'S' : ''})`;
+        } else {
+          btnText.innerText = `PAGAR NO PIX E GERAR (R$ ${singlePrice.toFixed(2).replace('.', ',')})`;
+        }
+      }
+
       analyzeCadenceAndRecommendPace(text);
     }
 
@@ -4060,8 +4072,8 @@
       }
 
       if (supabaseClient && !currentSession) {
-        // Usuário não autenticado: abre modal com opção de criar conta grátis (1 crédito) ou PIX avulso
-        openPreviewConversionModal();
+        // Usuário não autenticado: abre direto a tela de PIX avulso sem cadastro!
+        initiateSingleAudioPayment();
         return;
       }
 
@@ -4692,34 +4704,34 @@
       </div>
 
       <div class="space-y-2.5 pt-1">
-        <!-- Opção 1: Criar Conta Grátis e Ganhar 1 Crédito -->
-        <button
-          onclick="closePreviewConversionModal(); openAuthModal('signup');"
-          class="w-full py-3 px-4 rounded-xl btn-fire text-white text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-between shadow-lg group"
-        >
-          <div class="flex items-center gap-2">
-            <span class="text-base">🎁</span>
-            <div class="text-left">
-              <span class="block text-xs font-black">Criar Conta Grátis</span>
-              <span class="block text-[10px] text-zinc-200 font-normal">Ganhe 1 Áudio Completo de Boas-Vindas</span>
-            </div>
-          </div>
-          <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition"></i>
-        </button>
-
-        <!-- Opção 2: Gerar Avulso no PIX por R$ 2,49 -->
+        <!-- Opção Principal: Pagar no PIX sem cadastro -->
         <button
           onclick="closePreviewConversionModal(); initiateSingleAudioPayment();"
-          class="w-full py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/30 text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-between shadow-sm group"
+          class="w-full py-3.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-between shadow-lg group active:scale-95"
         >
           <div class="flex items-center gap-2">
             <span class="text-base">⚡</span>
             <div class="text-left">
-              <span class="block text-xs font-black">Pagar no PIX (a partir de R$ 2,49)</span>
-              <span class="block text-[10px] text-zinc-400 font-normal">Baixe o áudio completo agora</span>
+              <span class="block text-xs font-black">Pagar no PIX e Baixar na Hora</span>
+              <span class="block text-[10px] text-zinc-900 font-semibold">Sem cadastro • Apenas R$ 2,49</span>
             </div>
           </div>
-          <i data-lucide="chevron-right" class="w-4 h-4 group-hover:translate-x-1 transition text-emerald-400"></i>
+          <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition text-black"></i>
+        </button>
+
+        <!-- Opção Secundária: Criar Conta para Pacotes com Desconto -->
+        <button
+          onclick="closePreviewConversionModal(); openAuthModal('signup');"
+          class="w-full py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 text-xs font-semibold transition cursor-pointer flex items-center justify-between group"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-sm">🎁</span>
+            <div class="text-left">
+              <span class="block text-xs">Criar conta grátis</span>
+              <span class="block text-[10px] text-zinc-500 font-normal">Para comprar pacotes de áudios com desconto</span>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition text-zinc-500"></i>
         </button>
       </div>
 
