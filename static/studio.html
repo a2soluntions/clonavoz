@@ -344,35 +344,34 @@
       </div>
     </section>
 
-    <!-- 2. Studio Workspace Grid (Zero Rolagem na Tela: Editor na Esquerda + Menu Lateral com Alturas Travadas na Direita) -->
+    <!-- Top Hook Banner: Experimente Grátis & 1 Áudio de Boas-Vindas (Largura Total Fora do Grid) -->
+    <div id="studio-visitor-hook-banner" class="mb-2.5 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-brand-500/20 via-emerald-500/15 to-brand-500/10 border border-brand-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0">
+      <div class="flex items-center gap-2.5">
+        <span class="w-8 h-8 rounded-xl bg-brand-500/25 text-brand-400 flex items-center justify-center font-black text-sm shrink-0 border border-brand-500/40">🎁</span>
+        <div>
+          <p class="text-xs font-bold text-white">
+            Experimente Grátis: Digite qualquer texto e clique em <span class="text-emerald-400">"🎧 Ouvir Prévia Grátis"</span>!
+          </p>
+          <p class="text-[11px] text-zinc-300">
+            Crie sua conta em 10 segundos e ganhe <strong class="text-emerald-400">1 Áudio Completo Grátis</strong> para baixar em MP3.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          type="button"
+          onclick="openAuthModal('signup')"
+          class="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-black text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-md"
+        >
+          Criar Conta Grátis
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. Studio Workspace Grid (Zero Rolagem na Tela: Editor na Esquerda (7 colunas) + Menu Lateral na Direita (5 colunas)) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:items-stretch flex-1 min-h-0">
       
-      <!-- Left: Editor de Texto Principal -->
-        <!-- Top Hook Banner: Experimente Grátis & 1 Áudio de Boas-Vindas -->
-          <div id="studio-visitor-hook-banner" class="mb-2 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-brand-500/20 via-emerald-500/15 to-brand-500/10 border border-brand-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0">
-            <div class="flex items-center gap-2.5">
-              <span class="w-8 h-8 rounded-xl bg-brand-500/25 text-brand-400 flex items-center justify-center font-black text-sm shrink-0 border border-brand-500/40">🎁</span>
-              <div>
-                <p class="text-xs font-bold text-white">
-                  Experimente Grátis: Digite qualquer texto e clique em <span class="text-emerald-400">"🎧 Ouvir Prévia Grátis"</span>!
-                </p>
-                <p class="text-[11px] text-zinc-300">
-                  Crie sua conta em 10 segundos e ganhe <strong class="text-emerald-400">1 Áudio Completo Grátis</strong> para baixar em MP3.
-                </p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onclick="openAuthModal('signup')"
-                class="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-black text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-md"
-              >
-                Criar Conta Grátis
-              </button>
-            </div>
-          </div>
-
-          
+      <!-- Left: Editor de Texto Principal (7 colunas) -->
       <section class="lg:col-span-7 flex flex-col h-full min-h-0">
         <div class="panel-glass p-3.5 sm:p-4 rounded-2xl border border-white/10 shadow-2xl flex flex-col gap-2.5 h-full min-h-0">
           

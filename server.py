@@ -1678,24 +1678,8 @@ def get_history(authorization: Optional[str] = Header(None)):
         except Exception as e:
             print(f"[History Query Error] {e}")
 
-    # Fallback para histórico local em disco (se deslogado ou local dev)
-    files = glob.glob(os.path.join(OUTPUTS_DIR, "*.wav"))
-    files.sort(key=os.path.getmtime, reverse=True)
-    history = []
-    for f in files[:20]:
-        fname = os.path.basename(f)
-        size_kb = round(os.path.getsize(f) / 1024, 1)
-        history.append({
-            "id": fname,
-            "title": fname,
-            "filename": fname,
-            "url": f"/outputs/{fname}",
-            "mp3_url": f"/outputs/{fname.replace('.wav', '.mp3')}",
-            "voice": "standard",
-            "size_kb": size_kb,
-            "created_at": os.path.getmtime(f),
-        })
-    return history
+    # Se não houver usuário autenticado, o histórico é estritamente vazio (privacidade total)
+    return []
 
 
 @app.delete("/api/history/{item_id}")
