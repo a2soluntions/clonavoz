@@ -439,7 +439,7 @@
             </div>
           </div>
 
-          <!-- Barra de Valor do Áudio Avulso (Pague no PIX e Baixe na Hora) -->
+          <!-- Barra de Valor do Áudio Avulso (Pague no PIX e Baixe na Hora - Sem Cadastro) -->
           <div id="single-audio-pricing-card" class="p-2 sm:p-2.5 rounded-xl bg-gradient-to-r from-emerald-500/10 via-zinc-900 to-zinc-900 border border-emerald-500/30 flex items-center justify-between text-xs shrink-0 transition">
             <div class="flex items-center gap-2">
               <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-xs shrink-0">
@@ -448,10 +448,10 @@
               <div>
                 <div class="flex items-center gap-1.5 flex-wrap">
                   <span class="text-white font-bold">Áudio Avulso no PIX:</span>
-                  <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded border border-emerald-500/30">Inicia em R$ 2,49</span>
+                  <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded border border-emerald-500/30">Sem Cadastro</span>
                 </div>
                 <p id="single-audio-tier-hint" class="text-zinc-400 text-[11px] mt-0.5">
-                  Valor proporcional ao tamanho do roteiro (aumenta com o texto)
+                  Inicia em R$ 2,49 (até 300c) e varia pelo texto • Download imediato
                 </p>
               </div>
             </div>
@@ -467,7 +467,7 @@
                 id="btn-single-pix-action"
                 onclick="initiateSingleAudioPayment()"
                 class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center gap-1 shadow-sm active:scale-95 shrink-0"
-                title="Pagar este áudio via PIX e salvar na conta"
+                title="Pagar apenas este áudio via PIX e baixar na hora (sem cadastro)"
               >
                 <i data-lucide="zap" class="w-3 h-3 fill-current"></i>
                 <span>Pagar no PIX</span>
@@ -1006,8 +1006,25 @@
       <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-zinc-300 flex items-start gap-2">
         <i data-lucide="info" class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5"></i>
         <span>
-          O valor inicial é de <strong>R$ 2,49</strong> para até 300 caracteres. Para roteiros maiores, o valor aumenta proporcionalmente (R$ 3,90 até 700c / R$ 5,90 até 1.500c / R$ 9,90 até 3.000c).
+          Valor inicial de <strong>R$ 2,49</strong> (até 300c). Para textos maiores: R$ 3,90 (até 700c) / R$ 5,90 (até 1.500c) / R$ 9,90 (até 3.000c).
         </span>
+      </div>
+
+      <!-- Campo Opcional de Contato para Garantia Total de Entrega -->
+      <div class="space-y-1 text-left bg-zinc-900/80 p-2.5 rounded-xl border border-zinc-800">
+        <label class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider flex items-center justify-between">
+          <span>WhatsApp ou E-mail (Opcional):</span>
+          <span class="text-[9px] text-emerald-400 font-normal">Garantia anti-perda</span>
+        </label>
+        <input
+          id="single-contact-input"
+          type="text"
+          placeholder="Ex: (11) 99999-9999 ou seu@email.com"
+          class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 font-medium"
+        />
+        <p class="text-[9px] text-zinc-500">
+          Você não precisa de cadastro. Enviaremos o link do áudio aqui caso você feche esta tela antes do download.
+        </p>
       </div>
 
       <!-- PIX Box -->
@@ -3841,12 +3858,6 @@
     }
 
     function initiateSingleAudioPayment() {
-      if (supabaseClient && !currentSession) {
-        showToast('Crie sua conta ou faça login para continuar.', 'info');
-        openAuthModal('signup');
-        return;
-      }
-
       const text = textInput.value.trim();
       if (!text) {
         showToast('Digite algum texto para calcular o áudio avulso.', 'error');
@@ -3885,21 +3896,36 @@
       document.getElementById('single-audio-modal').classList.remove('hidden');
       lucide.createIcons();
 
+      const authHeader = (currentSession && currentSession.access_token) ? { 'Authorization': `Bearer ${currentSession.access_token}` } : {};
+      const contactVal = document.getElementById('single-contact-input') ? document.getElementById('single-contact-input').value.trim() : '';
+
       fetch(`${API_BASE}/api/pix/create-single`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader },
         body: JSON.stringify({
           text: text,
           voice: selectedVoiceKey || 'su',
           speed: selectedSpeed || 1.0,
           bgm: selectedBgm || 'none',
-          bgm_volume: 0.15
+          bgm_volume: 0.15,
+          email: contactVal
         })
       })
       .then(res => res.json())
       .then(data => {
         if (!data.success) throw new Error(data.detail || 'Erro ao gerar cobrança PIX');
         singlePixPaymentId = data.payment_id;
+
+        // Salva pedido em andamento no localStorage para garantia total de auto-recuperação
+        try {
+          localStorage.setItem('clonavoz_active_single_order', JSON.stringify({
+            payment_id: data.payment_id,
+            created_at: Date.now(),
+            text: text,
+            voice: selectedVoiceKey || 'su',
+            amount: data.amount
+          }));
+        } catch (_) {}
 
         const qrImg = document.getElementById('single-pix-qr-img');
         const qrLoading = document.getElementById('single-pix-qr-loading');
@@ -3947,6 +3973,10 @@
             const statusBadge = document.getElementById('single-pix-status-badge');
             statusBadge.className = 'text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5';
             document.getElementById('single-pix-status-text').innerText = '✅ Pagamento Aprovado! Áudio Pronto.';
+
+            try {
+              localStorage.removeItem('clonavoz_active_single_order');
+            } catch (_) {}
 
             setTimeout(() => {
               closeSingleAudioModal();
@@ -4618,7 +4648,33 @@
       setSample('welcome', false); // Não toca áudio ao abrir a página
       checkCookieConsent();
       initSaveHistoryPreference();
+      checkPendingSingleAudioOrder();
     });
+
+    // Auto-Recuperação Garantida de Áudio Pago (mesmo se fechar a tela)
+    function checkPendingSingleAudioOrder() {
+      try {
+        const raw = localStorage.getItem('clonavoz_active_single_order');
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (Date.now() - saved.created_at > 45 * 60 * 1000) {
+          localStorage.removeItem('clonavoz_active_single_order');
+          return;
+        }
+
+        fetch(`${API_BASE}/api/pix/status-single/${saved.payment_id}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 'approved' && data.audio) {
+              localStorage.removeItem('clonavoz_active_single_order');
+              displayAudioResult(data.audio);
+              triggerAutoDownload(data.audio.mp3_url || data.audio.url, data.audio.filename);
+              showToast('🎉 Seu áudio pago anteriormente foi recuperado e baixado com sucesso!', 'success');
+            }
+          })
+          .catch(() => {});
+      } catch (_) {}
+    }
   </script>
 
   <!-- MODAL DE CONVERSÃO PÓS-PRÉVIA (EFEITO UAU) -->
