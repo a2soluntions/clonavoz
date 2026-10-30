@@ -31,18 +31,17 @@ def get_font(size, bold=False):
                 pass
     return ImageFont.load_default()
 
-font_brand = get_font(32, bold=True)
+font_brand = get_font(34, bold=True)
 font_badge = get_font(30, bold=True)
 font_huge = get_font(72, bold=True)
 font_title = get_font(54, bold=True)
 font_subtitle = get_font(40, bold=True)
 font_body = get_font(32, bold=False)
 font_price = get_font(84, bold=True)
-font_cta_btn = get_font(44, bold=True)
-font_url = get_font(48, bold=True)
+font_cta_btn = get_font(46, bold=True)
 font_footer = get_font(24, bold=False)
 
-# 1. Roteiro de alta conversão
+# 1. Roteiro 100% otimizado para algoritmo do TikTok e Instagram Reels (SEM LINKS OU DOMÍNIOS)
 script_text = (
     "Pare de pagar mensalidade em dólar por voz de inteligência artificial! "
     "E o melhor: agora sem precisar de nenhum cadastro! "
@@ -52,10 +51,10 @@ script_text = (
     "Sem mensalidade fixa, sem cartão e com download imediato em MP3 na hora! "
     "E se você quiser economizar ainda mais, garanta trinta áudios por apenas dezenove e noventa, "
     "apenas sessenta e seis centavos por áudio! "
-    "Acesse clonavoz ponto com ponto b r pelo link da bio e faça seu teste grátis agora mesmo!"
+    "Toque no link da nossa bio e faça seu teste grátis agora mesmo!"
 )
 
-print("--- [1/5] Sintetizando locução com voz Eduarda (PT-BR) ---")
+print("--- [1/5] Sintetizando locução limpa (Zero links no áudio) com voz Eduarda ---")
 synth_res = tts_engine.synthesize_text(script_text, voice_key='eduarda', speed=1.0)
 wav_path = synth_res['file_path']
 duration = synth_res['duration_seconds']
@@ -91,7 +90,7 @@ def draw_auto_badge(draw, text, y_center, font, fill_bg, outline_color, text_col
     draw.rounded_rectangle([left, top, right, bottom], radius=radius, fill=fill_bg, outline=outline_color, width=border_width)
     draw.text((WIDTH // 2, y_center), text, fill=text_color, font=font, anchor="mm")
 
-print("--- [2/5] Renderizando quadros dinâmicos com design profissional ---")
+print("--- [2/5] Renderizando quadros dinâmicos sem links na tela (TikTok/Reels Safe) ---")
 
 def render_frame(t, frame_idx):
     img = Image.new("RGBA", (WIDTH, HEIGHT), (10, 10, 15, 255))
@@ -99,7 +98,7 @@ def render_frame(t, frame_idx):
 
     # Ambient neon pulse in background
     pulse = math.sin(t * 3.5) * 0.12 + 0.88
-    glow_color = (255, 85, 0, 32) if t < 12.0 else ((0, 225, 120, 28) if t < 22.0 else (255, 120, 30, 36))
+    glow_color = (255, 85, 0, 32) if t < 12.0 else ((0, 225, 120, 28) if t < 21.0 else (255, 120, 30, 36))
     
     glow = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
     g_draw = ImageDraw.Draw(glow)
@@ -109,9 +108,9 @@ def render_frame(t, frame_idx):
     img = Image.alpha_composite(img, glow)
     draw = ImageDraw.Draw(img)
 
-    # Top Brand Header
-    draw.text((WIDTH//2, 115), "CLONAVOZ.COM.BR", fill=(255, 130, 45, 240), font=font_brand, anchor="mm")
-    draw.line([(WIDTH//2 - 130, 142), (WIDTH//2 + 130, 142)], fill=(255, 85, 0, 180), width=2)
+    # Top Brand Header (100% seguro para TikTok: Sem .com.br)
+    draw.text((WIDTH//2, 115), "CLONAVOZ AI", fill=(255, 130, 45, 240), font=font_brand, anchor="mm")
+    draw.line([(WIDTH//2 - 110, 142), (WIDTH//2 + 110, 142)], fill=(255, 85, 0, 180), width=2)
 
     # Waveform live bars at bottom
     start_sample = int(frame_idx * samples_per_frame)
@@ -131,7 +130,7 @@ def render_frame(t, frame_idx):
         bh = max(10, int(bar_amp * 130))
         bx = start_bx + b * (bar_w + gap)
         by = 1680 - bh // 2
-        bcolor = (0, 255, 140) if t >= 12.0 and t < 22.0 else (255, int(90 + 130 * phase), 20)
+        bcolor = (0, 255, 140) if t >= 12.0 and t < 21.0 else (255, int(90 + 130 * phase), 20)
         draw.rounded_rectangle([bx, by, bx + bar_w, by + bh], radius=6, fill=bcolor)
 
     # TIMELINE LOGIC:
@@ -187,7 +186,7 @@ def render_frame(t, frame_idx):
 
         draw.text((WIDTH//2, 1420), "Sotaque brasileiro sem tom robótico!", fill=(255, 255, 255), font=font_subtitle, anchor="mm")
 
-    elif t < 20.5:
+    elif t < 20.2:
         # CENA 3: O GRANDE DIFERENCIAL (GERE NO PIX A PARTIR DE R$ 2,49)
         draw_auto_badge(draw, "⚡ CHEGOU O ÁUDIO AVULSO NO PIX", 250, font_badge,
                         fill_bg=(14, 38, 22, 235), outline_color=(0, 225, 120, 220), text_color=(0, 255, 140))
@@ -219,7 +218,7 @@ def render_frame(t, frame_idx):
         draw.text((WIDTH//2, 1420), "Ouça a prévia grátis antes de pagar!", fill=(255, 255, 255), font=font_subtitle, anchor="mm")
 
     else:
-        # CENA 4: PACOTE BOAS-VINDAS & CTA FINAL
+        # CENA 4: PACOTE BOAS-VINDAS & CTA FINAL (100% COMPATÍVEL COM TIKTOK E INSTAGRAM - SEM LINKS)
         draw_auto_badge(draw, "🎁 OFERTA EXCLUSIVA DE BOAS-VINDAS", 240, font_badge,
                         fill_bg=(36, 18, 12, 235), outline_color=(255, 110, 0, 220), text_color=(255, 160, 50))
 
@@ -237,11 +236,13 @@ def render_frame(t, frame_idx):
         draw.rounded_rectangle([80, btn_top, WIDTH - 80, btn_bottom], radius=38, fill=(255, 75, 0), outline=(255, 160, 80), width=3)
         draw.text((WIDTH//2, (btn_top + btn_bottom) // 2), "🚀 TESTAR GRÁTIS AGORA", fill=(255, 255, 255), font=font_cta_btn, anchor="mm")
 
-        draw.text((WIDTH//2, 1070), "Acesse no seu navegador:", fill=(170, 170, 180), font=font_subtitle, anchor="mm")
-        draw.text((WIDTH//2, 1145), "www.clonavoz.com.br", fill=(255, 125, 30), font=font_url, anchor="mm")
+        # Mensagem Segura sem Link na Tela (Aprovada pelo algoritmo)
+        draw.text((WIDTH//2, 1050), "Disponível para celular e computador", fill=(170, 170, 185), font=font_subtitle, anchor="mm")
 
-        draw_auto_badge(draw, "👉 Link direto na nossa Bio!", 1310, font_subtitle,
-                        fill_bg=(22, 22, 28, 235), outline_color=(255, 255, 255, 70), text_color=(255, 255, 255), pad_x=60, pad_y=20)
+        draw_auto_badge(draw, "👉 TOQUE NO LINK DA BIO", 1170, font_cta_btn,
+                        fill_bg=(24, 24, 32, 240), outline_color=(0, 225, 120, 220), text_color=(0, 255, 140), pad_x=65, pad_y=22)
+
+        draw.text((WIDTH//2, 1310), "Gere sua primeira locução em 10 segundos!", fill=(255, 255, 255), font=font_subtitle, anchor="mm")
 
     # Footer
     draw.text((WIDTH//2, 1845), "Clonavoz AI • Inteligência Artificial de Voz no Brasil", fill=(110, 110, 125), font=font_footer, anchor="mm")
@@ -254,7 +255,7 @@ for i in range(total_frames):
     t_sec = i / FPS
     frame_img = render_frame(t_sec, i)
     frame_img.save(os.path.join(SCRATCH_DIR, f"frame_{i:05d}.png"))
-    if i % 90 == 0:
+    if i % 100 == 0:
         print(f"Progresso: {i}/{total_frames} ({(i/total_frames)*100:.0f}%)")
 
 print("--- [3/5] Frames renderizados! Codificando vídeo MP4 com FFmpeg... ---")
@@ -286,7 +287,7 @@ cmd_audio = [
 ]
 subprocess.run(cmd_audio, check=True)
 
-print("--- [5/5] Exportando vídeo final em Full HD 9:16... ---")
+print("--- [5/5] Exportando vídeo final em Full HD 9:16 (Zero links na tela)... ---")
 static_output = os.path.join(STATIC_DIR, "video_marketing_post_redes_sociais.mp4")
 desktop_output = r"C:\Users\User\Desktop\video_marketing_clonavoz_reels.mp4"
 
@@ -303,14 +304,14 @@ subprocess.run(cmd_final, check=True)
 
 try:
     shutil.copyfile(static_output, desktop_output)
-    print(f"Cópia criada no Desktop: {desktop_output}")
+    print(f"Copia criada no Desktop: {desktop_output}")
 except Exception as e:
     print(f"Aviso ao copiar para Desktop: {e}")
 
 try:
     shutil.rmtree(SCRATCH_DIR)
-    print("Arquivos temporários excluídos com sucesso!")
+    print("Arquivos temporarios excluidos com sucesso!")
 except Exception:
     pass
 
-print(f"🎉 VÍDEO CONCLUÍDO COM SUCESSO EM: {static_output}")
+print(f"[OK] VIDEO CONCLUIDO COM SUCESSO: {static_output}")
