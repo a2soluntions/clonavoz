@@ -41,12 +41,12 @@ font_price = get_font(84, bold=True)
 font_cta_btn = get_font(46, bold=True)
 font_footer = get_font(24, bold=False)
 
-# 1. Roteiro 100% otimizado para algoritmo do TikTok e Instagram Reels (SEM LINKS OU DOMÍNIOS)
+# 1. Roteiro 100% em Português Puro (Zero palavras em inglês que possam embolar a dicção)
 script_text = (
     "Pare de pagar mensalidade em dólar por voz de inteligência artificial! "
     "E o melhor: agora sem precisar de nenhum cadastro! "
     "Conheça o Clonavoz! A ferramenta brasileira de voz neural ultra-realista, "
-    "perfeita para Canais Dark, Reels, TikTok, VSLs e anúncios de alta conversão. "
+    "feita para criar narrações humanas que prendem a atenção do início ao fim. "
     "Agora você gera suas locuções direto no Pícs a partir de apenas dois reais e quarenta e nove. "
     "Sem mensalidade fixa, sem cartão e com download imediato em MP3 na hora! "
     "E se você quiser economizar ainda mais, garanta trinta áudios por apenas dezenove e noventa, "
@@ -54,7 +54,7 @@ script_text = (
     "Toque no link da nossa bio e faça seu teste grátis agora mesmo!"
 )
 
-print("--- [1/5] Sintetizando locução limpa (Zero links no áudio) com voz Eduarda ---")
+print("--- [1/5] Sintetizando locução com dicção 100% pura em português (Voz Eduarda) ---")
 synth_res = tts_engine.synthesize_text(script_text, voice_key='eduarda', speed=1.0)
 wav_path = synth_res['file_path']
 duration = synth_res['duration_seconds']
@@ -90,7 +90,7 @@ def draw_auto_badge(draw, text, y_center, font, fill_bg, outline_color, text_col
     draw.rounded_rectangle([left, top, right, bottom], radius=radius, fill=fill_bg, outline=outline_color, width=border_width)
     draw.text((WIDTH // 2, y_center), text, fill=text_color, font=font, anchor="mm")
 
-print("--- [2/5] Renderizando quadros dinâmicos sem links na tela (TikTok/Reels Safe) ---")
+print("--- [2/5] Renderizando quadros dinâmicos (Zero caixas de emoji e dicção perfeita) ---")
 
 def render_frame(t, frame_idx):
     img = Image.new("RGBA", (WIDTH, HEIGHT), (10, 10, 15, 255))
@@ -108,7 +108,7 @@ def render_frame(t, frame_idx):
     img = Image.alpha_composite(img, glow)
     draw = ImageDraw.Draw(img)
 
-    # Top Brand Header (100% seguro para TikTok: Sem .com.br)
+    # Top Brand Header (Sem links, 100% seguro para TikTok/Instagram)
     draw.text((WIDTH//2, 115), "CLONAVOZ AI", fill=(255, 130, 45, 240), font=font_brand, anchor="mm")
     draw.line([(WIDTH//2 - 110, 142), (WIDTH//2 + 110, 142)], fill=(255, 85, 0, 180), width=2)
 
@@ -136,7 +136,7 @@ def render_frame(t, frame_idx):
     # TIMELINE LOGIC:
     if t < 5.8:
         # CENA 1: O FIM DO DÓLAR & SEM CADASTRO
-        draw_auto_badge(draw, "🔥 NOVIDADE NO BRASIL", 250, font_badge,
+        draw_auto_badge(draw, "NOVIDADE NO BRASIL", 250, font_badge,
                         fill_bg=(36, 18, 16, 230), outline_color=(255, 75, 40, 220), text_color=(255, 120, 80))
 
         draw.text((WIDTH//2, 410), "PARE DE PAGAR", fill=(255, 255, 255), font=font_subtitle, anchor="mm")
@@ -147,7 +147,7 @@ def render_frame(t, frame_idx):
         draw.rounded_rectangle([80, 720, WIDTH - 80, 1200], radius=32, fill=(20, 18, 24, 235), outline=(255, 85, 0, 100), width=2)
         
         # Pill inside
-        draw_auto_badge(draw, "⚡ ZERO CADASTRO • DIRETO NO PIX", 800, font_badge,
+        draw_auto_badge(draw, "ZERO CADASTRO • DIRETO NO PIX", 800, font_badge,
                         fill_bg=(16, 36, 22, 230), outline_color=(0, 225, 120, 220), text_color=(0, 255, 140))
 
         draw.text((WIDTH//2, 915), "Chega de assinaturas abusivas", fill=(220, 220, 230), font=font_subtitle, anchor="mm")
@@ -155,11 +155,11 @@ def render_frame(t, frame_idx):
         draw.text((WIDTH//2, 1060), "Sem formulários ou senhas", fill=(180, 180, 195), font=font_body, anchor="mm")
         draw.text((WIDTH//2, 1130), "Entre, digite e baixe na hora!", fill=(0, 255, 140), font=font_subtitle, anchor="mm")
 
-        draw.text((WIDTH//2, 1420), "Conheça a IA 100% brasileira 👇", fill=(255, 140, 40), font=font_subtitle, anchor="mm")
+        draw.text((WIDTH//2, 1420), "Conheça a IA 100% brasileira", fill=(255, 140, 40), font=font_subtitle, anchor="mm")
 
     elif t < 12.2:
-        # CENA 2: A REVELAÇÃO DO CLONAVOZ
-        draw_auto_badge(draw, "🎙️ 100% NATURAL & EXPRESSIVA", 250, font_badge,
+        # CENA 2: A REVELAÇÃO DO CLONAVOZ (COM VISUAL POLIDO E SEM CAIXAS QUEBRADAS [])
+        draw_auto_badge(draw, "100% NATURAL & EXPRESSIVA", 250, font_badge,
                         fill_bg=(28, 20, 12, 230), outline_color=(255, 110, 0, 220), text_color=(255, 160, 50))
 
         # Pulsing logo
@@ -171,16 +171,18 @@ def render_frame(t, frame_idx):
         draw.text((WIDTH//2, 630), "CLONAVOZ AI", fill=(255, 255, 255), font=font_huge, anchor="mm")
         draw.text((WIDTH//2, 715), "Vozes Neurais de Estúdio", fill=(255, 120, 30), font=font_title, anchor="mm")
 
-        # Casos de Uso
+        # Casos de Uso com bullets geométricos neon perfeitos (Zero caixas [])
         use_cases = [
-            ("🎬 Canais Dark no YouTube", "Histórias & curiosidades sem microfone"),
-            ("📱 Reels, Shorts & TikTok", "Retenção máxima e áudio hipnótico"),
-            ("💰 VSLs & Anúncios de Venda", "Locução profissional de alta conversão")
+            ("Vídeos com Retenção Máxima", "Prenda a atenção do público do início ao fim"),
+            ("Locuções Naturais Sem Microfone", "Qualidade de estúdio profissional em segundos"),
+            ("Alta Conversão para Vendas e Redes", "Sotaque brasileiro sem tom robótico")
         ]
         card_y = 800
         for title_uc, desc_uc in use_cases:
             draw.rounded_rectangle([80, card_y, WIDTH - 80, card_y + 135], radius=22, fill=(18, 18, 24, 235), outline=(255, 100, 20, 110), width=2)
-            draw.text((120, card_y + 42), title_uc, fill=(255, 155, 55), font=font_subtitle, anchor="lm")
+            # Glowing neon bullet dot
+            draw.ellipse([115, card_y + 35, 131, card_y + 51], fill=(255, 120, 30))
+            draw.text((148, card_y + 43), title_uc, fill=(255, 155, 55), font=font_subtitle, anchor="lm")
             draw.text((120, card_y + 94), desc_uc, fill=(195, 195, 205), font=font_body, anchor="lm")
             card_y += 160
 
@@ -188,7 +190,7 @@ def render_frame(t, frame_idx):
 
     elif t < 20.2:
         # CENA 3: O GRANDE DIFERENCIAL (GERE NO PIX A PARTIR DE R$ 2,49)
-        draw_auto_badge(draw, "⚡ CHEGOU O ÁUDIO AVULSO NO PIX", 250, font_badge,
+        draw_auto_badge(draw, "CHEGOU O ÁUDIO AVULSO NO PIX", 250, font_badge,
                         fill_bg=(14, 38, 22, 235), outline_color=(0, 225, 120, 220), text_color=(0, 255, 140))
 
         draw.text((WIDTH//2, 390), "PAGOU NO PIX,", fill=(255, 255, 255), font=font_title, anchor="mm")
@@ -203,23 +205,24 @@ def render_frame(t, frame_idx):
 
         draw.line([(140, 915), (WIDTH - 140, 915)], fill=(0, 225, 120, 80), width=2)
 
-        # Benefícios em bullets limpos
+        # Benefícios em bullets geométricos neon verdes
         bullets = [
-            "✅ Sem necessidade de cadastro",
-            "✅ Escaneie o QR Code no app do banco",
-            "✅ Síntese ultrarrápida em segundos",
-            "✅ Download automático do arquivo .MP3"
+            "Sem necessidade de cadastro",
+            "Escaneie o QR Code no app do banco",
+            "Síntese ultrarrápida em segundos",
+            "Download automático do arquivo MP3"
         ]
         by = 970
         for btext in bullets:
-            draw.text((WIDTH//2, by), btext, fill=(240, 255, 245), font=font_body, anchor="mm")
+            draw.ellipse([140, by - 8, 156, by + 8], fill=(0, 255, 140))
+            draw.text((175, by), btext, fill=(240, 255, 245), font=font_body, anchor="lm")
             by += 58
 
         draw.text((WIDTH//2, 1420), "Ouça a prévia grátis antes de pagar!", fill=(255, 255, 255), font=font_subtitle, anchor="mm")
 
     else:
-        # CENA 4: PACOTE BOAS-VINDAS & CTA FINAL (100% COMPATÍVEL COM TIKTOK E INSTAGRAM - SEM LINKS)
-        draw_auto_badge(draw, "🎁 OFERTA EXCLUSIVA DE BOAS-VINDAS", 240, font_badge,
+        # CENA 4: PACOTE BOAS-VINDAS & CTA FINAL (100% TIKTOK & REELS SAFE)
+        draw_auto_badge(draw, "OFERTA EXCLUSIVA DE BOAS-VINDAS", 240, font_badge,
                         fill_bg=(36, 18, 12, 235), outline_color=(255, 110, 0, 220), text_color=(255, 160, 50))
 
         draw.text((WIDTH//2, 380), "QUER MAIS ECONOMIA?", fill=(215, 215, 225), font=font_subtitle, anchor="mm")
@@ -234,12 +237,12 @@ def render_frame(t, frame_idx):
         btn_top = int(820 + btn_pulse)
         btn_bottom = btn_top + 130
         draw.rounded_rectangle([80, btn_top, WIDTH - 80, btn_bottom], radius=38, fill=(255, 75, 0), outline=(255, 160, 80), width=3)
-        draw.text((WIDTH//2, (btn_top + btn_bottom) // 2), "🚀 TESTAR GRÁTIS AGORA", fill=(255, 255, 255), font=font_cta_btn, anchor="mm")
+        draw.text((WIDTH//2, (btn_top + btn_bottom) // 2), "TESTAR GRÁTIS AGORA", fill=(255, 255, 255), font=font_cta_btn, anchor="mm")
 
-        # Mensagem Segura sem Link na Tela (Aprovada pelo algoritmo)
+        # Mensagem Segura sem Link na Tela
         draw.text((WIDTH//2, 1050), "Disponível para celular e computador", fill=(170, 170, 185), font=font_subtitle, anchor="mm")
 
-        draw_auto_badge(draw, "👉 TOQUE NO LINK DA BIO", 1170, font_cta_btn,
+        draw_auto_badge(draw, "TOQUE NO LINK DA BIO", 1170, font_cta_btn,
                         fill_bg=(24, 24, 32, 240), outline_color=(0, 225, 120, 220), text_color=(0, 255, 140), pad_x=65, pad_y=22)
 
         draw.text((WIDTH//2, 1310), "Gere sua primeira locução em 10 segundos!", fill=(255, 255, 255), font=font_subtitle, anchor="mm")
@@ -287,7 +290,7 @@ cmd_audio = [
 ]
 subprocess.run(cmd_audio, check=True)
 
-print("--- [5/5] Exportando vídeo final em Full HD 9:16 (Zero links na tela)... ---")
+print("--- [5/5] Exportando vídeo final em Full HD 9:16 (Sem caixas [] e com dicção pura)... ---")
 static_output = os.path.join(STATIC_DIR, "video_marketing_post_redes_sociais.mp4")
 desktop_output = r"C:\Users\User\Desktop\video_marketing_clonavoz_reels.mp4"
 
