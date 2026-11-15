@@ -161,105 +161,52 @@
         </div>
       </div>
 
-      <!-- Action Area: Auth & Credit Balance & Buttons -->
+      <!-- Action Area: Uso Direto Sem Cadastro + Ações do Estúdio -->
       <div class="flex items-center space-x-1.5 sm:space-x-2.5 lg:space-x-3 shrink-0">
-        
-        <!-- Estado DESLOGADO: Botões de Login e Cadastro Grátis -->
-        <div id="nav-auth-logged-out" class="flex items-center gap-1.5 sm:gap-2">
-          <div class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-500/10 border border-brand-500/20 text-[11px] text-brand-300 font-bold">
-            <i data-lucide="gift" class="w-3.5 h-3.5 text-brand-400"></i>
-            <span>Ganhe 1 Áudio Grátis</span>
-          </div>
-          <button
-            type="button"
-            onclick="openStudioFaqModal()"
-            class="px-2.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 text-xs font-medium transition cursor-pointer flex items-center gap-1"
-            title="Dúvidas Frequentes"
-          >
-            <i data-lucide="help-circle" class="w-3.5 h-3.5 text-brand-400"></i>
-            <span class="hidden sm:inline">Dúvidas</span>
-          </button>
-          <button
-            onclick="openAuthModal('login')"
-            class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-xs font-bold transition cursor-pointer"
-          >
-            Entrar
-          </button>
-          <button
-            onclick="openAuthModal('signup')"
-            class="px-2.5 sm:px-3 py-1.5 rounded-xl btn-fire text-white text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center gap-1"
-          >
-            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-            <span>Cadastrar</span>
-          </button>
+        <!-- Admin Visitor Pill (visível apenas para o dono) -->
+        <div id="admin-studio-views-badge" class="hidden items-center gap-1.5 bg-zinc-900/90 border border-brand-500/40 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-xs shrink-0 cursor-pointer hover:bg-zinc-800 transition" title="Métricas de visitantes da Landing Page" onclick="openStudioStatsModal()">
+          <i data-lucide="eye" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i>
+          <span class="text-zinc-300 hidden md:inline">Visitas:</span>
+          <span id="admin-studio-views-count" class="font-extrabold text-white font-mono text-xs sm:text-sm">...</span>
         </div>
 
-        <!-- Estado LOGADO: Usuário, Saldo Real e Sair -->
-        <div id="nav-auth-logged-in" class="hidden flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <!-- Admin Visitor Pill (visível para o dono) -->
-          <div id="admin-studio-views-badge" class="hidden items-center gap-1.5 bg-zinc-900/90 border border-brand-500/40 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-xs shrink-0 cursor-pointer hover:bg-zinc-800 transition" title="Métricas de visitantes da Landing Page" onclick="openStudioStatsModal()">
-            <i data-lucide="eye" class="w-3.5 h-3.5 text-brand-400 shrink-0"></i>
-            <span class="text-zinc-300 hidden md:inline">Visitas:</span>
-            <span id="admin-studio-views-count" class="font-extrabold text-white font-mono text-xs sm:text-sm">...</span>
-          </div>
-
-          <!-- User Profile Capsule (apenas em telas grandes para não apertar iPad nem mobile) -->
-          <div class="hidden lg:flex items-center gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-zinc-900/90 border border-zinc-800">
-            <div id="user-avatar-initial" class="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center font-black text-xs">
-              U
-            </div>
-            <span id="user-display-name" class="text-xs font-bold text-zinc-200 max-w-[90px] sm:max-w-[130px] truncate">
-              Usuário
-            </span>
-          </div>
-
-          <!-- Credit Balance Badge -->
-          <div class="flex items-center bg-zinc-900/90 border border-brand-500/30 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl shadow-inner shrink-0">
-            <div class="flex items-center gap-1 sm:gap-1.5 text-xs">
-              <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse shrink-0"></span>
-              <span class="text-zinc-300 hidden md:inline">Saldo:</span>
-              <span id="user-credits-badge" class="font-extrabold text-white font-mono text-xs sm:text-sm">1</span>
-              <span class="text-zinc-400 text-[10px] hidden md:inline">áudios</span>
-            </div>
-            <button
-              onclick="openRechargeModal()"
-              class="ml-1 sm:ml-2 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg bg-brand-500 hover:bg-brand-400 text-black font-extrabold text-[10px] sm:text-[11px] uppercase tracking-wider transition cursor-pointer shrink-0"
-              title="Recarregar créditos"
-            >
-              <span class="hidden sm:inline">+ Recarregar</span>
-              <span class="sm:hidden">+ Recarga</span>
-            </button>
-          </div>
-
-          <!-- Botão Sair (sempre contido dentro do card, sem sobrar) -->
-          <button
-            onclick="handleSignOut()"
-            class="p-1.5 sm:p-2 rounded-xl bg-zinc-900/80 hover:bg-red-950/60 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-500/30 transition cursor-pointer shrink-0"
-            title="Sair da Conta"
-          >
-            <i data-lucide="log-out" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-          </button>
+        <!-- Selo Uso Pré-Pago Sem Cadastro -->
+        <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] text-emerald-400 font-bold">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Uso Pré-Pago Sem Cadastro</span>
         </div>
 
-        <!-- Link para a Página Inicial / Planos -->
-        <a
-          href="/"
-          class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 text-xs font-semibold transition cursor-pointer"
-          title="Ver apresentação completa e planos de recarga"
-        >
-          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-brand-400"></i>
-          <span>Planos</span>
-        </a>
-
-        <!-- Upload Voice Button (oculto no iPad Mini e mobile para não sobrar, visível apenas em telas desktop amplas) -->
+        <!-- Upload Voice Button -->
         <button
+          type="button"
           onclick="openUploadModal()"
-          class="hidden xl:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white border border-white/10 hover:border-brand-500/40 text-xs font-semibold transition cursor-pointer"
+          class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white border border-white/10 hover:border-brand-500/40 text-xs font-semibold transition cursor-pointer"
+          title="Clonar uma voz a partir de amostra de áudio"
         >
-          <i data-lucide="user-plus" class="w-4 h-4 text-brand-500"></i>
-          <span>+ Upload de Voz</span>
+          <i data-lucide="user-plus" class="w-3.5 h-3.5 text-brand-500"></i>
+          <span>+ Clonar Voz</span>
         </button>
 
+        <!-- Botão Dúvidas -->
+        <button
+          type="button"
+          onclick="openStudioFaqModal()"
+          class="px-2.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 text-xs font-medium transition cursor-pointer flex items-center gap-1"
+          title="Dúvidas Frequentes"
+        >
+          <i data-lucide="help-circle" class="w-3.5 h-3.5 text-brand-400"></i>
+          <span class="hidden sm:inline">Dúvidas</span>
+        </button>
+
+        <!-- Link para a Página Inicial -->
+        <a
+          href="/"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 text-xs font-semibold transition cursor-pointer"
+          title="Voltar para a página inicial"
+        >
+          <i data-lucide="home" class="w-3.5 h-3.5 text-brand-400"></i>
+          <span>Início</span>
+        </a>
       </div>
     </div>
   </header>
@@ -328,10 +275,10 @@
             id="voice-sample-btn"
             onclick="playCurrentVoiceSample()"
             class="text-xs px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-brand-400 border border-brand-500/30 transition hidden items-center gap-1.5 cursor-pointer font-bold shadow-sm"
-            title="Ouvir amostra pré-gravada desta voz (Custo Zero de créditos)"
+            title="Ouvir amostra pré-gravada desta voz gratuitamente"
           >
             <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
-            <span>Ouvir Amostra (0 Créditos)</span>
+            <span>Ouvir Amostra Grátis</span>
           </button>
           <button
             id="voice-delete-btn"
@@ -353,27 +300,29 @@
       </div>
     </section>
 
-    <!-- Top Hook Banner: Áudio Avulso Instantâneo Sem Cadastro (Largura Total Fora do Grid) -->
+    <!-- Top Hook Banner: Uso Direto Pré-Pago Sem Cadastro -->
     <div id="studio-visitor-hook-banner" class="mb-2.5 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-zinc-900 to-zinc-900 border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0">
       <div class="flex items-center gap-2.5">
-        <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-sm shrink-0 border border-emerald-500/40">⚡</span>
+        <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black shrink-0 border border-emerald-500/40">
+          <i data-lucide="zap" class="w-4 h-4"></i>
+        </span>
         <div>
           <p class="text-xs font-bold text-white flex items-center gap-1.5">
-            Áudio Avulso no PIX <span class="text-[10px] text-emerald-400 font-extrabold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">Sem Cadastro</span>
+            Estúdio Pré-Pago Sem Cadastro <span class="text-[10px] text-emerald-400 font-extrabold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">PIX por Áudio</span>
           </p>
           <p class="text-[11px] text-zinc-300">
-            Digite seu roteiro, ouça a <span class="text-emerald-400 font-semibold">Prévia Grátis</span> e pague apenas <strong class="text-emerald-400">R$ 2,49</strong> para baixar o MP3 na hora!
+            Digite seu texto, ouça a <span class="text-emerald-400 font-semibold">Prévia Grátis</span> e veja o valor em tempo real. Achou viável? Pague no PIX e baixe na hora!
           </p>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <button
           type="button"
-          onclick="initiateSingleAudioPayment()"
+          onclick="generateVoice()"
           class="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-md flex items-center justify-center gap-1 active:scale-95"
         >
           <i data-lucide="zap" class="w-3.5 h-3.5 fill-current"></i>
-          <span>Pagar e Baixar no PIX</span>
+          <span>Liberar no PIX</span>
         </button>
       </div>
     </div>
@@ -418,7 +367,7 @@
             </button>
           </div>
 
-          <!-- Textarea (Travado em 3.000 caracteres conforme política de créditos) -->
+          <!-- Textarea (Máximo de 3.000 caracteres por geração avulsa) -->
           <div class="relative flex-1 flex flex-col min-h-0">
             <textarea
               id="text-input"
@@ -449,26 +398,26 @@
             </div>
           </div>
 
-          <!-- Barra de Valor do Áudio Avulso (Pague no PIX e Baixe na Hora - Sem Cadastro) -->
-          <div id="single-audio-pricing-card" class="p-2 sm:p-2.5 rounded-xl bg-gradient-to-r from-emerald-500/10 via-zinc-900 to-zinc-900 border border-emerald-500/30 flex items-center justify-between text-xs shrink-0 transition">
-            <div class="flex items-center gap-2">
-              <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-xs shrink-0">
-                ⚡
+          <!-- Barra de Valor em Tempo Real (Pré-Pago por Uso no PIX - Sem Cadastro) -->
+          <div id="single-audio-pricing-card" class="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 via-zinc-900 to-zinc-900 border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shrink-0 transition">
+            <div class="flex items-start gap-2">
+              <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black shrink-0 mt-0.5">
+                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
               </span>
               <div>
                 <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="text-white font-bold">Áudio Avulso no PIX:</span>
+                  <span class="text-white font-bold">Valor deste Áudio no PIX:</span>
                   <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded border border-emerald-500/30">Sem Cadastro</span>
                   <button type="button" onclick="openStudioFaqModal()" class="text-[10px] text-zinc-400 hover:text-emerald-400 transition underline underline-offset-2 ml-1 cursor-pointer">Como funciona?</button>
                 </div>
-                <p id="single-audio-tier-hint" class="text-zinc-400 text-[11px] mt-0.5">
-                  Inicia em R$ 2,49 (até 300c) e varia pelo texto • Download imediato
+                <p id="single-audio-tier-hint" class="text-zinc-400 text-[10px] sm:text-[11px] mt-0.5">
+                  Até 300c: <strong class="text-zinc-200">R$ 2,49</strong> • 301-700c: <strong class="text-zinc-200">R$ 3,90</strong> • 701-1.500c: <strong class="text-zinc-200">R$ 5,90</strong> • 1.501-3.000c: <strong class="text-zinc-200">R$ 9,90</strong>
                 </p>
               </div>
             </div>
-            <div class="flex items-center gap-2">
-              <div class="text-right">
-                <span id="single-audio-price-badge" class="font-mono text-xs sm:text-sm font-black text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/30 block">
+            <div class="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+              <div class="text-left sm:text-right">
+                <span id="single-audio-price-badge" class="font-mono text-xs sm:text-sm font-black text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/30 inline-block">
                   R$ 2,49
                 </span>
                 <span id="single-audio-range-label" class="text-[9px] text-zinc-500 block mt-0.5">Faixa: até 300 carac.</span>
@@ -476,19 +425,19 @@
               <button
                 type="button"
                 id="btn-single-pix-action"
-                onclick="initiateSingleAudioPayment()"
+                onclick="generateVoice()"
                 class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center gap-1 shadow-sm active:scale-95 shrink-0"
-                title="Pagar apenas este áudio via PIX e baixar na hora (sem cadastro)"
+                title="Pagar este áudio via PIX e liberar MP3 e WAV na hora (sem cadastro)"
               >
                 <i data-lucide="zap" class="w-3 h-3 fill-current"></i>
-                <span>Pagar no PIX</span>
+                <span>Liberar no PIX Sem Cadastro</span>
               </button>
             </div>
           </div>
 
-          <!-- Opção Salvar no Histórico da Nuvem / Apenas Baixar -->
+          <!-- Opção Salvar no Histórico Local deste Navegador / Apenas Baixar -->
           <div class="flex items-center justify-between text-xs pt-1 px-0.5 shrink-0">
-            <label class="flex items-center gap-2 cursor-pointer select-none group" title="Marque para manter uma cópia salva na sua conta ou desmarque para apenas escutar e baixar agora sem ocupar espaço">
+            <label class="flex items-center gap-2 cursor-pointer select-none group" title="Marque para manter uma cópia no histórico recente deste navegador ou desmarque para apenas escutar e baixar na hora">
               <input
                 type="checkbox"
                 id="toggle-save-history"
@@ -497,14 +446,14 @@
                 class="w-4 h-4 rounded bg-zinc-900 border-zinc-700 text-brand-500 focus:ring-brand-500 accent-brand-500 cursor-pointer"
               />
               <span class="text-zinc-300 text-[11px] sm:text-xs font-semibold group-hover:text-white transition flex items-center gap-1.5">
-                <i data-lucide="cloud-download" class="w-3.5 h-3.5 text-brand-400"></i>
-                <span>Salvar áudio no meu histórico</span>
+                <i data-lucide="hard-drive-download" class="w-3.5 h-3.5 text-brand-400"></i>
+                <span>Salvar áudio no histórico deste navegador</span>
               </span>
             </label>
-            <span id="save-history-hint" class="text-[10px] text-zinc-500 hidden sm:inline">Desmarque para apenas baixar</span>
+            <span id="save-history-hint" class="text-[10px] text-brand-400 font-medium hidden sm:inline">Salvo localmente neste dispositivo</span>
           </div>
 
-<!-- Master Action Buttons (Prévia Grátis & Geração Completa) -->
+          <!-- Master Action Buttons (Prévia Grátis & Pagar no PIX e Gerar) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 shrink-0">
             <!-- Botão 1: Degustação Gratuita Imediata da Voz -->
             <button
@@ -515,17 +464,17 @@
               title="Ouvir uma demonstração falada gratuita dos primeiros 120 caracteres do seu texto"
             >
               <i data-lucide="headphones" class="w-4 h-4 text-emerald-400 group-hover:scale-110 transition"></i>
-              <span id="btn-preview-text">🎧 Ouvir Prévia Grátis</span>
+              <span id="btn-preview-text">Ouvir Prévia Grátis</span>
             </button>
 
-            <!-- Botão 2: Gerar Áudio Completo / Download -->
+            <!-- Botão 2: Pagar no PIX e Gerar Áudio Completo -->
             <button
               id="btn-generate"
               onclick="generateVoice()"
               class="py-3 px-3.5 rounded-xl font-black text-white uppercase tracking-wider text-xs btn-fire flex items-center justify-center gap-1.5 group cursor-pointer shadow-lg active:scale-95"
             >
-              <i data-lucide="play" class="w-4 h-4 fill-current transition group-hover:scale-110"></i>
-              <span id="btn-text">GERAR ÁUDIO COMPLETO</span>
+              <i data-lucide="zap" class="w-4 h-4 fill-current transition group-hover:scale-110"></i>
+              <span id="btn-text">PAGAR NO PIX E GERAR (R$ 2,49)</span>
             </button>
           </div>
         </div>
@@ -1090,13 +1039,10 @@
         </button>
       </div>
 
-      <!-- Rodapé com Upsell de Pacotes -->
+      <!-- Selo de garantia e entrega -->
       <div class="text-center pt-1 border-t border-white/5">
         <p class="text-[11px] text-zinc-400">
-          Vai precisar de mais áudios? 
-          <a href="javascript:void(0)" onclick="closeSingleAudioModal(); openWelcomeOfferModal();" class="text-brand-400 hover:text-brand-300 font-bold underline">
-            Leve 30 áudios por R$ 19,90 (R$ 0,66 cada)
-          </a>
+          Pagamento único via PIX • Liberação imediata em <strong class="text-white">MP3 e WAV Master</strong>
         </p>
       </div>
 
@@ -1646,7 +1592,7 @@
           <h4 class="font-bold text-white text-sm mb-1 text-emerald-400">2. Dados Pessoais Coletados e Tratados</h4>
           <p>Coletamos exclusivamente os dados necessários para a prestação do serviço contratado:</p>
           <ul class="list-disc pl-5 space-y-1 mt-1 text-zinc-300">
-            <li><strong>Dados Cadastrais e de Pagamento:</strong> E-mail e identificadores de transação de recarga PIX;</li>
+            <li><strong>Dados de Pagamento:</strong> Identificadores de transação de pagamento avulso via PIX;</li>
             <li><strong>Dados de Áudio e Voz (Biometria):</strong> Gravações de áudio enviadas voluntariamente pelo usuário para fins específicos de clonagem ou síntese;</li>
             <li><strong>Registros de Conexão:</strong> Endereço IP, data e hora de acesso, mantidos obrigatoriamente pelo prazo legal de 6 meses em cumprimento ao Art. 15 do Marco Civil da Internet.</li>
           </ul>
@@ -1656,7 +1602,7 @@
           <h4 class="font-bold text-white text-sm mb-1 text-emerald-400">3. Finalidade e Base Legal do Tratamento</h4>
           <p>O tratamento de dados é realizado fundamentado nas seguintes bases legais da LGPD:</p>
           <ul class="list-disc pl-5 space-y-1 mt-1 text-zinc-300">
-            <li><strong>Execução de Contrato (Art. 7º, V):</strong> Para sintetizar os áudios e gerenciar seus créditos;</li>
+            <li><strong>Execução de Contrato (Art. 7º, V):</strong> Para processar seu pagamento avulso no PIX e sintetizar os áudios solicitados;</li>
             <li><strong>Consentimento Expresso (Art. 7º, I):</strong> Para processar perfis acústicos de voz cadastrados pelo usuário;</li>
             <li><strong>Cumprimento de Obrigação Legal (Art. 7º, II):</strong> Para guarda de logs de conexão.</li>
           </ul>
@@ -1969,14 +1915,7 @@
         console.warn('[Supabase Init Warning]', err);
       }
 
-      // Se a URL tiver parâmetro ?auth=signup, login, forgot ou reset, abre na aba correta
-      const urlParams = new URLSearchParams(window.location.search);
-      const authParam = urlParams.get('auth');
-      if (authParam && ['login', 'forgot', 'reset'].includes(authParam)) {
-        if (!currentSession || authParam === 'reset') {
-          openAuthModal(authParam);
-        }
-      }
+      // Modo direto pré-pago sem cadastro: não abre modais de login pela URL
     }
 
     async function handleAuthSession(session) {
@@ -1984,9 +1923,7 @@
       const loggedOutNav = document.getElementById('nav-auth-logged-out');
       const loggedInNav = document.getElementById('nav-auth-logged-in');
 
-      const hookBanner = document.getElementById('studio-visitor-hook-banner');
       if (session && session.user) {
-        if (hookBanner) hookBanner.classList.add('hidden');
         let profileLoaded = false;
         try {
           const res = await fetch(`${API_BASE}/api/me`, {
@@ -2004,33 +1941,6 @@
           console.warn('[Auth Profile Fallback]', err);
         }
 
-        // Se não conseguiu carregar da API (ex: Vercel estático ou backend iniciando), busca direto no Supabase
-        if (!profileLoaded && supabaseClient) {
-          try {
-            const { data: dbProf, error: dbErr } = await supabaseClient
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
-            if (dbProf && !dbErr) {
-              currentUser = dbProf;
-              userCredits = typeof dbProf.credits !== 'undefined' ? dbProf.credits : userCredits;
-              profileLoaded = true;
-            }
-          } catch (sbErr) {
-            console.warn('[Direct Supabase Profile Read Error]', sbErr);
-          }
-        }
-
-        if (!profileLoaded) {
-          currentUser = {
-            id: session.user.id,
-            email: session.user.email,
-            full_name: (session.user.user_metadata && session.user.user_metadata.full_name) || session.user.email.split('@')[0],
-            credits: userCredits || 1
-          };
-        }
-
         // Se for o dono (araujoexcel@gmail.com), ativa o painel de visitas em tempo real
         const isOwner = (currentUser && currentUser.email === 'araujoexcel@gmail.com') || (session.user && session.user.email === 'araujoexcel@gmail.com') || localStorage.getItem('clonavoz_owner_access') === 'true';
         if (isOwner) {
@@ -2039,27 +1949,34 @@
         }
 
         updateCreditUI();
-        const displayName = currentUser.full_name || currentUser.email.split('@')[0];
+        const displayName = (currentUser && (currentUser.full_name || currentUser.email.split('@')[0])) || 'Usuário';
         const userDisplayElem = document.getElementById('user-display-name');
         const userAvatarElem = document.getElementById('user-avatar-initial');
         if (userDisplayElem) userDisplayElem.innerText = displayName;
         if (userAvatarElem) userAvatarElem.innerText = displayName[0].toUpperCase();
 
-        loggedOutNav.classList.add('hidden');
-        loggedOutNav.classList.remove('flex');
-        loggedInNav.classList.remove('hidden');
-        loggedInNav.classList.add('flex');
+        if (loggedOutNav) {
+          loggedOutNav.classList.add('hidden');
+          loggedOutNav.classList.remove('flex');
+        }
+        if (loggedInNav) {
+          loggedInNav.classList.remove('hidden');
+          loggedInNav.classList.add('flex');
+        }
         lucide.createIcons();
         loadHistory();
         return;
       }
 
-      // Se realmente deslogado (sem sessão):
       currentUser = null;
-      loggedOutNav.classList.remove('hidden');
-      loggedOutNav.classList.add('flex');
-      loggedInNav.classList.add('hidden');
-      loggedInNav.classList.remove('flex');
+      if (loggedOutNav) {
+        loggedOutNav.classList.remove('hidden');
+        loggedOutNav.classList.add('flex');
+      }
+      if (loggedInNav) {
+        loggedInNav.classList.add('hidden');
+        loggedInNav.classList.remove('flex');
+      }
       lucide.createIcons();
       loadHistory();
     }
@@ -2671,7 +2588,7 @@
         url: sampleUrl,
         duration: 3.5
       });
-      showToast(`Reproduzindo amostra da voz "${v ? getCleanVoiceName(v) : voiceKey}" (0 créditos consumidos)...`, 'info');
+      showToast(`Reproduzindo amostra gratuita da voz "${v ? getCleanVoiceName(v) : voiceKey}"...`, 'info');
     }
 
     async function deleteCurrentCustomVoice() {
@@ -3401,15 +3318,9 @@
         }
       }
 
-            const btnText = document.getElementById('btn-text');
+      const btnText = document.getElementById('btn-text');
       if (btnText) {
-        if (!currentSession) {
-          btnText.innerText = `PAGAR NO PIX E GERAR (R$ ${singlePrice.toFixed(2).replace('.', ',')})`;
-        } else if (typeof userCredits !== 'undefined' && userCredits > 0) {
-          btnText.innerText = `GERAR ÁUDIO COMPLETO (${userCredits} CRÉDITO${userCredits > 1 ? 'S' : ''})`;
-        } else {
-          btnText.innerText = `PAGAR NO PIX E GERAR (R$ ${singlePrice.toFixed(2).replace('.', ',')})`;
-        }
+        btnText.innerText = `PAGAR NO PIX E GERAR (R$ ${singlePrice.toFixed(2).replace('.', ',')})`;
       }
 
       analyzeCadenceAndRecommendPace(text);
@@ -3459,14 +3370,14 @@
               url: presetUrl,
               duration: 4.2
             });
-            showToast(`🎉 Demonstração de "${vName}" (${presetKey}) reproduzida (0 créditos consumidos)!`, 'success');
+            showToast(`Demonstração gratuita de "${vName}" (${presetKey}) reproduzida!`, 'success');
           } else {
             displayAudioResult({
               filename: `amostra_${demoKey}.mp3`,
               url: fallbackSampleUrl,
               duration: 3.5
             });
-            showToast(`Reproduzindo amostra da voz "${vName}" (0 créditos)!`, 'info');
+            showToast(`Reproduzindo amostra gratuita da voz "${vName}"!`, 'info');
           }
         })
         .catch(() => {
@@ -3475,7 +3386,7 @@
             url: fallbackSampleUrl,
             duration: 3.5
           });
-          showToast(`Reproduzindo amostra da voz "${vName}" (0 créditos)!`, 'info');
+          showToast(`Reproduzindo amostra gratuita da voz "${vName}"!`, 'info');
         });
     }
 
@@ -3793,8 +3704,15 @@
     }
 
 
-    // Lógica de Prévia Gratuita com Degustação da IA (Efeito Uau)
+    // Lógica de Prévia Gratuita com Degustação da IA
     function openPreviewConversionModal(voiceName) {
+      const text = textInput ? textInput.value.trim() : '';
+      const price = getSingleAudioPrice(text.length);
+      const priceStr = price.toFixed(2).replace('.', ',');
+      const subEl = document.getElementById('preview-modal-price-sub');
+      if (subEl) {
+        subEl.innerText = `Sem cadastro • Apenas R$ ${priceStr} no PIX`;
+      }
       document.getElementById('modal-preview-conversion').classList.remove('hidden');
       lucide.createIcons();
     }
@@ -3838,20 +3756,17 @@
 
         // Toca no player com Wavesurfer
         displayAudioResult(data.audio);
-        showToast(`🎉 Prévia de "${vLabel}" reproduzida com sucesso!`, 'success');
+        showToast(`Prévia de "${vLabel}" reproduzida com sucesso!`, 'success');
 
-        // Se visitante não logado, abre modal convidativo após 4 segundos
-        if (!currentSession) {
-          setTimeout(() => {
-            openPreviewConversionModal(vLabel);
-          }, 3500);
-        }
+        setTimeout(() => {
+          openPreviewConversionModal(vLabel);
+        }, 3500);
       } catch (err) {
         showToast(err.message || 'Erro ao gerar prévia', 'error');
       } finally {
         btn.disabled = false;
         btn.classList.remove('opacity-75');
-        btnText.innerHTML = '🎧 Ouvir Prévia Grátis';
+        btnText.innerHTML = 'Ouvir Prévia Grátis';
         lucide.createIcons();
       }
     }
@@ -4004,15 +3919,17 @@
               closeSingleAudioModal();
 
               if (data.audio) {
+                saveAudioToLocalHistory(data.audio, textInput ? textInput.value.trim() : '');
+                loadHistory();
                 displayAudioResult(data.audio);
-                showToast('🎉 Áudio avulso gerado com sucesso! Baixando...', 'success');
-                triggerAutoDownload(data.audio.mp3_url || data.audio.url, data.audio.filename);
-
-                setTimeout(() => {
-                  showToast('💡 Sabia que no Pacote Boas-Vindas você leva 30 áudios por apenas R$ 19,90?', 'info');
-                }, 4000);
+                showToast('Áudio liberado com sucesso! Baixando MP3...', 'success');
+                const dlUrl = data.audio.mp3_url || data.audio.url;
+                const dlName = data.audio.mp3_url
+                  ? (data.audio.filename || 'audio_clonavoz.mp3').replace(/\.wav$/i, '.mp3')
+                  : (data.audio.filename || 'audio_clonavoz.wav');
+                triggerAutoDownload(dlUrl, dlName);
               }
-            }, 1200);
+            }, 1000);
           }
         } catch (_) {}
       }, 2500);
@@ -4029,10 +3946,17 @@
         const data = await res.json();
         if (data.status === 'approved' && data.audio) {
           if (singlePixPollInterval) clearInterval(singlePixPollInterval);
+          try { localStorage.removeItem('clonavoz_active_single_order'); } catch (_) {}
           closeSingleAudioModal();
+          saveAudioToLocalHistory(data.audio, textInput ? textInput.value.trim() : '');
+          loadHistory();
           displayAudioResult(data.audio);
-          showToast('🎉 Áudio avulso sintetizado com sucesso!', 'success');
-          triggerAutoDownload(data.audio.mp3_url || data.audio.url, data.audio.filename);
+          showToast('Áudio avulso sintetizado com sucesso!', 'success');
+          const dlUrl = data.audio.mp3_url || data.audio.url;
+          const dlName = data.audio.mp3_url
+            ? (data.audio.filename || 'audio_clonavoz.mp3').replace(/\.wav$/i, '.mp3')
+            : (data.audio.filename || 'audio_clonavoz.wav');
+          triggerAutoDownload(dlUrl, dlName);
         }
       } catch (err) {
         showToast('Erro ao simular: ' + err.message, 'error');
@@ -4059,39 +3983,26 @@
     }
 
 
-    // Generate Voice with Credit Validation & Supabase Integration
+    // Fluxo Principal 100% Direto Sem Cadastro: Pré-pago por Uso via PIX
     async function generateVoice() {
       const text = textInput.value.trim();
       if (!text) {
-        showToast('Digite algum texto para sintetizar.', 'error');
+        showToast('Digite algum texto para calcular o valor e gerar no PIX.', 'error');
         textInput.focus();
         return;
       }
 
-      // Verificação Inteligente de Dicção & Gramática antes de consumir créditos
+      // Verificação Inteligente Gratuita de Dicção & Gramática antes do pagamento
       const dictionCheck = analyzeTextDictionJS(text);
       if (dictionCheck && dictionCheck.has_issues && dictionCheck.issues_count > 0 && dictionWarningDismissedForText !== text) {
         currentDictionAnalysis = dictionCheck;
         openDictionModal(dictionCheck, true);
         return;
       }
-      if (!text) {
-        showToast('Digite algum texto para sintetizar.', 'error');
-        textInput.focus();
-        return;
-      }
 
-      if (supabaseClient && !currentSession) {
-        // Usuário não autenticado: abre direto a tela de PIX avulso sem cadastro!
-        initiateSingleAudioPayment();
-        return;
-      }
-
-      if (userCredits <= 0) {
-        // Usuário sem créditos: abre a opção de gerar avulso no PIX
-        initiateSingleAudioPayment();
-        return;
-      }
+      // Abre diretamente o pagamento avulso no PIX sem exigir cadastro ou créditos
+      initiateSingleAudioPayment();
+      return;
 
       const speed = selectedSpeed;
       const threads = 4;
@@ -4404,19 +4315,54 @@
       lucide.createIcons();
     }
 
+    // Histórico Local Sem Cadastro (salvo neste navegador)
+    function getLocalHistoryItems() {
+      try {
+        const raw = localStorage.getItem('clonavoz_local_history');
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function saveAudioToLocalHistory(audio, promptText = '') {
+      if (!audio) return;
+      const saveCheckbox = document.getElementById('toggle-save-history');
+      if (saveCheckbox && !saveCheckbox.checked) return;
+
+      try {
+        const items = getLocalHistoryItems();
+        const fname = audio.filename || 'audio_clonavoz.wav';
+        const cleanTitle = (promptText || audio.title || fname).replace(/\s+/g, ' ').trim().slice(0, 60);
+        const entry = {
+          id: fname,
+          title: cleanTitle || fname,
+          filename: fname,
+          url: audio.url,
+          mp3_url: audio.mp3_url || (audio.url ? audio.url.replace(/\.wav$/i, '.mp3') : ''),
+          voice: audio.voice || selectedVoiceKey,
+          duration: audio.duration || 0,
+          size_kb: audio.size_kb || '',
+          created_at: new Date().toISOString()
+        };
+
+        const filtered = items.filter(it => (it.filename || it.id) !== fname);
+        filtered.unshift(entry);
+        localStorage.setItem('clonavoz_local_history', JSON.stringify(filtered.slice(0, 30)));
+      } catch (err) {
+        console.warn('[Local History Save Error]', err);
+      }
+    }
+
     // History
     async function loadHistory() {
       try {
-        const headers = {};
-        if (currentSession && currentSession.access_token) {
-          headers['Authorization'] = `Bearer ${currentSession.access_token}`;
-        }
-        const res = await fetch(`${API_BASE}/api/history`, { headers });
-        const items = await res.json();
+        const items = getLocalHistoryItems();
         const list = document.getElementById('history-list');
 
         if (!items || items.length === 0) {
-          list.innerHTML = '<p class="text-xs text-zinc-500 py-3 text-center">Nenhum áudio gerado ainda.</p>';
+          list.innerHTML = '<p class="text-xs text-zinc-500 py-3 text-center">Nenhum áudio gerado neste navegador ainda.</p>';
           return;
         }
 
@@ -4431,14 +4377,13 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
-          const safeFilename = (item.filename || 'audio.wav').replace(/"/g, '&quot;');
-          const safeMp3Filename = (item.filename || 'audio.wav').replace(/\.wav$/i, '.mp3').replace(/"/g, '&quot;');
-          
+          const metaInfo = item.size_kb ? `${item.size_kb} KB` : (item.duration ? `${item.duration}s` : 'MP3/WAV');
+
           return `
           <div class="h-[51px] shrink-0 p-2.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800/80 border border-zinc-800 flex items-center justify-between text-xs transition">
             <div class="truncate mr-2 cursor-pointer flex-1 min-w-0" onclick="playHistoryItemByIndex(${idx})">
               <p class="font-bold text-zinc-200 truncate text-[11px]">${safeTitle}</p>
-              <span class="text-[9px] text-zinc-400 font-mono">${item.size_kb || ''} KB</span>
+              <span class="text-[9px] text-zinc-400 font-mono">${metaInfo}</span>
             </div>
             <div class="flex items-center gap-1 shrink-0">
               <button onclick="playHistoryItemByIndex(${idx})" class="p-1.5 rounded-lg bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 cursor-pointer" title="Tocar">
@@ -4542,18 +4487,18 @@
     async function deleteHistoryItem(itemRef) {
       const confirmed = await customConfirm({
         title: 'Excluir do Histórico?',
-        message: 'Deseja remover este áudio permanentemente do seu histórico recente?',
+        message: 'Deseja remover este áudio do histórico recente deste navegador?',
         confirmText: 'Excluir Áudio',
         cancelText: 'Cancelar',
         type: 'danger'
       });
       if (!confirmed) return;
       try {
-        const headers = {};
-        if (currentSession && currentSession.access_token) {
-          headers['Authorization'] = `Bearer ${currentSession.access_token}`;
+        const items = getLocalHistoryItems().filter(it => it.id !== itemRef && it.filename !== itemRef);
+        localStorage.setItem('clonavoz_local_history', JSON.stringify(items));
+        if (itemRef) {
+          fetch(`${API_BASE}/api/history/${encodeURIComponent(itemRef)}`, { method: 'DELETE' }).catch(() => {});
         }
-        await fetch(`${API_BASE}/api/history/${itemRef}`, { method: 'DELETE', headers });
         loadHistory();
         showToast('Áudio removido do histórico com sucesso.', 'info');
       } catch (err) {
@@ -4642,7 +4587,7 @@
         localStorage.setItem('clonavoz_save_history', checked ? 'true' : 'false');
         const hint = document.getElementById('save-history-hint');
         if (hint) {
-          hint.innerText = checked ? 'Salvo no histórico da conta' : 'Apenas ouvir/baixar (sem histórico)';
+          hint.innerText = checked ? 'Salvo localmente neste dispositivo' : 'Apenas ouvir e baixar agora';
           hint.className = checked ? 'text-[10px] text-brand-400 font-medium hidden sm:inline' : 'text-[10px] text-amber-400 font-medium hidden sm:inline';
         }
       } catch (_) {}
@@ -4664,7 +4609,9 @@
     window.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
       initSupabaseAuth();
-      updateCreditUI();
+      if (localStorage.getItem('clonavoz_owner_access') === 'true') {
+        initStudioAdminViews();
+      }
       loadVoices();
       loadHistory();
       setSample('welcome', false); // Não toca áudio ao abrir a página
@@ -4689,9 +4636,15 @@
           .then(data => {
             if (data.status === 'approved' && data.audio) {
               localStorage.removeItem('clonavoz_active_single_order');
+              saveAudioToLocalHistory(data.audio, saved.text || '');
+              loadHistory();
               displayAudioResult(data.audio);
-              triggerAutoDownload(data.audio.mp3_url || data.audio.url, data.audio.filename);
-              showToast('🎉 Seu áudio pago anteriormente foi recuperado e baixado com sucesso!', 'success');
+              const dlUrl = data.audio.mp3_url || data.audio.url;
+              const dlName = data.audio.mp3_url
+                ? (data.audio.filename || 'audio_clonavoz.mp3').replace(/\.wav$/i, '.mp3')
+                : (data.audio.filename || 'audio_clonavoz.wav');
+              triggerAutoDownload(dlUrl, dlName);
+              showToast('Seu áudio pago anteriormente foi recuperado e baixado com sucesso!', 'success');
             }
           })
           .catch(() => {});
@@ -4699,17 +4652,17 @@
     }
   </script>
 
-  <!-- MODAL DE CONVERSÃO PÓS-PRÉVIA (EFEITO UAU) -->
+  <!-- MODAL DE CONVERSÃO PÓS-PRÉVIA -->
   <div id="modal-preview-conversion" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4">
     <div class="panel-glass border border-brand-500/40 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
       
       <div class="text-center space-y-2">
-        <div class="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center mx-auto text-xl border border-brand-500/30">
-          🎉
+        <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
+          <i data-lucide="headphones" class="w-6 h-6"></i>
         </div>
         <h3 class="text-lg font-black text-white uppercase tracking-wider">Gostou da Voz?</h3>
         <p class="text-xs text-zinc-300">
-          Você acabou de ouvir a prévia neural com qualidade de estúdio! Para gerar seu áudio completo de até 3.000 caracteres e baixar o arquivo .MP3:
+          Você acabou de ouvir a prévia neural com qualidade de estúdio! Para gerar seu áudio completo e liberar o download em <strong class="text-white">MP3 e WAV Master</strong>:
         </p>
       </div>
 
@@ -4719,35 +4672,20 @@
           onclick="closePreviewConversionModal(); initiateSingleAudioPayment();"
           class="w-full py-3.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-between shadow-lg group active:scale-95"
         >
-          <div class="flex items-center gap-2">
-            <span class="text-base">⚡</span>
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="zap" class="w-4 h-4 fill-current shrink-0"></i>
             <div class="text-left">
               <span class="block text-xs font-black">Pagar no PIX e Baixar na Hora</span>
-              <span class="block text-[10px] text-zinc-900 font-semibold">Sem cadastro • Apenas R$ 2,49</span>
+              <span id="preview-modal-price-sub" class="block text-[10px] text-zinc-900 font-semibold">Sem cadastro • Apenas R$ 2,49 no PIX</span>
             </div>
           </div>
           <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition text-black"></i>
-        </button>
-
-        <!-- Opção Secundária: Criar Conta para Pacotes com Desconto -->
-        <button
-          onclick="closePreviewConversionModal(); openAuthModal('signup');"
-          class="w-full py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 text-xs font-semibold transition cursor-pointer flex items-center justify-between group"
-        >
-          <div class="flex items-center gap-2">
-            <span class="text-sm">🎁</span>
-            <div class="text-left">
-              <span class="block text-xs">Criar conta grátis</span>
-              <span class="block text-[10px] text-zinc-500 font-normal">Para comprar pacotes de áudios com desconto</span>
-            </div>
-          </div>
-          <i data-lucide="chevron-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition text-zinc-500"></i>
         </button>
       </div>
 
       <div class="text-center pt-2 border-t border-white/5">
         <button onclick="closePreviewConversionModal()" class="text-xs text-zinc-500 hover:text-zinc-300 cursor-pointer">
-          Continuar experimentando outras vozes
+          Continuar editando meu texto ou testar outras vozes
         </button>
       </div>
 
@@ -4856,12 +4794,12 @@
       <!-- Header -->
       <div class="p-4 sm:p-5 border-b border-zinc-800/80 flex items-center justify-between shrink-0 bg-zinc-950/70">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center text-sm font-black border border-brand-500/30">
-            ❓
+          <div class="w-8 h-8 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+            <i data-lucide="help-circle" class="w-4 h-4"></i>
           </div>
           <div>
             <h3 class="text-sm sm:text-base font-bold text-white">Dúvidas Frequentes</h3>
-            <p class="text-[11px] text-zinc-400">Entenda o uso sem cadastro e as vantagens de criar conta</p>
+            <p class="text-[11px] text-zinc-400">Como funciona o modelo pré-pago sem cadastro no PIX</p>
           </div>
         </div>
         <button onclick="closeStudioFaqModal()" class="w-8 h-8 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition cursor-pointer border border-zinc-800">
@@ -4875,27 +4813,27 @@
         <!-- FAQ 1: Sem Cadastro -->
         <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-emerald-500/30 space-y-1.5">
           <h4 class="text-white font-bold flex items-center gap-2">
-            <span class="text-emerald-400 font-extrabold text-[10px] uppercase tracking-wider bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">Sem Cadastro</span>
+            <span class="text-emerald-400 font-extrabold text-[10px] uppercase tracking-wider bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">Pré-Pago</span>
             <span>Como funciona a geração direta no PIX sem cadastro?</span>
           </h4>
           <p class="text-zinc-300 leading-relaxed">
-            Você digita ou cola seu texto no estúdio, ouve a <strong>Prévia Grátis</strong> para conferir o timbre da voz e clica em <strong>"Pagar no PIX e Gerar"</strong>. Os valores iniciam em <strong>R$ 2,49</strong> (até 300 caracteres) e aumentam proporcionalmente ao tamanho do texto. Você não precisa criar conta, cadastrar e-mail nem lembrar senha. Ao pagar o QR Code no app do seu banco, nosso servidor sintetiza seu áudio e faz o <strong>download automático do arquivo .MP3</strong> na hora!
+            Você escolhe a voz (ou clona uma amostra), digita ou cola seu texto no editor e pode ouvir a <strong>Prévia Grátis</strong> na hora. Enquanto você digita, o sistema mostra o valor exato do áudio em tempo real. Achou viável? Clique em <strong>"Pagar no PIX e Gerar"</strong>, pague o QR Code e baixe imediatamente sem precisar criar conta, senha ou assinar planos.
           </p>
         </div>
 
-        <!-- FAQ 2: Vantagens de Cadastrar -->
+        <!-- FAQ 2: Faixas de preço e formatos -->
         <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-brand-500/30 space-y-1.5">
           <h4 class="text-white font-bold flex items-center gap-2">
-            <span class="text-brand-400 font-extrabold text-[10px] uppercase tracking-wider bg-brand-500/10 px-1.5 py-0.5 rounded border border-brand-500/30">Com Conta</span>
-            <span>Quais são as vantagens de criar uma conta gratuita?</span>
+            <span class="text-brand-400 font-extrabold text-[10px] uppercase tracking-wider bg-brand-500/10 px-1.5 py-0.5 rounded border border-brand-500/30">Valores & Formatos</span>
+            <span>Quais são as faixas de preço e formatos liberados?</span>
           </h4>
           <div class="text-zinc-300 leading-relaxed space-y-1.5">
-            <p>Se você gera áudios com frequência, criar sua conta grátis oferece economia e recursos profissionais:</p>
+            <p>Não há planos nem mensalidades — você paga apenas pelo tamanho do áudio que gerar:</p>
             <ul class="list-disc list-inside space-y-1 text-zinc-400 pl-1">
-              <li><strong class="text-white">Economia Brutal nos Pacotes:</strong> Compre pacotes de créditos com áudios a partir de apenas <strong class="text-emerald-400">R$ 0,66 cada</strong> (Oferta Boas-Vindas: 30 áudios por R$ 19,90).</li>
-              <li><strong class="text-white">Histórico em Nuvem Permanente:</strong> Seus áudios ficam salvos na sua biblioteca para você reouvir e baixar novamente em qualquer dispositivo.</li>
-              <li><strong class="text-white">Download em WAV Master:</strong> Arquivos profissionais sem perda de qualidade (44.1kHz) para edição em vídeo (Premiere, CapCut, DaVinci).</li>
-              <li><strong class="text-white">Clonagem de Voz Própria:</strong> Envie amostras de áudio e clone sua própria voz com IA.</li>
+              <li><strong class="text-white">Até 300 caracteres:</strong> R$ 2,49 | <strong class="text-white">301 a 700:</strong> R$ 3,90</li>
+              <li><strong class="text-white">701 a 1.500 caracteres:</strong> R$ 5,90 | <strong class="text-white">1.501 a 3.000:</strong> R$ 9,90</li>
+              <li><strong class="text-white">Download Duplo WAV + MP3:</strong> Ambos os formatos (MP3 leve e WAV Master 44.1kHz) são liberados após o PIX.</li>
+              <li><strong class="text-white">Histórico no Navegador:</strong> Seus áudios pagos ficam acessíveis no card Histórico Recente deste navegador.</li>
             </ul>
           </div>
         </div>
@@ -4904,7 +4842,7 @@
         <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-1.5">
           <h4 class="text-white font-bold">É garantido que receberei meu áudio se eu pagar sem cadastro? E se a página fechar?</h4>
           <p class="text-zinc-400 leading-relaxed">
-            <strong>100% garantido!</strong> Cada pagamento PIX tem um ID exclusivo rastreado pelo seu navegador. Mesmo se você minimizar o navegador para abrir o app do banco no celular, o sistema conta com <strong>auto-recuperação inteligente</strong>: ao reabrir a página, o áudio pago é entregue automaticamente. Você também pode informar opcionalmente seu WhatsApp ou e-mail na tela do PIX para receber o link de backup.
+            <strong>100% garantido!</strong> Cada pagamento PIX tem um ID exclusivo rastreado pelo seu navegador. Mesmo se você minimizar o navegador para abrir o app do banco no celular, o sistema conta com <strong>auto-recuperação inteligente</strong>: ao reabrir a página, o áudio pago é entregue automaticamente. Você também pode informar opcionalmente seu WhatsApp ou e-mail na tela do PIX.
           </p>
         </div>
 
@@ -4919,16 +4857,12 @@
       </div>
 
       <!-- Footer CTA -->
-      <div class="p-3.5 sm:p-4 border-t border-zinc-800/80 bg-zinc-950/70 flex items-center justify-between shrink-0">
-        <button onclick="closeStudioFaqModal()" class="text-xs text-zinc-400 hover:text-white cursor-pointer">
-          Fechar
-        </button>
+      <div class="p-3.5 sm:p-4 border-t border-zinc-800/80 bg-zinc-950/70 flex items-center justify-end shrink-0">
         <button
-          onclick="closeStudioFaqModal(); openAuthModal('signup');"
-          class="px-4 py-2 rounded-xl btn-fire text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer shadow-md flex items-center gap-1.5"
+          onclick="closeStudioFaqModal()"
+          class="px-5 py-2 rounded-xl btn-fire text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer shadow-md flex items-center gap-1.5"
         >
-          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-          <span>Criar Conta Grátis</span>
+          <span>Entendi e Quero Testar</span>
         </button>
       </div>
 

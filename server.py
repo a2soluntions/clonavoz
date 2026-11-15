@@ -814,7 +814,7 @@ async def pix_webhook(request: Request):
     elif "id" in data:
         payment_id = str(data["id"])
 
-    if payment_id and MERCADO_PAGO_ACCESS_TOKEN and supabase_admin:
+    if payment_id and MERCADO_PAGO_ACCESS_TOKEN:
         try:
             import urllib.request
             import json
@@ -825,21 +825,33 @@ async def pix_webhook(request: Request):
             with urllib.request.urlopen(req_obj, timeout=8) as resp:
                 mp_data = json.loads(resp.read().decode("utf-8"))
                 if mp_data.get("status") == "approved":
-                    tx_res = supabase_admin.table("pix_transactions").select("*").eq("gateway_txid", payment_id).execute()
-                    if tx_res.data:
-                        tx = tx_res.data[0]
-                        if tx.get("status") != "paid":
-                            import datetime
-                            supabase_admin.table("pix_transactions").update({
-                                "status": "paid",
-                                "paid_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
-                            }).eq("gateway_txid", payment_id).execute()
-                            
-                            u_id = tx.get("user_id")
-                            prof_res = supabase_admin.table("profiles").select("credits").eq("id", u_id).execute()
-                            current_cred = prof_res.data[0]["credits"] if prof_res.data else 0
-                            new_cred = current_cred + tx.get("credits_amount", 1)
-                            supabase_admin.table("profiles").update({"credits": new_cred}).eq("id", u_id).execute()
+                    is_single_order = payment_id in single_audio_orders
+                    if is_single_order:
+                        single_audio_orders[payment_id]["status"] = "approved"
+
+                    if supabase_admin:
+                        tx_res = supabase_admin.table("pix_transactions").select("*").eq("gateway_txid", payment_id).execute()
+                        if tx_res.data:
+                            tx = tx_res.data[0]
+                            if tx.get("status") != "paid":
+                                import datetime
+                                supabase_admin.table("pix_transactions").update({
+                                    "status": "paid",
+                                    "paid_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                                }).eq("gateway_txid", payment_id).execute()
+
+                                u_id = tx.get("user_id")
+                                pkg_id = str(tx.get("package_id") or "")
+                                if (
+                                    not is_single_order
+                                    and not pkg_id.startswith("single_")
+                                    and u_id
+                                    and u_id != "00000000-0000-0000-0000-000000000000"
+                                ):
+                                    prof_res = supabase_admin.table("profiles").select("credits").eq("id", u_id).execute()
+                                    current_cred = prof_res.data[0]["credits"] if prof_res.data else 0
+                                    new_cred = current_cred + tx.get("credits_amount", 1)
+                                    supabase_admin.table("profiles").update({"credits": new_cred}).eq("id", u_id).execute()
         except Exception as e:
             print(f"[PIX Webhook Processing Error] {e}")
 
