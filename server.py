@@ -5,6 +5,7 @@ import os
 import glob
 import shutil
 import subprocess
+import threading
 from typing import Optional, List, Dict, Any
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Header, Depends, BackgroundTasks, Request
@@ -1247,6 +1248,7 @@ class CreateSinglePixRequest(BaseModel):
     style: Optional[str] = "Voz natural, clara e expressiva"
     dialogue: Optional[List[Dict[str, Any]]] = None
     speakers: Optional[List[Dict[str, Any]]] = None
+    auto_correct_fee: bool = False
 
 
 def _build_dialogue_fallback_text(dialogue: Optional[List[Dict[str, Any]]]) -> str:
@@ -1299,6 +1301,8 @@ def create_single_audio_pix(req: CreateSinglePixRequest, authorization: Optional
 
     char_count = len(clean_text)
     amount_num = calculate_single_audio_price(char_count)
+    if req.auto_correct_fee:
+        amount_num = round(amount_num + 0.10, 2)
 
     user = get_current_user_from_header(authorization) if supabase_admin and authorization else None
     user_email = req.email or (getattr(user, "email", None) if user else "cliente@clonavoz.com.br")
@@ -1646,6 +1650,66 @@ def mix_audio_with_bgm(voice_wav_path: str, bgm_file_path: str, volume: float = 
     return False
 
 
+MAX_FREE_PREVIEWS = 3
+PREVIEW_USAGE_FILE = os.path.join(OUTPUTS_DIR, "preview_usage.json")
+_preview_usage_lock = threading.Lock()
+
+
+def _extract_client_ip(request: Request) -> str:
+    """Extrai o IP real do visitante considerando proxies (Cloudflare/Nginx)."""
+    for header in ("cf-connecting-ip", "x-forwarded-for", "x-real-ip"):
+        val = (request.headers.get(header) or "").strip()
+        if val:
+            return val.split(",")[0].strip()
+    return (request.client.host if request.client else "unknown") or "unknown"
+
+
+def _load_preview_usage() -> Dict[str, int]:
+    try:
+        if os.path.exists(PREVIEW_USAGE_FILE):
+            with open(PREVIEW_USAGE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    return {str(k): int(v) for k, v in data.items()}
+    except Exception:
+        pass
+    return {}
+
+
+def _save_preview_usage(data: Dict[str, int]) -> None:
+    try:
+        os.makedirs(os.path.dirname(PREVIEW_USAGE_FILE), exist_ok=True)
+        with open(PREVIEW_USAGE_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[PreviewUsage] Erro ao salvar preview_usage.json: {e}")
+
+
+def _get_preview_attempts(ip: str, client_id: Optional[str]) -> int:
+    with _preview_usage_lock:
+        usage = _load_preview_usage()
+        ip_count = usage.get(f"ip:{ip}", 0) if ip else 0
+        cid = (client_id or "").strip()
+        cid_count = usage.get(f"cid:{cid}", 0) if cid else 0
+        return max(ip_count, cid_count)
+
+
+def _increment_preview_attempts(ip: str, client_id: Optional[str]) -> int:
+    with _preview_usage_lock:
+        usage = _load_preview_usage()
+        cid = (client_id or "").strip()
+        ip_key = f"ip:{ip}" if ip else ""
+        cid_key = f"cid:{cid}" if cid else ""
+        current = max(usage.get(ip_key, 0) if ip_key else 0, usage.get(cid_key, 0) if cid_key else 0)
+        new_count = current + 1
+        if ip_key:
+            usage[ip_key] = new_count
+        if cid_key:
+            usage[cid_key] = new_count
+        _save_preview_usage(usage)
+        return new_count
+
+
 class PreviewRequest(BaseModel):
     text: str
     voice: str = "Kore"
@@ -1655,11 +1719,20 @@ class PreviewRequest(BaseModel):
     style: Optional[str] = "Voz natural, clara e expressiva"
     dialogue: Optional[List[Dict[str, Any]]] = None
     speakers: Optional[List[Dict[str, Any]]] = None
+    client_id: Optional[str] = None
 
 
 @app.post("/api/preview")
-def generate_preview(req: PreviewRequest):
-    """Gera uma prévia rápida e gratuita dos primeiros 120 caracteres do texto do visitante para encantar antes da compra."""
+def generate_preview(req: PreviewRequest, request: Request):
+    """Gera uma prévia curta e gratuita (máx. 3 tentativas por visitante e tamanho reduzido para segurança de custo)."""
+    client_ip = _extract_client_ip(request)
+    attempts = _get_preview_attempts(client_ip, req.client_id)
+    if attempts >= MAX_FREE_PREVIEWS:
+        raise HTTPException(
+            status_code=429,
+            detail="Testes gratuitos encerrados (limite de 3 prévias atingido). Para gerar seu áudio completo, clique em Pagar no PIX e Gerar.",
+        )
+
     clean_text = (req.text or "").replace("\r\n", "\n").strip()
     if not clean_text and req.dialogue:
         clean_text = _build_dialogue_fallback_text(req.dialogue)
@@ -1668,6 +1741,8 @@ def generate_preview(req: PreviewRequest):
 
     norm_mode = (req.mode or "single").strip().lower()
     preview_dialogue = None
+    max_single_len = 80
+    max_dialogue_len = 100
 
     if norm_mode == "dialogue" and req.dialogue:
         total_len = 0
@@ -1676,19 +1751,18 @@ def generate_preview(req: PreviewRequest):
             t_txt = str(turn.get("text") or "").strip()
             if not t_txt:
                 continue
-            remaining = 160 - total_len
-            if remaining <= 15:
+            remaining = max_dialogue_len - total_len
+            if remaining <= 12:
                 break
             snippet = t_txt[:remaining].strip()
             preview_dialogue.append({**turn, "text": snippet})
             total_len += len(snippet)
-        preview_text = _build_dialogue_fallback_text(preview_dialogue) or clean_text[:160]
+        preview_text = _build_dialogue_fallback_text(preview_dialogue) or clean_text[:max_dialogue_len]
     else:
-        max_len = 160 if norm_mode == "dialogue" else 120
-        preview_text = clean_text[:max_len].strip()
-        if len(clean_text) > max_len:
+        preview_text = clean_text[:max_single_len].strip()
+        if len(clean_text) > max_single_len:
             last_space = preview_text.rfind(" ")
-            if last_space > 80:
+            if last_space > 45:
                 preview_text = preview_text[:last_space] + "..."
             else:
                 preview_text = preview_text + "..."
@@ -1706,9 +1780,14 @@ def generate_preview(req: PreviewRequest):
         speakers=req.speakers,
     )
 
+    new_attempts = _increment_preview_attempts(client_ip, req.client_id)
+
     return {
         "success": True,
         "preview_text": preview_text,
+        "preview_attempts": new_attempts,
+        "max_previews": MAX_FREE_PREVIEWS,
+        "remaining_previews": max(0, MAX_FREE_PREVIEWS - new_attempts),
         "audio": audio_res
     }
 

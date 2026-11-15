@@ -300,15 +300,6 @@
 
           <!-- Ações Rápidas do Editor -->
           <div class="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0 flex-wrap">
-            <button
-              id="btn-enhance-text"
-              onclick="enhanceTextForDiction()"
-              class="text-[11px] sm:text-xs px-2 sm:px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition flex items-center gap-1 font-bold cursor-pointer shadow-sm active:scale-95 shrink-0"
-              title="Corrigir gramática, acentuação e pontuação para uma dicção impecável sem tropeços"
-            >
-              <i data-lucide="sparkles" class="w-3 h-3 text-emerald-400"></i>
-              <span>Otimizar Dicção</span>
-            </button>
             <button onclick="clearText()" class="text-[11px] sm:text-xs px-2 sm:px-2.5 py-1 rounded-lg bg-red-950/30 hover:bg-red-900/40 text-red-400 border border-red-500/20 transition flex items-center gap-1 font-medium cursor-pointer shrink-0" title="Limpar texto">
               <i data-lucide="trash-2" class="w-3 h-3"></i>
               <span>Limpar</span>
@@ -346,6 +337,18 @@
             </div>
           </div>
 
+          <!-- Aviso Automático de Ortografia/Dicção em Tempo Real -->
+          <div id="inline-diction-warning" class="hidden p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/35 text-[11px] space-y-1.5 shrink-0">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <span class="text-amber-300 font-bold flex items-center gap-1.5">
+                <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
+                <span id="inline-diction-title">Erros de ortografia detectados que podem prejudicar o áudio:</span>
+              </span>
+              <span class="text-[10px] text-zinc-400">Corrija grátis abaixo ou peça correção automática (+R$ 0,10) ao gerar</span>
+            </div>
+            <div id="inline-diction-errors" class="flex flex-wrap gap-1.5"></div>
+          </div>
+
           <!-- Barra Informativa de Valor em Tempo Real (Pagamento apenas no botão laranja abaixo) -->
           <div id="single-audio-pricing-card" class="p-2.5 sm:p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shrink-0 transition">
             <div class="flex items-start gap-2">
@@ -380,10 +383,10 @@
               id="btn-preview-audio"
               onclick="generateFreePreview()"
               class="py-3 px-3.5 rounded-xl font-bold text-xs uppercase tracking-wider bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/40 hover:border-emerald-400 transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md group active:scale-95"
-              title="Ouvir uma demonstração falada gratuita dos primeiros 120 caracteres do seu texto"
+              title="Ouvir uma demonstração falada gratuita dos primeiros 80 caracteres (máximo 3 testes por visitante)"
             >
               <i data-lucide="headphones" class="w-4 h-4 text-emerald-400 group-hover:scale-110 transition"></i>
-              <span id="btn-preview-text">Ouvir Prévia Grátis</span>
+              <span id="btn-preview-text">Ouvir Prévia Grátis (3 restantes)</span>
             </button>
 
             <!-- Botão 2 (Único PIX): Pagar no PIX e Gerar Áudio Completo -->
@@ -1814,6 +1817,91 @@
         return u.startsWith('/') ? u : `/${u}`;
       }
       return `${API_BASE}${u.startsWith('/') ? '' : '/'}${u}`;
+    }
+
+    const MAX_FREE_PREVIEWS = 3;
+    let autoCorrectFeeApplied = false;
+    let lastAutoCorrectedText = '';
+
+    function getOrCreateClientId() {
+      try {
+        let cid = localStorage.getItem('clonavoz_client_id');
+        if (!cid) {
+          cid = 'cv_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+          localStorage.setItem('clonavoz_client_id', cid);
+        }
+        return cid;
+      } catch (_) {
+        return 'cv_anon';
+      }
+    }
+
+    function getLocalPreviewCount() {
+      try {
+        const raw = parseInt(localStorage.getItem('clonavoz_preview_count') || '0', 10);
+        return Number.isFinite(raw) && raw > 0 ? raw : 0;
+      } catch (_) {
+        return 0;
+      }
+    }
+
+    function setLocalPreviewCount(count) {
+      try {
+        localStorage.setItem('clonavoz_preview_count', String(Math.max(0, count)));
+      } catch (_) {}
+      updatePreviewButtonUI();
+    }
+
+    function updatePreviewButtonUI() {
+      const btn = document.getElementById('btn-preview-audio');
+      const label = document.getElementById('btn-preview-text');
+      if (!btn || !label) return;
+      const used = getLocalPreviewCount();
+      const remaining = Math.max(0, MAX_FREE_PREVIEWS - used);
+      if (remaining <= 0) {
+        label.innerText = 'Testes Encerrados (0/3)';
+        btn.classList.remove('text-emerald-400', 'border-emerald-500/40', 'hover:border-emerald-400');
+        btn.classList.add('text-zinc-400', 'border-zinc-700', 'opacity-80');
+        btn.title = 'Testes gratuitos encerrados (limite de 3 prévias atingido). Clique em Pagar no PIX e Gerar.';
+      } else {
+        label.innerText = `Ouvir Prévia Grátis (${remaining} restante${remaining > 1 ? 's' : ''})`;
+        btn.classList.add('text-emerald-400', 'border-emerald-500/40', 'hover:border-emerald-400');
+        btn.classList.remove('text-zinc-400', 'border-zinc-700', 'opacity-80');
+        btn.title = `Ouvir uma demonstração falada gratuita dos primeiros 80 caracteres (${remaining} de ${MAX_FREE_PREVIEWS} restantes)`;
+      }
+    }
+
+    function updateInlineDictionWarning(text) {
+      const box = document.getElementById('inline-diction-warning');
+      const titleEl = document.getElementById('inline-diction-title');
+      const listEl = document.getElementById('inline-diction-errors');
+      if (!box || !listEl) return;
+
+      if (!text || selectedTtsMode === 'dialogue' || typeof analyzeTextDictionJS !== 'function') {
+        box.classList.add('hidden');
+        return;
+      }
+
+      const check = analyzeTextDictionJS(text);
+      if (!check || !check.has_issues || !check.issues_count) {
+        box.classList.add('hidden');
+        return;
+      }
+
+      if (titleEl) {
+        titleEl.innerText = `Atenção: ${check.issues_count} erro(s) de ortografia/dicção podem prejudicar o áudio final:`;
+      }
+
+      const details = Array.isArray(check.issues_details) ? check.issues_details.slice(0, 8) : [];
+      listEl.innerHTML = details.map(item => `
+        <span class="px-2 py-0.5 rounded-md bg-zinc-900 border border-amber-500/30 text-[10px] inline-flex items-center gap-1" title="${item.reason || ''}">
+          <span class="text-red-400 line-through font-mono">${item.original}</span>
+          <span class="text-zinc-500">→</span>
+          <span class="text-emerald-400 font-mono font-bold">${item.suggestion}</span>
+        </span>
+      `).join('') + (check.issues_count > 8 ? `<span class="text-[10px] text-amber-300 self-center">+${check.issues_count - 8} mais</span>` : '');
+
+      box.classList.remove('hidden');
     }
 
     function customConfirm({
@@ -3525,6 +3613,11 @@
 
     function updateTextStats() {
       const text = textInput.value.trim();
+      if (autoCorrectFeeApplied && text !== lastAutoCorrectedText) {
+        autoCorrectFeeApplied = false;
+        lastAutoCorrectedText = '';
+      }
+
       const charCount = text.length;
       const wordCount = text ? text.split(/\s+/).length : 0;
       const estSeconds = Math.max(1, Math.round(wordCount / 2.6));
@@ -3533,8 +3626,8 @@
       document.getElementById('word-count').innerText = wordCount;
       document.getElementById('est-time').innerText = wordCount > 0 ? `~${estSeconds}s` : '~0s';
 
-      // Atualiza precificação dinâmica do áudio avulso
-      const singlePrice = getSingleAudioPrice(charCount);
+      // Atualiza precificação dinâmica do áudio avulso (+ R$ 0,10 se correção automática paga foi aplicada)
+      const singlePrice = getSingleAudioPrice(charCount, autoCorrectFeeApplied);
       const priceBadge = document.getElementById('single-audio-price-badge');
       if (priceBadge) {
         priceBadge.innerText = `R$ ${singlePrice.toFixed(2).replace('.', ',')}`;
@@ -3542,15 +3635,15 @@
 
       const rangeLabel = document.getElementById('single-audio-range-label');
       if (rangeLabel) {
+        let baseRange = 'Faixa: 1.501 a 3.000 carac.';
         if (charCount <= 300) {
-          rangeLabel.innerText = 'Faixa: até 300 carac. (Inicial)';
+          baseRange = 'Faixa: até 300 carac. (Inicial)';
         } else if (charCount <= 700) {
-          rangeLabel.innerText = 'Faixa: 301 a 700 carac.';
+          baseRange = 'Faixa: 301 a 700 carac.';
         } else if (charCount <= 1500) {
-          rangeLabel.innerText = 'Faixa: 701 a 1.500 carac.';
-        } else {
-          rangeLabel.innerText = 'Faixa: 1.501 a 3.000 carac.';
+          baseRange = 'Faixa: 701 a 1.500 carac.';
         }
+        rangeLabel.innerText = autoCorrectFeeApplied ? `${baseRange} + R$ 0,10 correção` : baseRange;
       }
 
       const btnText = document.getElementById('btn-text');
@@ -3559,6 +3652,7 @@
       }
 
       analyzeCadenceAndRecommendPace(text);
+      updateInlineDictionWarning(text);
     }
 
     function setSample(type, autoPlay = true) {
@@ -3864,14 +3958,10 @@
       const btnApply = document.getElementById('btn-apply-diction');
       const btnKeep = document.getElementById('btn-keep-diction');
       if (btnApply) {
-        btnApply.innerHTML = forGeneration 
-          ? '<i data-lucide="check-check" class="w-4 h-4"></i><span>Aplicar e Gerar Áudio Perfeito</span>'
-          : '<i data-lucide="check-check" class="w-4 h-4"></i><span>Aplicar Correções Sugeridas (Recomendado)</span>';
+        btnApply.innerHTML = '<i data-lucide="check-check" class="w-4 h-4"></i><span>Corrigir Automaticamente (+ R$ 0,10)</span>';
       }
       if (btnKeep) {
-        btnKeep.innerText = forGeneration
-          ? 'Gerar Mesmo Assim com Texto Original'
-          : 'Manter Meu Texto Original (Ciente do Risco)';
+        btnKeep.innerText = 'Prosseguir Sem Correção';
       }
 
       const modal = document.getElementById('modal-diction-advisor');
@@ -3884,13 +3974,28 @@
       if (modal) modal.classList.add('hidden');
     }
 
+    function editDictionManually() {
+      closeDictionModal();
+      const warningBox = document.getElementById('inline-diction-warning');
+      if (warningBox) {
+        warningBox.classList.remove('hidden');
+        warningBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      if (textInput) textInput.focus();
+      showToast('✏️ Veja os erros destacados abaixo do editor e corrija gratuitamente.', 'info');
+    }
+
     function applyDictionSuggestion() {
       if (currentDictionAnalysis && currentDictionAnalysis.suggested_text) {
-        textInput.value = currentDictionAnalysis.suggested_text;
+        const corrected = currentDictionAnalysis.suggested_text.trim();
+        textInput.value = corrected;
+        autoCorrectFeeApplied = true;
+        lastAutoCorrectedText = corrected;
+        dictionWarningDismissedForText = corrected;
         updateTextStats();
         closeDictionModal();
-        showToast('✨ Correções aplicadas com sucesso! Dicção perfeita garantida.', 'success');
-        
+        showToast('✨ Correção automática aplicada (+ R$ 0,10 no PIX)!', 'success');
+
         if (isPendingGenerationAfterDiction) {
           isPendingGenerationAfterDiction = false;
           generateVoice();
@@ -3899,10 +4004,12 @@
     }
 
     function keepOriginalDictionText() {
+      autoCorrectFeeApplied = false;
+      lastAutoCorrectedText = '';
       dictionWarningDismissedForText = textInput.value.trim();
       closeDictionModal();
       showToast('⚠️ Texto original mantido conforme sua escolha.', 'info');
-      
+
       if (isPendingGenerationAfterDiction) {
         isPendingGenerationAfterDiction = false;
         generateVoice();
@@ -3977,6 +4084,12 @@
     }
 
     async function generateFreePreview() {
+      if (getLocalPreviewCount() >= MAX_FREE_PREVIEWS) {
+        updatePreviewButtonUI();
+        showToast('Testes gratuitos encerrados (limite de 3 prévias atingido). Clique em Pagar no PIX e Gerar.', 'error');
+        return;
+      }
+
       const text = textInput.value.trim();
       if (!text) {
         showToast('Digite ou cole algum texto no editor para ouvir a prévia.', 'error');
@@ -3991,44 +4104,65 @@
       btnText.innerHTML = '<span class="animate-spin inline-block mr-1">⏳</span> Gerando Prévia...';
 
       const vObj = voices.find(item => item.key === selectedVoiceKey);
-      const vLabel = vObj ? getCleanVoiceName(vObj) : (selectedVoiceKey || 'Su');
+      const vLabel = vObj ? getCleanVoiceName(vObj) : (selectedVoiceKey || 'Kore');
 
-      const geminiPayload = buildGeminiTtsPayload(text);
+      // Margem segura de custo: envia no máximo 80 caracteres (ou 100 em diálogo)
+      const safePreviewText = text.slice(0, selectedTtsMode === 'dialogue' ? 100 : 80);
+      const geminiPayload = buildGeminiTtsPayload(safePreviewText);
 
       try {
         const res = await fetch(`${API_BASE}/api/preview`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            text: text,
+            text: safePreviewText,
             voice: selectedVoiceKey || 'Kore',
             speed: selectedSpeed || 1.0,
             mode: geminiPayload.mode,
             model: geminiPayload.model,
             style: geminiPayload.style,
             dialogue: geminiPayload.dialogue,
-            speakers: geminiPayload.speakers
+            speakers: geminiPayload.speakers,
+            client_id: getOrCreateClientId()
           })
         });
 
-        const data = await res.json();
-        if (!res.ok || !data.success) {
-          throw new Error(data.detail || 'Não foi possível gerar a prévia');
+        let data = {};
+        try {
+          data = await res.json();
+        } catch (_) {
+          data = {};
         }
 
-        // Toca no player com Wavesurfer
+        if (res.status === 429) {
+          setLocalPreviewCount(MAX_FREE_PREVIEWS);
+          throw new Error(data.detail || 'Testes gratuitos encerrados (limite de 3 prévias atingido).');
+        }
+        if (!res.ok || !data.success || !data.audio) {
+          throw new Error(data.detail || `Não foi possível gerar a prévia (HTTP ${res.status})`);
+        }
+
+        const nextCount = Number.isFinite(data.preview_attempts) ? data.preview_attempts : (getLocalPreviewCount() + 1);
+        setLocalPreviewCount(nextCount);
+
         displayAudioResult(data.audio);
-        showToast(`Prévia de "${vLabel}" reproduzida com sucesso!`, 'success');
+        const rem = Math.max(0, MAX_FREE_PREVIEWS - nextCount);
+        if (rem === 0) {
+          showToast(`Prévia de "${vLabel}" reproduzida! Atenção: este foi seu último teste grátis (3/3).`, 'info');
+        } else {
+          showToast(`Prévia de "${vLabel}" reproduzida! Restam ${rem} teste(s) grátis.`, 'success');
+        }
 
         setTimeout(() => {
           openPreviewConversionModal(vLabel);
         }, 3500);
       } catch (err) {
+        console.error('[Preview Error]', err);
         showToast(err.message || 'Erro ao gerar prévia', 'error');
       } finally {
         btn.disabled = false;
         btn.classList.remove('opacity-75');
-        btnText.innerHTML = 'Ouvir Prévia Grátis';
+        updatePreviewButtonUI();
         lucide.createIcons();
       }
     }
@@ -4037,11 +4171,12 @@
     let singlePixPaymentId = null;
     let singlePixPollInterval = null;
 
-    function getSingleAudioPrice(chars) {
-      if (chars <= 300) return 2.49;
-      if (chars <= 700) return 3.90;
-      if (chars <= 1500) return 5.90;
-      return 9.90;
+    function getSingleAudioPrice(chars, withAutoCorrect = false) {
+      let base = 9.90;
+      if (chars <= 300) base = 2.49;
+      else if (chars <= 700) base = 3.90;
+      else if (chars <= 1500) base = 5.90;
+      return withAutoCorrect ? Number((base + 0.10).toFixed(2)) : base;
     }
 
     function triggerAutoDownload(url, filename) {
@@ -4069,15 +4204,16 @@
       }
 
       const vObj = voices.find(item => item.key === selectedVoiceKey);
-      const vLabel = vObj ? getCleanVoiceName(vObj) : (selectedVoiceKey || 'Su');
+      const vLabel = vObj ? getCleanVoiceName(vObj) : (selectedVoiceKey || 'Kore');
       const chars = text.length;
-      const price = getSingleAudioPrice(chars);
+      const price = getSingleAudioPrice(chars, autoCorrectFeeApplied);
       const priceFormatted = `R$ ${price.toFixed(2).replace('.', ',')}`;
 
       let tierText = 'Até 300 carac. (Inicia em R$ 2,49)';
       if (chars > 300 && chars <= 700) tierText = '301 a 700 caracteres (R$ 3,90)';
       else if (chars > 700 && chars <= 1500) tierText = '701 a 1.500 caracteres (R$ 5,90)';
       else if (chars > 1500) tierText = '1.501 a 3.000 caracteres (R$ 9,90)';
+      if (autoCorrectFeeApplied) tierText += ' + R$ 0,10 correção';
 
       document.getElementById('single-modal-voice-name').innerText = `${vLabel} (Neural HD)`;
       document.getElementById('single-modal-char-count').innerText = `${chars} caracteres (~${Math.max(1, Math.round(text.split(/\s+/).length / 2.6))}s de fala)`;
@@ -4113,7 +4249,8 @@
           model: geminiPayload.model,
           style: geminiPayload.style,
           dialogue: geminiPayload.dialogue,
-          speakers: geminiPayload.speakers
+          speakers: geminiPayload.speakers,
+          auto_correct_fee: autoCorrectFeeApplied
         })
       })
       .then(res => res.json())
@@ -5042,23 +5179,33 @@
       </div>
 
       <!-- Footer do Modal com Botões -->
-      <div class="p-4 sm:p-5 border-t border-zinc-800/80 bg-zinc-900/60 flex flex-col-reverse sm:flex-row items-center justify-between gap-2.5 shrink-0">
+      <div class="p-4 sm:p-5 border-t border-zinc-800/80 bg-zinc-900/60 flex flex-col-reverse sm:flex-row items-center justify-between gap-2 shrink-0">
         <button
           id="btn-keep-diction"
           onclick="keepOriginalDictionText()"
-          class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition border border-zinc-700 cursor-pointer text-center"
+          class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition border border-zinc-700 cursor-pointer text-center"
         >
-          Manter Meu Texto Original (Ciente do Risco)
+          Prosseguir Sem Correção
         </button>
 
-        <button
-          id="btn-apply-diction"
-          onclick="applyDictionSuggestion()"
-          class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-95"
-        >
-          <i data-lucide="check-check" class="w-4 h-4"></i>
-          <span>Aplicar Correções Sugeridas (Recomendado)</span>
-        </button>
+        <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+          <button
+            type="button"
+            onclick="editDictionManually()"
+            class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-bold transition border border-amber-500/40 cursor-pointer text-center"
+          >
+            Corrigir Eu Mesmo (Grátis)
+          </button>
+
+          <button
+            id="btn-apply-diction"
+            onclick="applyDictionSuggestion()"
+            class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-95"
+          >
+            <i data-lucide="check-check" class="w-4 h-4"></i>
+            <span>Corrigir Automaticamente (+ R$ 0,10)</span>
+          </button>
+        </div>
       </div>
 
     </div>
@@ -5159,6 +5306,13 @@
       const modal = document.getElementById('modal-studio-faq');
       if (modal) modal.classList.add('hidden');
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        updatePreviewButtonUI();
+        updateTextStats();
+      } catch (_) {}
+    });
   </script>
 
 </body>
