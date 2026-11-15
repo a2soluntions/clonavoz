@@ -1,0 +1,13 @@
+{
+  "name": "clonavoz-backend",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ClonaVoz TTS Backend & Gemini Interactions API Worker",
+  "scripts": {
+    "generate:samples": "node scripts/generate_voice_samples.mjs"
+  },
+  "dependencies": {
+    "@google/genai": "^3.3.0"
+  }
+}

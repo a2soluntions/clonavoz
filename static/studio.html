@@ -214,46 +214,84 @@
   <!-- Main Container (Ajustado com espaçamento padrão gap-3 e zero rolagem) -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-2.5 flex flex-col gap-3 min-h-0">
 
-    <!-- 1. Voice Selector Control Bar (Black & Neon Orange) -->
-    <section class="panel-glass px-3.5 py-2 rounded-2xl border border-white/10 shadow-2xl shrink-0">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+    <!-- 1. Voice Selector Control Bar (30 Vozes Oficiais Gemini TTS + Busca + Filtro por Timbre) -->
+    <section class="panel-glass px-3.5 py-2.5 rounded-2xl border border-white/10 shadow-2xl shrink-0">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
         
-        <!-- Left: Label + Botões de Gênero + Dropdown com Nome do Locutor -->
-        <div class="flex-1 flex flex-col sm:flex-row sm:items-center gap-2">
-          <label for="voice-select" class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5 shrink-0">
-            <i data-lucide="mic" class="w-4 h-4 text-brand-500"></i> Escolha a Voz:
-          </label>
-
-          <!-- Botões de escolha do Gênero (Feminino / Masculino) ao lado do campo -->
-          <div class="grid grid-cols-2 sm:flex items-center bg-zinc-950 p-1 rounded-xl border border-zinc-800 shrink-0 gap-1">
+        <!-- Left: Label + Gênero + Timbre + Busca + Select -->
+        <div class="flex-1 grid grid-cols-1 sm:grid-cols-12 items-center gap-2">
+          <!-- Gênero (Todas / Feminino / Masculino) -->
+          <div class="sm:col-span-4 grid grid-cols-3 bg-zinc-950 p-1 rounded-xl border border-zinc-800 gap-1">
+            <button
+              id="filter-gender-all"
+              type="button"
+              onclick="setGenderFilter('Todas')"
+              class="px-2 py-1 rounded-lg text-[11px] font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/40 shadow-sm transition flex items-center justify-center cursor-pointer text-center"
+            >
+              Todas (30)
+            </button>
             <button
               id="filter-gender-fem"
               type="button"
               onclick="setGenderFilter('Feminina')"
-              class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/40 shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
+              class="px-2 py-1 rounded-lg text-[11px] font-semibold text-zinc-400 hover:text-zinc-200 transition flex items-center justify-center cursor-pointer text-center"
             >
-              <span>👩 Feminino</span>
+              👩 Feminino
             </button>
             <button
               id="filter-gender-masc"
               type="button"
               onclick="setGenderFilter('Masculina')"
-              class="px-2.5 py-1 rounded-lg text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
+              class="px-2 py-1 rounded-lg text-[11px] font-semibold text-zinc-400 hover:text-zinc-200 transition flex items-center justify-center cursor-pointer text-center"
             >
-              <span>👨 Masculino</span>
+              👨 Masculino
             </button>
           </div>
 
-          <!-- Seletor da Voz com SOMENTE o nome do Locutor -->
-          <div class="relative flex-1">
+          <!-- Filtro por Timbre -->
+          <div class="sm:col-span-3 relative">
+            <select
+              id="voice-timbre-filter"
+              onchange="onVoiceTimbreChange(this.value)"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-brand-500 cursor-pointer appearance-none pr-7"
+              title="Filtrar vozes por timbre vocal"
+            >
+              <option value="Todos">🎭 Todos os Timbres</option>
+              <option value="Firme & Comercial">Firme & Comercial</option>
+              <option value="Suave & Acolhedor">Suave & Acolhedor</option>
+              <option value="Sereno & Claro">Sereno & Claro</option>
+              <option value="Grave & Narrativo">Grave & Narrativo</option>
+              <option value="Jovem & Dinâmico">Jovem & Dinâmico</option>
+              <option value="Expressivo & Quente">Expressivo & Quente</option>
+              <option value="Voz Clonada">Voz Clonada</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-zinc-400">
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-brand-500"></i>
+            </div>
+          </div>
+
+          <!-- Campo de Busca de Voz -->
+          <div class="sm:col-span-2 relative">
+            <input
+              id="voice-search-input"
+              type="text"
+              oninput="onVoiceSearchInput(this.value)"
+              placeholder="Buscar voz..."
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-7 pr-2.5 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-brand-500"
+            />
+            <i data-lucide="search" class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2 pointer-events-none"></i>
+          </div>
+
+          <!-- Dropdown Principal com as 30 Vozes Oficiais Gemini TTS -->
+          <div class="sm:col-span-3 relative">
             <select
               id="voice-select"
               onchange="onVoiceSelectChange(this.value)"
-              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-bold text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 cursor-pointer appearance-none pr-9"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 cursor-pointer appearance-none pr-8"
             >
               <option value="">Carregando vozes...</option>
             </select>
-            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-400">
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-400">
               <i data-lucide="chevron-down" class="w-4 h-4 text-brand-500"></i>
             </div>
           </div>
@@ -261,10 +299,9 @@
 
         <!-- Right: Status Badges & Quick Action Buttons -->
         <div class="flex items-center gap-2 flex-wrap shrink-0">
-          <!-- Botão Clonar / Upload de Voz universal (Mobile, iPad e Desktop) -->
           <button
             onclick="openUploadModal()"
-            class="text-xs px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 hover:border-brand-500/50 transition flex items-center gap-1.5 font-bold cursor-pointer"
+            class="text-xs px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 hover:border-brand-500/50 transition flex items-center gap-1.5 font-bold cursor-pointer"
             title="Fazer upload de áudio e clonar uma nova voz"
           >
             <i data-lucide="user-plus" class="w-3.5 h-3.5 text-brand-500"></i>
@@ -274,8 +311,8 @@
           <button
             id="voice-sample-btn"
             onclick="playCurrentVoiceSample()"
-            class="text-xs px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-brand-400 border border-brand-500/30 transition hidden items-center gap-1.5 cursor-pointer font-bold shadow-sm"
-            title="Ouvir amostra pré-gravada desta voz gratuitamente"
+            class="text-xs px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-brand-400 border border-brand-500/30 transition hidden items-center gap-1.5 cursor-pointer font-bold shadow-sm"
+            title="Ouvir amostra gratuita do timbre desta voz"
           >
             <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
             <span>Ouvir Amostra Grátis</span>
@@ -283,7 +320,7 @@
           <button
             id="voice-delete-btn"
             onclick="deleteCurrentCustomVoice()"
-            class="text-xs px-2 py-1 rounded-lg bg-red-950/40 hover:bg-red-900/40 text-red-400 border border-red-500/20 transition hidden items-center gap-1 cursor-pointer"
+            class="text-xs px-2 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/40 text-red-400 border border-red-500/20 transition hidden items-center gap-1 cursor-pointer"
             title="Excluir voz clonada"
           >
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -291,9 +328,9 @@
           <button
             id="voice-download-btn"
             onclick="downloadCurrentModel()"
-            class="text-xs px-2.5 py-1 rounded-lg bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/30 transition hidden items-center gap-1.5 cursor-pointer font-bold"
+            class="text-xs px-2.5 py-1.5 rounded-lg bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/30 transition hidden items-center gap-1.5 cursor-pointer font-bold"
           >
-            <i data-lucide="download" class="w-3.5 h-3.5"></i> Baixar Modelo (64MB)
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Baixar Modelo
           </button>
         </div>
 
@@ -334,6 +371,96 @@
       <section class="lg:col-span-7 flex flex-col h-full min-h-0">
         <div class="panel-glass p-3.5 sm:p-4 rounded-2xl border border-white/10 shadow-2xl flex flex-col gap-2.5 h-full min-h-0">
           
+          <!-- Modo Gemini TTS (Locutor Único / Expressivo / Diálogo 2 Locutores) & Estilo Vocal -->
+          <div class="p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/90 space-y-2 shrink-0">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+              <button
+                id="mode-btn-single"
+                type="button"
+                onclick="setTtsMode('single')"
+                class="py-1.5 px-2.5 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-[11px] font-bold transition cursor-pointer flex items-center justify-center gap-1.5"
+                title="Modelo rápido e econômico (gemini-3.8-flash-lite-tts)"
+              >
+                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                <span>Locutor Único</span>
+              </button>
+              <button
+                id="mode-btn-expressive"
+                type="button"
+                onclick="setTtsMode('expressive')"
+                class="py-1.5 px-2.5 rounded-lg border border-zinc-800 bg-zinc-900/70 hover:bg-zinc-800 text-zinc-400 text-[11px] font-semibold transition cursor-pointer flex items-center justify-center gap-1.5"
+                title="Voice Design e expressividade avançada (gemini-3.8-flash-tts)"
+              >
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                <span>Expressivo / Voice Design</span>
+              </button>
+              <button
+                id="mode-btn-dialogue"
+                type="button"
+                onclick="setTtsMode('dialogue')"
+                class="py-1.5 px-2.5 rounded-lg border border-zinc-800 bg-zinc-900/70 hover:bg-zinc-800 text-zinc-400 text-[11px] font-semibold transition cursor-pointer flex items-center justify-center gap-1.5"
+                title="Diálogo natural alternado com 2 locutores (gemini-3.8-flash-tts)"
+              >
+                <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                <span>Diálogo 2 Locutores</span>
+              </button>
+            </div>
+
+            <!-- Campo Estilo Vocal (Modo Single & Expressivo) -->
+            <div id="voice-style-container" class="flex flex-col sm:flex-row sm:items-center gap-1.5">
+              <div class="relative flex-1">
+                <input
+                  id="voice-style-input"
+                  type="text"
+                  value="Voz natural, clara e expressiva"
+                  placeholder="Estilo vocal (ex: Voz firme, emocionante, calmo, didático...)"
+                  class="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-7 pr-2.5 py-1 text-[11px] text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-brand-500"
+                />
+                <i data-lucide="sliders-horizontal" class="w-3 h-3 text-brand-400 absolute left-2.5 top-2 pointer-events-none"></i>
+              </div>
+              <div class="flex items-center gap-1 flex-wrap shrink-0">
+                <button type="button" onclick="setVoiceStylePreset('Voz firme, persuasiva e enérgica para vendas')" class="text-[10px] px-2 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer">VSL</button>
+                <button type="button" onclick="setVoiceStylePreset('Voz grave, misteriosa e pausada estilo documentário')" class="text-[10px] px-2 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer">Doc/Dark</button>
+                <button type="button" onclick="setVoiceStylePreset('Voz calma, acolhedora e relaxante')" class="text-[10px] px-2 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer">Suave</button>
+              </div>
+            </div>
+
+            <!-- Painel de Configuração de Diálogo com 2 Locutores (visível no modo Diálogo) -->
+            <div id="dialogue-mode-panel" class="hidden space-y-2 pt-1 border-t border-zinc-800/80">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <!-- Locutor 1 -->
+                <div class="p-2 rounded-lg bg-zinc-900/70 border border-zinc-800 space-y-1">
+                  <div class="flex items-center justify-between gap-1">
+                    <span class="text-[10px] font-bold text-brand-400 uppercase">Locutor 1</span>
+                    <input id="speaker1-name" type="text" value="Ana" class="w-24 bg-zinc-950 border border-zinc-800 rounded px-1.5 py-0.5 text-[10px] text-white" />
+                  </div>
+                  <select id="speaker1-voice" class="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-[11px] font-semibold text-white"></select>
+                  <input id="speaker1-style" type="text" value="Voz natural, curiosa e animada" class="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-0.5 text-[10px] text-zinc-300" placeholder="Estilo do Locutor 1" />
+                </div>
+                <!-- Locutor 2 -->
+                <div class="p-2 rounded-lg bg-zinc-900/70 border border-zinc-800 space-y-1">
+                  <div class="flex items-center justify-between gap-1">
+                    <span class="text-[10px] font-bold text-emerald-400 uppercase">Locutor 2</span>
+                    <input id="speaker2-name" type="text" value="Carlos" class="w-24 bg-zinc-950 border border-zinc-800 rounded px-1.5 py-0.5 text-[10px] text-white" />
+                  </div>
+                  <select id="speaker2-voice" class="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-[11px] font-semibold text-white"></select>
+                  <input id="speaker2-style" type="text" value="Voz grave, explicativa e bem-humorada" class="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-0.5 text-[10px] text-zinc-300" placeholder="Estilo do Locutor 2" />
+                </div>
+              </div>
+              <div class="flex items-center justify-between gap-1.5 flex-wrap">
+                <div class="flex items-center gap-1 flex-wrap">
+                  <button type="button" onclick="appendDialogueTurn(1)" class="text-[10px] px-2 py-0.5 rounded bg-brand-500/20 hover:bg-brand-500/30 text-brand-300 border border-brand-500/30 font-bold cursor-pointer">+ Fala 1</button>
+                  <button type="button" onclick="appendDialogueTurn(2)" class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold cursor-pointer">+ Fala 2</button>
+                  <button type="button" onclick="insertAtCursor(' <breath> ')" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer">&lt;breath&gt;</button>
+                  <button type="button" onclick="insertAtCursor(' <laugh> ')" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer">&lt;laugh&gt;</button>
+                  <button type="button" onclick="insertAtCursor(' <gasp> ')" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer">&lt;gasp&gt;</button>
+                  <button type="button" onclick="insertAtCursor(' |mhm| ')" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer">|mhm|</button>
+                </div>
+                <button type="button" onclick="loadDialogueSample()" class="text-[10px] px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-white font-semibold cursor-pointer">Inserir Exemplo</button>
+              </div>
+            </div>
+          </div>
+
           <!-- Quick Preset Chips & Actions (Tudo em 1 Linha Compacta, Alinhados com Espaçamento Uniforme) -->
           <div class="flex items-center justify-start gap-1.5 sm:gap-2 shrink-0 flex-wrap">
             <button id="btn-preset-welcome" onclick="setSample('welcome')" class="preset-btn text-[11px] sm:text-xs px-2 sm:px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition font-medium cursor-pointer flex items-center gap-1 shrink-0" title="Preencher roteiro e ouvir áudio de Boas-vindas">
@@ -638,7 +765,7 @@
               <div id="waveform" class="w-full"></div>
             </div>
 
-            <!-- Control Buttons: Play + Baixar WAV + Baixar MP3 + Compartilhar -->
+            <!-- Control Buttons: Play + Velocidade + Baixar WAV + Baixar MP3 + Compartilhar -->
             <div class="flex items-center gap-1.5 pt-0.5">
               <button
                 id="btn-play-pause"
@@ -649,16 +776,29 @@
                 <i id="play-icon" data-lucide="play" class="w-3.5 h-3.5 fill-current ml-0.5"></i>
               </button>
 
-              <!-- Botão Baixar WAV Master -->
+              <!-- Controle de Velocidade do Player -->
+              <select
+                id="player-playback-rate"
+                onchange="setPlayerPlaybackRate(this.value)"
+                class="h-8 px-1.5 rounded-xl bg-zinc-900 border border-zinc-700 hover:border-brand-500 text-brand-300 font-mono font-bold text-[10px] cursor-pointer focus:outline-none shrink-0"
+                title="Velocidade de reprodução do player"
+              >
+                <option value="0.75">0.75x</option>
+                <option value="1" selected>1.0x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+              </select>
+
+              <!-- Botão Baixar WAV Master (24kHz Gemini TTS) -->
               <button
                 type="button"
                 id="btn-download-wav"
                 onclick="downloadActiveAudio('wav')"
                 class="flex-1 py-1 px-2 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 hover:from-brand-400 hover:to-amber-400 text-black font-black text-[10px] sm:text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 shadow-lg shadow-brand-500/20 transition cursor-pointer truncate"
-                title="Baixar diretamente em áudio sem compressão (WAV)"
+                title="Baixar diretamente em áudio sem compressão (.WAV)"
               >
                 <i data-lucide="disc" class="w-3 h-3 stroke-[2.5]"></i>
-                <span>WAV</span>
+                <span>.WAV</span>
               </button>
 
               <!-- Botão Baixar MP3 Leve -->
@@ -670,7 +810,7 @@
                 title="Baixar diretamente em formato MP3 leve"
               >
                 <i data-lucide="file-audio" class="w-3 h-3 text-brand-400"></i>
-                <span>MP3</span>
+                <span>.MP3</span>
               </button>
 
               <!-- Botão Compartilhar Rápido -->
@@ -682,7 +822,6 @@
                 title="Compartilhar Áudio (WhatsApp, Link Direto ou Redes)"
               >
                 <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
-                <span class="hidden sm:inline">Compartilhar</span>
               </button>
             </div>
 
@@ -1721,8 +1860,12 @@
 
     // Studio State
     let voices = [];
-    let selectedVoiceKey = 'sarah';
-    let selectedGenderFilter = 'Feminina';
+    let selectedVoiceKey = 'Kore';
+    let selectedGenderFilter = 'Todas';
+    let selectedTimbreFilter = 'Todos';
+    let voiceSearchQuery = '';
+    let selectedTtsMode = 'single'; // 'single' | 'expressive' | 'dialogue'
+    let playerPlaybackRate = 1.0;
     let currentPreset = 'welcome';
     let userCredits = 1;
     let wavesurfer = null;
@@ -2409,19 +2552,49 @@
       if (wavesurfer) wavesurfer.playPause();
     }
 
-    // Catálogo padrão de vozes (Garante que a interface funcione perfeitamente mesmo se a VPS estiver iniciando)
+    function setPlayerPlaybackRate(rate) {
+      const parsed = parseFloat(rate) || 1.0;
+      playerPlaybackRate = parsed;
+      const sel = document.getElementById('player-playback-rate');
+      if (sel) sel.value = String(parsed);
+      if (wavesurfer && typeof wavesurfer.setPlaybackRate === 'function') {
+        try { wavesurfer.setPlaybackRate(parsed, true); } catch (_) { wavesurfer.setPlaybackRate(parsed); }
+      }
+      showToast(`Velocidade do player: ${parsed}x`, 'info');
+    }
+
+    // Catálogo Oficial Completo das 30 Vozes do Google Gemini TTS
     const DEFAULT_VOICES = [
-      { key: "el_su", label: "Su", gender: "Feminina", quality: "ElevenLabs Multilingual v2", type: "vip_elevenlabs", is_downloaded: true, sample_url: "/demos/su_sample.mp3" },
-      { key: "sarah", label: "Sarah (Feminina Expressiva)", gender: "Feminina", quality: "Neural Studio (Local)", type: "standard", is_downloaded: true, sample_url: "/demos/sarah_sample.mp3" },
-      { key: "eduarda", label: "Eduarda (Feminina Conversacional)", gender: "Feminina", quality: "Neural Studio (Local)", type: "standard", is_downloaded: true, sample_url: "/demos/eduarda_sample.mp3" },
-      { key: "duda", label: "Duda (Feminina Dinâmica)", gender: "Feminina", quality: "Neural Studio (Local)", type: "standard", is_downloaded: true, sample_url: "/demos/duda_sample.mp3" },
-      { key: "dii", label: "Dii (Feminina Suave)", gender: "Feminina", quality: "Neural VITS (PT-BR)", type: "standard", is_downloaded: true, sample_url: "/demos/dii_sample.mp3" },
-      { key: "faber", label: "Faber (Feminina Padrão)", gender: "Feminina", quality: "Neural VITS (PT-BR)", type: "standard", is_downloaded: true, sample_url: "/demos/faber_sample.mp3" },
-      { key: "thalita", label: "Thalita (Feminina Expressiva)", gender: "Feminina", quality: "Neural VITS (PT-BR)", type: "standard", is_downloaded: true, sample_url: "/demos/dii_sample.mp3" },
-      { key: "jeff", label: "Jeff (Masculina Jovem)", gender: "Masculino", quality: "Neural VITS (PT-BR)", type: "standard", is_downloaded: true, sample_url: "/demos/jeff_sample.mp3" },
-      { key: "cadu", label: "Cadu (Masculina Dinâmica)", gender: "Masculino", quality: "Neural VITS (PT-BR)", type: "standard", is_downloaded: true, sample_url: "/demos/cadu_sample.mp3" },
-      { key: "miro", label: "Miro (Masculina Profunda)", gender: "Masculino", quality: "Neural VITS (PT-BR)", type: "standard", is_downloaded: true, sample_url: "/demos/miro_sample.mp3" },
-      { key: "edresson", label: "Edresson (Masculina Neutra)", gender: "Masculino", quality: "Neural VITS (PT-BR)", type: "standard", is_downloaded: true, sample_url: "/demos/edresson_sample.mp3" }
+      { key: "Kore", label: "Kore", gender: "Feminina", timbre: "Firme & Comercial", default_style: "Voz firme, natural, clara e persuasiva", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/su_sample.mp3" },
+      { key: "Charon", label: "Charon", gender: "Masculina", timbre: "Grave & Narrativo", default_style: "Voz grave, informativa, segura e envolvente", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/miro_sample.mp3" },
+      { key: "Puck", label: "Puck", gender: "Masculina", timbre: "Jovem & Dinâmico", default_style: "Voz animada, ágil e expressiva", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/jeff_sample.mp3" },
+      { key: "Fenrir", label: "Fenrir", gender: "Masculina", timbre: "Expressivo & Quente", default_style: "Voz vibrante, intensa e empolgante", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/cadu_sample.mp3" },
+      { key: "Zephyr", label: "Zephyr", gender: "Feminina", timbre: "Sereno & Claro", default_style: "Voz brilhante, leve e articulada", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/sarah_sample.mp3" },
+      { key: "Aoede", label: "Aoede", gender: "Feminina", timbre: "Suave & Acolhedor", default_style: "Voz fluida, leve e natural", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/eduarda_sample.mp3" },
+      { key: "Leda", label: "Leda", gender: "Feminina", timbre: "Jovem & Dinâmico", default_style: "Voz jovem, doce e espontânea", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/duda_sample.mp3" },
+      { key: "Orus", label: "Orus", gender: "Masculina", timbre: "Firme & Comercial", default_style: "Voz firme, direta e autoritativa", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/faber_sample.mp3" },
+      { key: "Callirrhoe", label: "Callirrhoe", gender: "Feminina", timbre: "Suave & Acolhedor", default_style: "Voz tranquila, amigável e descontraída", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/dii_sample.mp3" },
+      { key: "Autonoe", label: "Autonoe", gender: "Feminina", timbre: "Sereno & Claro", default_style: "Voz luminosa, otimista e nítida", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/sarah_sample.mp3" },
+      { key: "Enceladus", label: "Enceladus", gender: "Masculina", timbre: "Suave & Acolhedor", default_style: "Voz suave, íntima e relaxada", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/edresson_sample.mp3" },
+      { key: "Iapetus", label: "Iapetus", gender: "Masculina", timbre: "Sereno & Claro", default_style: "Voz limpa, clara e equilibrada", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/edresson_sample.mp3" },
+      { key: "Umbriel", label: "Umbriel", gender: "Masculina", timbre: "Suave & Acolhedor", default_style: "Voz relaxada, calorosa e acessível", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/cadu_sample.mp3" },
+      { key: "Algieba", label: "Algieba", gender: "Masculina", timbre: "Suave & Acolhedor", default_style: "Voz macia, polida e agradável", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/jeff_sample.mp3" },
+      { key: "Despina", label: "Despina", gender: "Feminina", timbre: "Suave & Acolhedor", default_style: "Voz suave, elegante e fluida", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/dii_sample.mp3" },
+      { key: "Erinome", label: "Erinome", gender: "Feminina", timbre: "Sereno & Claro", default_style: "Voz cristalina, didática e bem articulada", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/eduarda_sample.mp3" },
+      { key: "Algenib", label: "Algenib", gender: "Masculina", timbre: "Grave & Narrativo", default_style: "Voz texturizada, grave e marcante", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/miro_sample.mp3" },
+      { key: "Rasalgethi", label: "Rasalgethi", gender: "Masculina", timbre: "Sereno & Claro", default_style: "Voz informativa, jornalística e objetiva", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/jeff_sample.mp3" },
+      { key: "Laomedeia", label: "Laomedeia", gender: "Feminina", timbre: "Jovem & Dinâmico", default_style: "Voz alegre, viva e carismática", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/duda_sample.mp3" },
+      { key: "Achernar", label: "Achernar", gender: "Feminina", timbre: "Suave & Acolhedor", default_style: "Voz gentil, macia e acolhedora", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/dii_sample.mp3" },
+      { key: "Alnilam", label: "Alnilam", gender: "Masculina", timbre: "Firme & Comercial", default_style: "Voz forte, decidida e confiável", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/faber_sample.mp3" },
+      { key: "Schedar", label: "Schedar", gender: "Masculina", timbre: "Sereno & Claro", default_style: "Voz equilibrada e realista", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/edresson_sample.mp3" },
+      { key: "Gacrux", label: "Gacrux", gender: "Feminina", timbre: "Grave & Narrativo", default_style: "Voz madura, experiente e envolvente", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/dii_sample.mp3" },
+      { key: "Pulcherrima", label: "Pulcherrima", gender: "Feminina", timbre: "Expressivo & Quente", default_style: "Voz emotiva, expressiva e cativante", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/su_sample.mp3" },
+      { key: "Achird", label: "Achird", gender: "Masculina", timbre: "Suave & Acolhedor", default_style: "Voz amigável, próxima e simpática", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/jeff_sample.mp3" },
+      { key: "Zubenelgenubi", label: "Zubenelgenubi", gender: "Masculina", timbre: "Jovem & Dinâmico", default_style: "Voz casual, cotidiana e espontânea", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/cadu_sample.mp3" },
+      { key: "Vindemiatrix", label: "Vindemiatrix", gender: "Feminina", timbre: "Suave & Acolhedor", default_style: "Voz meiga, delicada e calma", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/dii_sample.mp3" },
+      { key: "Sadachbia", label: "Sadachbia", gender: "Feminina", timbre: "Expressivo & Quente", default_style: "Voz vivaz, enérgica e expressiva", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/duda_sample.mp3" },
+      { key: "Sadaltager", label: "Sadaltager", gender: "Masculina", timbre: "Grave & Narrativo", default_style: "Voz sábia, explicativa e segura", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/miro_sample.mp3" },
+      { key: "Sulafat", label: "Sulafat", gender: "Feminina", timbre: "Expressivo & Quente", default_style: "Voz calorosa, envolvente e humana", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/sarah_sample.mp3" }
     ];
 
     // Load Voices
@@ -2429,15 +2602,18 @@
       try {
         const res = await fetch(`${API_BASE}/api/voices`);
         if (!res.ok) throw new Error('API indisponível');
-        voices = await res.json();
+        const loaded = await res.json();
+        voices = Array.isArray(loaded) && loaded.length > 0 ? loaded : DEFAULT_VOICES;
       } catch (err) {
-        console.warn('[Vozes] Usando catálogo padrão pré-instalado:', err);
+        console.warn('[Vozes] Usando catálogo oficial pré-instalado:', err);
         voices = DEFAULT_VOICES;
       }
-      const current = voices.find(v => v.key === selectedVoiceKey);
-      if (current) selectedGenderFilter = current.gender;
+      if (!voices.some(v => v.key === selectedVoiceKey) && voices.length > 0) {
+        selectedVoiceKey = voices[0].key;
+      }
       updateGenderButtonsUI();
       renderVoiceDropdown();
+      populateDialogueVoiceSelects();
       updateVoiceStatusPills();
     }
 
@@ -2448,55 +2624,88 @@
       return v.label.split(' (')[0].trim();
     }
 
+    function getFilteredVoices() {
+      const q = (voiceSearchQuery || '').trim().toLowerCase();
+      return voices.filter(v => {
+        const matchGender = selectedGenderFilter === 'Todas' || v.gender === selectedGenderFilter;
+        const matchTimbre = selectedTimbreFilter === 'Todos' || (v.timbre || '') === selectedTimbreFilter;
+        const searchable = `${v.key} ${v.label} ${v.timbre || ''} ${v.gender || ''}`.toLowerCase();
+        const matchSearch = !q || searchable.includes(q);
+        return matchGender && matchTimbre && matchSearch;
+      });
+    }
+
     function setGenderFilter(gender) {
       selectedGenderFilter = gender;
       updateGenderButtonsUI();
 
-      const filtered = voices.filter(v => v.gender === gender);
-      if (filtered.length > 0) {
-        if (!filtered.some(v => v.key === selectedVoiceKey)) {
-          selectedVoiceKey = filtered[0].key;
-        }
+      const filtered = getFilteredVoices();
+      if (filtered.length > 0 && !filtered.some(v => v.key === selectedVoiceKey)) {
+        selectedVoiceKey = filtered[0].key;
       }
 
       renderVoiceDropdown();
       updateVoiceStatusPills();
-      const current = voices.find(v => v.key === selectedVoiceKey);
-      if (current) {
-        showToast(`Locutor ativo: ${getCleanVoiceName(current)} (${gender})`, 'info');
+    }
+
+    function onVoiceTimbreChange(timbre) {
+      selectedTimbreFilter = timbre || 'Todos';
+      const filtered = getFilteredVoices();
+      if (filtered.length > 0 && !filtered.some(v => v.key === selectedVoiceKey)) {
+        selectedVoiceKey = filtered[0].key;
       }
+      renderVoiceDropdown();
+      updateVoiceStatusPills();
+    }
+
+    function onVoiceSearchInput(query) {
+      voiceSearchQuery = query || '';
+      const filtered = getFilteredVoices();
+      if (filtered.length > 0 && !filtered.some(v => v.key === selectedVoiceKey)) {
+        selectedVoiceKey = filtered[0].key;
+      }
+      renderVoiceDropdown();
+      updateVoiceStatusPills();
     }
 
     function updateGenderButtonsUI() {
+      const btnAll = document.getElementById('filter-gender-all');
       const btnFem = document.getElementById('filter-gender-fem');
       const btnMasc = document.getElementById('filter-gender-masc');
-      if (!btnFem || !btnMasc) return;
+      const activeCls = 'px-2 py-1 rounded-lg text-[11px] font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/40 shadow-sm transition flex items-center justify-center cursor-pointer text-center';
+      const inactiveCls = 'px-2 py-1 rounded-lg text-[11px] font-semibold text-zinc-400 hover:text-zinc-200 transition flex items-center justify-center cursor-pointer text-center';
 
-      if (selectedGenderFilter === 'Feminina') {
-        btnFem.className = 'px-3 py-1.5 rounded-lg text-xs font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/40 shadow-sm transition flex items-center gap-1.5 cursor-pointer';
-        btnMasc.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1.5 cursor-pointer';
-      } else {
-        btnMasc.className = 'px-3 py-1.5 rounded-lg text-xs font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/40 shadow-sm transition flex items-center gap-1.5 cursor-pointer';
-        btnFem.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1.5 cursor-pointer';
-      }
+      if (btnAll) btnAll.className = selectedGenderFilter === 'Todas' ? activeCls : inactiveCls;
+      if (btnFem) btnFem.className = selectedGenderFilter === 'Feminina' ? activeCls : inactiveCls;
+      if (btnMasc) btnMasc.className = selectedGenderFilter === 'Masculina' ? activeCls : inactiveCls;
     }
 
     function renderVoiceDropdown() {
       const select = document.getElementById('voice-select');
       select.innerHTML = '';
 
-      const filtered = voices.filter(v => v.gender === selectedGenderFilter);
+      const filtered = getFilteredVoices();
+
+      if (filtered.length === 0) {
+        const emptyOpt = document.createElement('option');
+        emptyOpt.value = '';
+        emptyOpt.innerText = 'Nenhuma voz encontrada neste filtro';
+        select.appendChild(emptyOpt);
+        lucide.createIcons();
+        return;
+      }
 
       filtered.forEach(v => {
         const opt = document.createElement('option');
         opt.value = v.key;
-        let cName = getCleanVoiceName(v).replace(/^[⭐🎙️]\s*/, '').replace(/\[.*?\]/g, '').trim();
-        if (v.type === 'vip_elevenlabs') {
-          opt.innerText = `⭐ ${cName}`;
+        let cName = getCleanVoiceName(v).replace(/^[⭐🎙️✨]\s*/, '').replace(/\[.*?\]/g, '').trim();
+        const timbreTag = v.timbre ? ` • ${v.timbre}` : '';
+        if (v.type === 'gemini_tts') {
+          opt.innerText = `✨ ${cName}${timbreTag}`;
         } else if (v.type === 'custom') {
           opt.innerText = `🎙️ ${cName}`;
         } else {
-          opt.innerText = cName;
+          opt.innerText = `${cName}${timbreTag}`;
         }
         if (v.key === selectedVoiceKey) opt.selected = true;
         select.appendChild(opt);
@@ -2509,15 +2718,149 @@
       lucide.createIcons();
     }
 
+    function populateDialogueVoiceSelects() {
+      const s1 = document.getElementById('speaker1-voice');
+      const s2 = document.getElementById('speaker2-voice');
+      if (!s1 || !s2) return;
+
+      const gemVoices = voices.filter(v => v.type === 'gemini_tts');
+      const sourceList = gemVoices.length > 0 ? gemVoices : voices;
+
+      const cur1 = s1.value || 'Kore';
+      const cur2 = s2.value || 'Charon';
+
+      [s1, s2].forEach((sel, idx) => {
+        sel.innerHTML = '';
+        sourceList.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v.key;
+          opt.innerText = `${getCleanVoiceName(v)} (${v.gender} • ${v.timbre || 'Natural'})`;
+          sel.appendChild(opt);
+        });
+        const desired = idx === 0 ? cur1 : cur2;
+        if (sourceList.some(v => v.key === desired)) {
+          sel.value = desired;
+        }
+      });
+    }
+
+    function setTtsMode(mode) {
+      selectedTtsMode = mode || 'single';
+      const btnSingle = document.getElementById('mode-btn-single');
+      const btnExpressive = document.getElementById('mode-btn-expressive');
+      const btnDialogue = document.getElementById('mode-btn-dialogue');
+      const activeCls = 'py-1.5 px-2.5 rounded-lg border border-brand-500 bg-brand-500/20 text-brand-300 text-[11px] font-bold transition cursor-pointer flex items-center justify-center gap-1.5';
+      const inactiveCls = 'py-1.5 px-2.5 rounded-lg border border-zinc-800 bg-zinc-900/70 hover:bg-zinc-800 text-zinc-400 text-[11px] font-semibold transition cursor-pointer flex items-center justify-center gap-1.5';
+
+      if (btnSingle) btnSingle.className = selectedTtsMode === 'single' ? activeCls : inactiveCls;
+      if (btnExpressive) btnExpressive.className = selectedTtsMode === 'expressive' ? activeCls : inactiveCls;
+      if (btnDialogue) btnDialogue.className = selectedTtsMode === 'dialogue' ? activeCls : inactiveCls;
+
+      const styleBox = document.getElementById('voice-style-container');
+      const dialoguePanel = document.getElementById('dialogue-mode-panel');
+      if (styleBox) styleBox.classList.toggle('hidden', selectedTtsMode === 'dialogue');
+      if (dialoguePanel) dialoguePanel.classList.toggle('hidden', selectedTtsMode !== 'dialogue');
+
+      if (selectedTtsMode === 'dialogue') {
+        populateDialogueVoiceSelects();
+      }
+      lucide.createIcons();
+    }
+
+    function setVoiceStylePreset(styleText) {
+      const inp = document.getElementById('voice-style-input');
+      if (inp) {
+        inp.value = styleText;
+        showToast('Estilo vocal atualizado!', 'info');
+      }
+    }
+
+    function insertAtCursor(snippet) {
+      if (!textInput) return;
+      const start = textInput.selectionStart || textInput.value.length;
+      const end = textInput.selectionEnd || textInput.value.length;
+      const before = textInput.value.slice(0, start);
+      const after = textInput.value.slice(end);
+      textInput.value = `${before}${snippet}${after}`;
+      textInput.focus();
+      const pos = start + snippet.length;
+      textInput.setSelectionRange(pos, pos);
+      updateTextStats();
+    }
+
+    function appendDialogueTurn(speakerIdx) {
+      const nameInput = document.getElementById(`speaker${speakerIdx}-name`);
+      const speakerName = (nameInput ? nameInput.value.trim() : '') || `Locutor ${speakerIdx}`;
+      const prefix = textInput.value.trim() ? '\n' : '';
+      insertAtCursor(`${prefix}${speakerName}: `);
+    }
+
+    function loadDialogueSample() {
+      const sp1 = (document.getElementById('speaker1-name')?.value || 'Ana').trim() || 'Ana';
+      const sp2 = (document.getElementById('speaker2-name')?.value || 'Carlos').trim() || 'Carlos';
+      textInput.value = `${sp1}: Você já testou a nova geração de diálogo natural do ClonaVoz? <breath> O som fica impressionante!\n${sp2}: |mhm| Ouvi agora pouco e quase não acreditei! <laugh> Parece realmente duas pessoas gravando no mesmo estúdio.`;
+      updateTextStats();
+      showToast('Roteiro de diálogo com 2 locutores inserido!', 'success');
+    }
+
+    function buildGeminiTtsPayload(text) {
+      const styleVal = (document.getElementById('voice-style-input')?.value || 'Voz natural, clara e expressiva').trim();
+      if (selectedTtsMode === 'dialogue') {
+        const sp1Name = (document.getElementById('speaker1-name')?.value || 'Ana').trim() || 'Ana';
+        const sp1Voice = document.getElementById('speaker1-voice')?.value || 'Kore';
+        const sp1Style = (document.getElementById('speaker1-style')?.value || 'Voz natural, clara e expressiva').trim();
+
+        const sp2Name = (document.getElementById('speaker2-name')?.value || 'Carlos').trim() || 'Carlos';
+        const sp2Voice = document.getElementById('speaker2-voice')?.value || 'Charon';
+        const sp2Style = (document.getElementById('speaker2-style')?.value || 'Voz natural, clara e expressiva').trim();
+
+        const speakers = [
+          { speaker: sp1Name, voice: sp1Voice, style: sp1Style },
+          { speaker: sp2Name, voice: sp2Voice, style: sp2Style }
+        ];
+
+        const lines = String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        const dialogue = [];
+        lines.forEach((line, idx) => {
+          const match = line.match(/^([^:\n]{1,30})\s*:\s*(.+)$/);
+          if (match && !/^https?$/i.test(match[1])) {
+            const rawSp = match[1].trim();
+            const isSp2 = rawSp.toLowerCase() === sp2Name.toLowerCase() || rawSp === '2';
+            const chosen = isSp2 ? speakers[1] : (rawSp.toLowerCase() === sp1Name.toLowerCase() || rawSp === '1' ? speakers[0] : (idx % 2 === 0 ? speakers[0] : speakers[1]));
+            dialogue.push({ speaker: chosen.speaker, text: match[2].trim(), style: chosen.style });
+          } else {
+            const chosen = idx % 2 === 0 ? speakers[0] : speakers[1];
+            dialogue.push({ speaker: chosen.speaker, text: line, style: chosen.style });
+          }
+        });
+
+        return {
+          mode: 'dialogue',
+          model: 'gemini-3.8-flash-tts',
+          style: styleVal,
+          dialogue,
+          speakers
+        };
+      }
+
+      return {
+        mode: selectedTtsMode === 'expressive' ? 'expressive' : 'single',
+        model: selectedTtsMode === 'expressive' ? 'gemini-3.8-flash-tts' : 'gemini-3.8-flash-lite-tts',
+        style: styleVal,
+        dialogue: null,
+        speakers: null
+      };
+    }
+
     function onVoiceSelectChange(val) {
       selectedVoiceKey = val;
       const v = voices.find(item => item.key === val);
       if (v) {
-        if (v.gender !== selectedGenderFilter) {
-          selectedGenderFilter = v.gender;
-          updateGenderButtonsUI();
+        const styleInput = document.getElementById('voice-style-input');
+        if (styleInput && v.default_style && styleInput.value === 'Voz natural, clara e expressiva') {
+          styleInput.value = v.default_style;
         }
-        showToast(`Locutor selecionado: ${getCleanVoiceName(v)}`, 'info');
+        showToast(`Locutor selecionado: ${getCleanVoiceName(v)} (${v.timbre || v.gender})`, 'info');
       }
       updateVoiceStatusPills();
     }
@@ -2542,9 +2885,9 @@
         sampleBtn.classList.remove('flex');
       }
 
-      if (v.type === 'vip_elevenlabs') {
-        statusBadge.innerText = '';
-        statusBadge.classList.add('hidden');
+      if (v.type === 'gemini_tts' || v.type === 'vip_elevenlabs') {
+        statusBadge.innerText = v.type === 'gemini_tts' ? `✨ ${v.timbre || 'Gemini TTS'}` : '';
+        statusBadge.className = v.type === 'gemini_tts' ? 'text-[11px] px-2.5 py-1 rounded-lg bg-brand-500/15 text-brand-300 border border-brand-500/30 font-bold' : 'hidden';
         dlBtn.classList.add('hidden');
         dlBtn.classList.remove('flex');
         deleteBtn.classList.add('hidden');
@@ -2577,18 +2920,15 @@
 
     function playCurrentVoiceSample() {
       const v = voices.find(item => item.key === selectedVoiceKey);
-      const isSu = v && getCleanVoiceName(v).toLowerCase() === 'su';
-      const voiceKey = isSu ? 'su' : (selectedVoiceKey || 'dii');
-      const presetKey = currentPreset || 'welcome';
-      // Para a voz Su ou vozes padrão, reproduz a frase de demonstração ativa
-      const sampleUrl = isSu ? `/demos/su_${presetKey}.mp3` : ((v && v.sample_url) ? v.sample_url : `/demos/${voiceKey}_sample.mp3`);
+      const voiceKey = selectedVoiceKey || 'Kore';
+      const sampleUrl = (v && v.sample_url) ? v.sample_url : `/voice-samples/${voiceKey.toLowerCase()}.wav`;
 
       displayAudioResult({
-        filename: `amostra_${voiceKey}.mp3`,
+        filename: `amostra_${voiceKey}.wav`,
         url: sampleUrl,
-        duration: 3.5
+        duration: 3.8
       });
-      showToast(`Reproduzindo amostra gratuita da voz "${v ? getCleanVoiceName(v) : voiceKey}"...`, 'info');
+      showToast(`Reproduzindo amostra gratuita de "${v ? getCleanVoiceName(v) : voiceKey}"...`, 'info');
     }
 
     async function deleteCurrentCustomVoice() {
@@ -3352,6 +3692,26 @@
 
     function playCurrentPresetDemo() {
       const vObj = voices.find(item => item.key === selectedVoiceKey);
+      if (vObj && vObj.type === 'gemini_tts' && vObj.sample_url) {
+        const sampleFullUrl = getFullAudioUrl(vObj.sample_url);
+        fetch(sampleFullUrl, { method: 'HEAD' })
+          .then((res) => {
+            if (res.ok) {
+              displayAudioResult({
+                filename: `amostra_${vObj.key}.wav`,
+                url: vObj.sample_url,
+                duration: 3.8
+              });
+              showToast(`Reproduzindo amostra estática da voz ${vObj.key} (sem custo de API).`, 'success');
+            } else {
+              showToast(`Amostra estática de ${vObj.key} ainda não foi gerada no servidor. Rode npm run generate:samples ou use o texto livre.`, 'info');
+            }
+          })
+          .catch(() => {
+            showToast(`Não foi possível carregar a amostra estática de ${vObj.key}.`, 'error');
+          });
+        return;
+      }
       const isSu = vObj && getCleanVoiceName(vObj).toLowerCase() === 'su';
       const demoKey = isSu ? 'su' : (selectedVoiceKey || 'dii');
       const presetKey = currentPreset || 'welcome';
@@ -3738,14 +4098,21 @@
       const vObj = voices.find(item => item.key === selectedVoiceKey);
       const vLabel = vObj ? getCleanVoiceName(vObj) : (selectedVoiceKey || 'Su');
 
+      const geminiPayload = buildGeminiTtsPayload(text);
+
       try {
         const res = await fetch(`${API_BASE}/api/preview`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text: text,
-            voice: selectedVoiceKey || 'su',
-            speed: selectedSpeed || 1.0
+            voice: selectedVoiceKey || 'Kore',
+            speed: selectedSpeed || 1.0,
+            mode: geminiPayload.mode,
+            model: geminiPayload.model,
+            style: geminiPayload.style,
+            dialogue: geminiPayload.dialogue,
+            speakers: geminiPayload.speakers
           })
         });
 
@@ -3835,17 +4202,23 @@
 
       const authHeader = (currentSession && currentSession.access_token) ? { 'Authorization': `Bearer ${currentSession.access_token}` } : {};
       const contactVal = document.getElementById('single-contact-input') ? document.getElementById('single-contact-input').value.trim() : '';
+      const geminiPayload = buildGeminiTtsPayload(text);
 
       fetch(`${API_BASE}/api/pix/create-single`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeader },
         body: JSON.stringify({
           text: text,
-          voice: selectedVoiceKey || 'su',
+          voice: selectedVoiceKey || 'Kore',
           speed: selectedSpeed || 1.0,
           bgm: selectedBgm || 'none',
           bgm_volume: 0.15,
-          email: contactVal
+          email: contactVal,
+          mode: geminiPayload.mode,
+          model: geminiPayload.model,
+          style: geminiPayload.style,
+          dialogue: geminiPayload.dialogue,
+          speakers: geminiPayload.speakers
         })
       })
       .then(res => res.json())
@@ -3992,12 +4365,14 @@
         return;
       }
 
-      // Verificação Inteligente Gratuita de Dicção & Gramática antes do pagamento
-      const dictionCheck = analyzeTextDictionJS(text);
-      if (dictionCheck && dictionCheck.has_issues && dictionCheck.issues_count > 0 && dictionWarningDismissedForText !== text) {
-        currentDictionAnalysis = dictionCheck;
-        openDictionModal(dictionCheck, true);
-        return;
+      // Verificação Inteligente Gratuita de Dicção & Gramática antes do pagamento (preserva tags no modo diálogo)
+      if (selectedTtsMode !== 'dialogue') {
+        const dictionCheck = analyzeTextDictionJS(text);
+        if (dictionCheck && dictionCheck.has_issues && dictionCheck.issues_count > 0 && dictionWarningDismissedForText !== text) {
+          currentDictionAnalysis = dictionCheck;
+          openDictionModal(dictionCheck, true);
+          return;
+        }
       }
 
       // Abre diretamente o pagamento avulso no PIX sem exigir cadastro ou créditos
@@ -4287,6 +4662,7 @@
         const targetAudioUrl = wavUrl || mp3Url;
 
         wavesurfer.load(targetAudioUrl).then(() => {
+          try { if (wavesurfer.setPlaybackRate) wavesurfer.setPlaybackRate(playerPlaybackRate || 1.0, true); } catch (_) {}
           wavesurfer.play().then(() => {
             statusBadge.innerText = '▶️ Tocando';
             statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 font-bold border border-brand-500/30';
@@ -4472,12 +4848,18 @@
       initWaveSurfer();
       wavesurfer.load(wavUrl);
       wavesurfer.once('ready', () => {
+        if (typeof playerPlaybackRate !== 'undefined') {
+          wavesurfer.setPlaybackRate(playerPlaybackRate || 1.0, true);
+        }
         wavesurfer.play().catch(() => {});
       });
       wavesurfer.once('error', (err) => {
         console.warn('[WaveSurfer WAV Error, carregando MP3]', err);
         wavesurfer.load(mp3Url);
         wavesurfer.once('ready', () => {
+          if (typeof playerPlaybackRate !== 'undefined') {
+            wavesurfer.setPlaybackRate(playerPlaybackRate || 1.0, true);
+          }
           wavesurfer.play().catch(() => {});
         });
       });

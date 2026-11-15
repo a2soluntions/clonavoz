@@ -3,8 +3,9 @@ import hashlib
 import json
 import os
 import glob
+import shutil
 import subprocess
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Header, Depends, BackgroundTasks, Request
 from fastapi.staticfiles import StaticFiles
@@ -20,8 +21,51 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "").strip()
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "").strip()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MERCADO_PAGO_ACCESS_TOKEN", "").strip()
 BASE_URL = os.getenv("BASE_URL", "https://api.clonavoz.com.br").strip()
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+GEMINI_SERVICE_SCRIPT = os.path.join(BASE_DIR, "gemini_tts_service.mjs")
+PUBLIC_VOICE_SAMPLES_DIR = os.path.join(BASE_DIR, "public", "voice-samples")
+os.makedirs(PUBLIC_VOICE_SAMPLES_DIR, exist_ok=True)
+
+# Catálogo oficial das 30 vozes do Google Gemini TTS
+GEMINI_TTS_VOICES = [
+    {"key": "Kore", "label": "Kore", "gender": "Feminina", "timbre": "Firme & Comercial", "default_style": "Voz firme, natural, clara e persuasiva", "fallback_voice": "su"},
+    {"key": "Charon", "label": "Charon", "gender": "Masculina", "timbre": "Grave & Narrativo", "default_style": "Voz grave, informativa, segura e envolvente", "fallback_voice": "miro"},
+    {"key": "Puck", "label": "Puck", "gender": "Masculina", "timbre": "Jovem & Dinâmico", "default_style": "Voz animada, ágil e expressiva", "fallback_voice": "jeff"},
+    {"key": "Fenrir", "label": "Fenrir", "gender": "Masculina", "timbre": "Expressivo & Quente", "default_style": "Voz vibrante, intensa e empolgante", "fallback_voice": "cadu"},
+    {"key": "Zephyr", "label": "Zephyr", "gender": "Feminina", "timbre": "Sereno & Claro", "default_style": "Voz brilhante, leve e articulada", "fallback_voice": "sarah"},
+    {"key": "Aoede", "label": "Aoede", "gender": "Feminina", "timbre": "Suave & Acolhedor", "default_style": "Voz fluida, leve e natural", "fallback_voice": "eduarda"},
+    {"key": "Leda", "label": "Leda", "gender": "Feminina", "timbre": "Jovem & Dinâmico", "default_style": "Voz jovem, doce e espontânea", "fallback_voice": "duda"},
+    {"key": "Orus", "label": "Orus", "gender": "Masculina", "timbre": "Firme & Comercial", "default_style": "Voz firme, direta e autoritativa", "fallback_voice": "faber"},
+    {"key": "Callirrhoe", "label": "Callirrhoe", "gender": "Feminina", "timbre": "Suave & Acolhedor", "default_style": "Voz tranquila, amigável e descontraída", "fallback_voice": "dii"},
+    {"key": "Autonoe", "label": "Autonoe", "gender": "Feminina", "timbre": "Sereno & Claro", "default_style": "Voz luminosa, otimista e nítida", "fallback_voice": "sarah"},
+    {"key": "Enceladus", "label": "Enceladus", "gender": "Masculina", "timbre": "Suave & Acolhedor", "default_style": "Voz suave, íntima e relaxada", "fallback_voice": "edresson"},
+    {"key": "Iapetus", "label": "Iapetus", "gender": "Masculina", "timbre": "Sereno & Claro", "default_style": "Voz limpa, clara e equilibrada", "fallback_voice": "edresson"},
+    {"key": "Umbriel", "label": "Umbriel", "gender": "Masculina", "timbre": "Suave & Acolhedor", "default_style": "Voz relaxada, calorosa e acessível", "fallback_voice": "cadu"},
+    {"key": "Algieba", "label": "Algieba", "gender": "Masculina", "timbre": "Suave & Acolhedor", "default_style": "Voz macia, polida e agradável", "fallback_voice": "jeff"},
+    {"key": "Despina", "label": "Despina", "gender": "Feminina", "timbre": "Suave & Acolhedor", "default_style": "Voz suave, elegante e fluida", "fallback_voice": "dii"},
+    {"key": "Erinome", "label": "Erinome", "gender": "Feminina", "timbre": "Sereno & Claro", "default_style": "Voz cristalina, didática e bem articulada", "fallback_voice": "eduarda"},
+    {"key": "Algenib", "label": "Algenib", "gender": "Masculina", "timbre": "Grave & Narrativo", "default_style": "Voz texturizada, grave e marcante", "fallback_voice": "miro"},
+    {"key": "Rasalgethi", "label": "Rasalgethi", "gender": "Masculina", "timbre": "Sereno & Claro", "default_style": "Voz informativa, jornalística e objetiva", "fallback_voice": "jeff"},
+    {"key": "Laomedeia", "label": "Laomedeia", "gender": "Feminina", "timbre": "Jovem & Dinâmico", "default_style": "Voz alegre, viva e carismática", "fallback_voice": "duda"},
+    {"key": "Achernar", "label": "Achernar", "gender": "Feminina", "timbre": "Suave & Acolhedor", "default_style": "Voz gentil, macia e acolhedora", "fallback_voice": "dii"},
+    {"key": "Alnilam", "label": "Alnilam", "gender": "Masculina", "timbre": "Firme & Comercial", "default_style": "Voz forte, decidida e confiável", "fallback_voice": "faber"},
+    {"key": "Schedar", "label": "Schedar", "gender": "Masculina", "timbre": "Sereno & Claro", "default_style": "Voz equilibrada e realista", "fallback_voice": "edresson"},
+    {"key": "Gacrux", "label": "Gacrux", "gender": "Feminina", "timbre": "Grave & Narrativo", "default_style": "Voz madura, experiente e envolvente", "fallback_voice": "dii"},
+    {"key": "Pulcherrima", "label": "Pulcherrima", "gender": "Feminina", "timbre": "Expressivo & Quente", "default_style": "Voz emotiva, expressiva e cativante", "fallback_voice": "thalita"},
+    {"key": "Achird", "label": "Achird", "gender": "Masculina", "timbre": "Suave & Acolhedor", "default_style": "Voz amigável, próxima e simpática", "fallback_voice": "jeff"},
+    {"key": "Zubenelgenubi", "label": "Zubenelgenubi", "gender": "Masculina", "timbre": "Jovem & Dinâmico", "default_style": "Voz casual, cotidiana e espontânea", "fallback_voice": "cadu"},
+    {"key": "Vindemiatrix", "label": "Vindemiatrix", "gender": "Feminina", "timbre": "Suave & Acolhedor", "default_style": "Voz meiga, delicada e calma", "fallback_voice": "dii"},
+    {"key": "Sadachbia", "label": "Sadachbia", "gender": "Feminina", "timbre": "Expressivo & Quente", "default_style": "Voz vivaz, enérgica e expressiva", "fallback_voice": "duda"},
+    {"key": "Sadaltager", "label": "Sadaltager", "gender": "Masculina", "timbre": "Grave & Narrativo", "default_style": "Voz sábia, explicativa e segura", "fallback_voice": "miro"},
+    {"key": "Sulafat", "label": "Sulafat", "gender": "Feminina", "timbre": "Expressivo & Quente", "default_style": "Voz calorosa, envolvente e humana", "fallback_voice": "sarah"},
+]
+
+GEMINI_VOICE_MAP = {v["key"].lower(): v for v in GEMINI_TTS_VOICES}
+_gemini_tts_mem_cache: Dict[str, Dict[str, Any]] = {}
 
 # Catálogo de Trilhas Sonoras de Fundo (BGM)
 BGM_TRACKS = {
@@ -94,12 +138,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
 OUTPUTS_DIR = tts_engine.OUTPUTS_DIR
+GEMINI_CACHE_DIR = os.path.join(OUTPUTS_DIR, "cache")
+os.makedirs(GEMINI_CACHE_DIR, exist_ok=True)
 CUSTOM_VOICES_DIR = tts_engine.CUSTOM_VOICES_DIR
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-# /outputs/{filename} é servido dinamicamente por @app.get("/outputs/{filename}") para garantir conversão WAV/MP3 on-the-fly
+# /outputs/{filename} e /outputs/cache/{filename} são servidos dinamicamente para garantir conversão WAV/MP3 on-the-fly
 
 bgm_dir = os.path.join(STATIC_DIR, "bgm")
 if os.path.exists(bgm_dir):
@@ -108,6 +154,9 @@ if os.path.exists(bgm_dir):
 demos_dir = os.path.join(STATIC_DIR, "demos")
 if os.path.exists(demos_dir):
     app.mount("/demos", StaticFiles(directory=demos_dir), name="demos")
+
+if os.path.exists(PUBLIC_VOICE_SAMPLES_DIR):
+    app.mount("/voice-samples", StaticFiles(directory=PUBLIC_VOICE_SAMPLES_DIR), name="voice_samples")
 
 @app.get("/favicon.ico")
 def get_favicon():
@@ -514,12 +563,17 @@ def analyze_text_endpoint(req: EnhanceTextRequest):
 
 class SynthesizeRequest(BaseModel):
     text: str
-    voice: str = "sarah"
+    voice: str = "Kore"
     speed: float = 1.0
     threads: int = 4
     bgm: Optional[str] = "none"
     bgm_volume: Optional[float] = 0.15
     save_history: Optional[bool] = True
+    mode: Optional[str] = "single"
+    model: Optional[str] = None
+    style: Optional[str] = "Voz natural, clara e expressiva"
+    dialogue: Optional[List[Dict[str, Any]]] = None
+    speakers: Optional[List[Dict[str, Any]]] = None
 
 
 class DownloadVoiceRequest(BaseModel):
@@ -882,86 +936,274 @@ def calculate_single_audio_price(char_count: int) -> float:
         return 9.90
 
 
-def execute_synthesis(
+def resolve_gemini_model(mode: Optional[str] = "single", model: Optional[str] = None) -> str:
+    """Seleciona o modelo oficial Gemini TTS conforme o modo solicitado."""
+    norm_mode = (mode or "single").strip().lower()
+    if norm_mode == "dialogue":
+        return "gemini-3.8-flash-tts"
+    if norm_mode == "expressive":
+        return "gemini-3.8-flash-tts"
+    if model and model.strip() in {"gemini-3.8-flash-lite-tts", "gemini-3.8-flash-tts"}:
+        return model.strip()
+    return "gemini-3.8-flash-lite-tts"
+
+
+def build_tts_cache_key(
+    model_name: str,
+    mode: str,
     text: str,
-    voice: str = "su",
+    voice: str,
+    style: str,
     speed: float = 1.0,
     bgm: Optional[str] = "none",
     bgm_volume: float = 0.15,
-    threads: int = 4
+    dialogue: Optional[List[Dict[str, Any]]] = None,
+    speakers: Optional[List[Dict[str, Any]]] = None,
+) -> str:
+    """Gera hash SHA-256 determinístico indexado por (modelo + texto + voz + estilo + diálogo + velocidade + BGM)."""
+    payload = {
+        "model": model_name,
+        "mode": (mode or "single").strip().lower(),
+        "text": text,
+        "voice": voice,
+        "style": style or "Voz natural, clara e expressiva",
+        "speed": round(float(speed or 1.0), 2),
+        "bgm": bgm or "none",
+        "bgm_volume": round(float(bgm_volume or 0.15), 2) if (bgm and bgm != "none") else 0.0,
+        "dialogue": dialogue or [],
+        "speakers": speakers or [],
+    }
+    serialized = json.dumps(payload, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(serialized.encode("utf-8")).hexdigest()[:24]
+
+
+def apply_speed_ffmpeg(wav_path: str, speed: float) -> bool:
+    """Ajusta a velocidade da fala preservando o pitch via filtro atempo do FFmpeg."""
+    if not os.path.exists(wav_path) or abs(float(speed) - 1.0) < 0.04:
+        return False
+    sp = max(0.5, min(2.0, float(speed)))
+    temp_path = wav_path + ".speed.wav"
+    try:
+        cmd = ["ffmpeg", "-y", "-i", wav_path, "-filter:a", f"atempo={sp:.2f}", temp_path]
+        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if res.returncode == 0 and os.path.exists(temp_path) and os.path.getsize(temp_path) > 1000:
+            os.replace(temp_path, wav_path)
+            return True
+    except Exception as e:
+        print(f"[FFmpeg Speed Error] {e}")
+    if os.path.exists(temp_path):
+        try:
+            os.remove(temp_path)
+        except Exception:
+            pass
+    return False
+
+
+def synthesize_with_gemini_sdk(
+    text: str,
+    voice: str,
+    output_wav_path: str,
+    mode: str = "single",
+    model: Optional[str] = None,
+    style: Optional[str] = "Voz natural, clara e expressiva",
+    dialogue: Optional[List[Dict[str, Any]]] = None,
+    speakers: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    """Executa geração TTS somente áudio via SDK oficial @google/genai (gemini_tts_service.mjs)."""
+    api_key = GEMINI_API_KEY or os.getenv("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY não configurada no servidor.")
+    if not os.path.exists(GEMINI_SERVICE_SCRIPT):
+        raise RuntimeError(f"Worker Node.js não encontrado: {GEMINI_SERVICE_SCRIPT}")
+
+    payload = {
+        "text": text,
+        "voice": voice,
+        "style": style or "Voz natural, clara e expressiva",
+        "mode": (mode or "single").strip().lower(),
+        "model": resolve_gemini_model(mode, model),
+        "language": "pt-BR",
+        "dialogue": dialogue,
+        "speakers": speakers,
+        "outputWavPath": output_wav_path,
+    }
+    env = os.environ.copy()
+    env["GEMINI_API_KEY"] = api_key
+
+    res = subprocess.run(
+        ["node", GEMINI_SERVICE_SCRIPT],
+        input=json.dumps(payload, ensure_ascii=False),
+        text=True,
+        encoding="utf-8",
+        capture_output=True,
+        env=env,
+        timeout=120,
+    )
+    if res.returncode != 0:
+        err_msg = (res.stderr or res.stdout or "Falha no worker Gemini TTS").strip()
+        raise RuntimeError(err_msg)
+
+    try:
+        return json.loads(res.stdout.strip())
+    except Exception:
+        return {"success": os.path.exists(output_wav_path), "model": payload["model"], "mode": payload["mode"]}
+
+
+def execute_synthesis(
+    text: str,
+    voice: str = "Kore",
+    speed: float = 1.0,
+    bgm: Optional[str] = "none",
+    bgm_volume: float = 0.15,
+    threads: int = 4,
+    mode: str = "single",
+    model: Optional[str] = None,
+    style: Optional[str] = "Voz natural, clara e expressiva",
+    dialogue: Optional[List[Dict[str, Any]]] = None,
+    speakers: Optional[List[Dict[str, Any]]] = None,
 ):
-    """Executa a síntese neural unificada de alta fidelidade para avulso ou créditos."""
+    """Executa a síntese neural com cache SHA-256 em memória/disco e Gemini TTS oficial (@google/genai)."""
     import time
     start_time = time.time()
+
+    norm_mode = (mode or "single").strip().lower()
+    active_model = resolve_gemini_model(norm_mode, model)
+    effective_style = (style or "Voz natural, clara e expressiva").strip()
+
+    # 1. Verifica cache em memória e em disco por hash (modelo + texto + voz + estilo + speakers + ritmo + BGM)
+    cache_hash = build_tts_cache_key(
+        model_name=active_model,
+        mode=norm_mode,
+        text=text,
+        voice=voice,
+        style=effective_style,
+        speed=speed,
+        bgm=bgm,
+        bgm_volume=bgm_volume,
+        dialogue=dialogue,
+        speakers=speakers,
+    )
+    cached_wav_name = f"cache_{cache_hash}.wav"
+    cached_mp3_name = f"cache_{cache_hash}.mp3"
+    cached_wav_path = os.path.join(GEMINI_CACHE_DIR, cached_wav_name)
+    cached_mp3_path = os.path.join(GEMINI_CACHE_DIR, cached_mp3_name)
+
+    if cache_hash in _gemini_tts_mem_cache:
+        mem_entry = _gemini_tts_mem_cache[cache_hash]
+        mem_wav = os.path.join(GEMINI_CACHE_DIR, os.path.basename(mem_entry["filename"]))
+        if os.path.exists(mem_wav) and os.path.getsize(mem_wav) > 500:
+            res_copy = dict(mem_entry)
+            res_copy["cached"] = True
+            res_copy["elapsed_seconds"] = round(time.time() - start_time, 3)
+            return res_copy
+
+    if os.path.exists(cached_wav_path) and os.path.getsize(cached_wav_path) > 500:
+        if not os.path.exists(cached_mp3_path):
+            convert_wav_to_mp3(cached_wav_path, cached_mp3_path)
+        est_duration = 2.0
+        try:
+            import soundfile as sf
+            est_duration = round(sf.info(cached_wav_path).duration, 2)
+        except Exception:
+            est_duration = max(round(len(text.split()) / 2.6, 1), 1.5)
+        cached_res = {
+            "filename": cached_wav_name,
+            "url": f"/outputs/cache/{cached_wav_name}",
+            "mp3_url": f"/outputs/cache/{cached_mp3_name}",
+            "duration": est_duration,
+            "elapsed_seconds": round(time.time() - start_time, 3),
+            "voice": voice,
+            "model": active_model,
+            "mode": norm_mode,
+            "char_count": len(text),
+            "cached": True,
+        }
+        _gemini_tts_mem_cache[cache_hash] = dict(cached_res)
+        return cached_res
+
+    wav_path = cached_wav_path
+    mp3_path = cached_mp3_path
+    wav_filename = cached_wav_name
+    mp3_filename = cached_mp3_name
+    used_gemini = False
 
     eleven_voice_id = None
     fb_voice = "dii"
     fb_semi = 0.0
 
-    if voice.startswith("el_") and voice in ELEVENLABS_VOICES and ELEVENLABS_API_KEY:
-        el_voice = ELEVENLABS_VOICES[voice]
-        eleven_voice_id = el_voice["voice_id"]
-        fb_voice = el_voice.get("fallback_voice", "dii")
-        fb_semi = el_voice.get("fallback_semitones", 0.0)
-    elif voice in ["su", "custom_su"] and ELEVENLABS_API_KEY:
-        eleven_voice_id = "qE4bxNbWYcb8hs72HJEO"
-        fb_voice = "su"
-        fb_semi = 0.0
-    elif voice.startswith("custom_") and ELEVENLABS_API_KEY:
-        c_meta = tts_engine.load_custom_voices_metadata()
-        if voice in c_meta and c_meta[voice].get("eleven_voice_id"):
-            eleven_voice_id = c_meta[voice]["eleven_voice_id"]
-            fb_voice = c_meta[voice].get("base_voice", "dii")
-            fb_semi = c_meta[voice].get("semitones_shift", 0.0)
+    is_explicit_legacy_vip = voice.startswith("el_") and voice in ELEVENLABS_VOICES
+    is_explicit_custom = voice.startswith("custom_")
 
-    timestamp = int(time.time() * 1000)
-    mp3_filename = f"synth_{voice}_{timestamp}.mp3"
-    wav_filename = f"synth_{voice}_{timestamp}.wav"
-    mp3_path = os.path.join(OUTPUTS_DIR, mp3_filename)
-    wav_path = os.path.join(OUTPUTS_DIR, wav_filename)
-
-    if eleven_voice_id and ELEVENLABS_API_KEY:
+    # 2. Motor Principal Oficial: Google Gemini TTS via @google/genai (Interactions API)
+    active_gemini_key = GEMINI_API_KEY or os.getenv("GEMINI_API_KEY", "").strip()
+    if active_gemini_key and not is_explicit_legacy_vip and not is_explicit_custom:
         try:
-            synthesize_elevenlabs(eleven_voice_id, text, mp3_path)
+            sdk_res = synthesize_with_gemini_sdk(
+                text=text,
+                voice=voice,
+                output_wav_path=wav_path,
+                mode=norm_mode,
+                model=active_model,
+                style=effective_style,
+                dialogue=dialogue,
+                speakers=speakers,
+            )
+            if os.path.exists(wav_path) and os.path.getsize(wav_path) > 500:
+                used_gemini = True
+                active_model = sdk_res.get("model", active_model)
+                apply_speed_ffmpeg(wav_path, speed)
+        except Exception as gem_err:
+            print(f"[Gemini TTS SDK Warning - Usando Fallback]: {gem_err}")
+
+    # 3. Fallback legado (ElevenLabs / Motor Local VITS) se Gemini não estiver ativo ou for voz custom/clonada
+    if not used_gemini:
+        if is_explicit_legacy_vip and ELEVENLABS_API_KEY:
+            el_voice = ELEVENLABS_VOICES[voice]
+            eleven_voice_id = el_voice["voice_id"]
+            fb_voice = el_voice.get("fallback_voice", "dii")
+            fb_semi = el_voice.get("fallback_semitones", 0.0)
+        elif is_explicit_custom and ELEVENLABS_API_KEY:
+            c_meta = tts_engine.load_custom_voices_metadata()
+            if voice in c_meta and c_meta[voice].get("eleven_voice_id"):
+                eleven_voice_id = c_meta[voice]["eleven_voice_id"]
+                fb_voice = c_meta[voice].get("base_voice", "dii")
+                fb_semi = c_meta[voice].get("semitones_shift", 0.0)
+
+        if eleven_voice_id and ELEVENLABS_API_KEY:
             try:
+                synthesize_elevenlabs(eleven_voice_id, text, mp3_path)
                 cmd = ["ffmpeg", "-y", "-i", mp3_path, "-f", "wav", wav_path]
                 subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-            except Exception:
-                pass
-        except Exception as el_err:
-            print(f"[ElevenLabs Quota/API Warning - Fallback Local]: {el_err}")
-            fb_res = tts_engine.synthesize_text(
+            except Exception as el_err:
+                print(f"[ElevenLabs Quota/API Warning - Fallback Local]: {el_err}")
+                fb_res = tts_engine.synthesize_text(
+                    text=text,
+                    voice_key=fb_voice,
+                    speed=speed,
+                    num_threads=threads,
+                )
+                shutil.move(fb_res["file_path"], wav_path)
+                if abs(fb_semi) > 0.15:
+                    tts_engine.pitch_shift_ffmpeg(wav_path, fb_semi, fb_res.get("sample_rate", 22050))
+        else:
+            gem_info = GEMINI_VOICE_MAP.get(voice.lower())
+            local_voice_key = gem_info["fallback_voice"] if gem_info else voice
+            if local_voice_key not in tts_engine.VOICES and not local_voice_key.startswith("custom_"):
+                local_voice_key = "su"
+            result = tts_engine.synthesize_text(
                 text=text,
-                voice_key=fb_voice,
+                voice_key=local_voice_key,
                 speed=speed,
                 num_threads=threads,
             )
-            os.replace(fb_res["file_path"], wav_path)
-            if abs(fb_semi) > 0.15:
-                tts_engine.pitch_shift_ffmpeg(wav_path, fb_semi, fb_res.get("sample_rate", 22050))
-            convert_wav_to_mp3(wav_path, mp3_path)
-    else:
-        result = tts_engine.synthesize_text(
-            text=text,
-            voice_key=voice,
-            speed=speed,
-            num_threads=threads,
-        )
-        wav_filename = result["filename"]
-        mp3_filename = wav_filename.replace(".wav", ".mp3")
-        wav_path = os.path.join(OUTPUTS_DIR, wav_filename)
-        mp3_path = os.path.join(OUTPUTS_DIR, mp3_filename)
+            shutil.move(result["file_path"], wav_path)
 
     # Aplica Trilha Sonora de Fundo (BGM) se selecionada
     if bgm and bgm != "none" and bgm in BGM_TRACKS and os.path.exists(wav_path):
         bgm_file = os.path.join(STATIC_DIR, "bgm", BGM_TRACKS[bgm]["file"])
         if os.path.exists(bgm_file):
             mix_audio_with_bgm(wav_path, bgm_file, bgm_volume or 0.15)
-            try:
-                cmd_mp3 = ["ffmpeg", "-y", "-i", wav_path, "-b:a", "192k", mp3_path]
-                subprocess.run(cmd_mp3, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-            except Exception:
-                pass
+            convert_wav_to_mp3(wav_path, mp3_path)
 
     if os.path.exists(wav_path) and not os.path.exists(mp3_path):
         convert_wav_to_mp3(wav_path, mp3_path)
@@ -977,24 +1219,65 @@ def execute_synthesis(
             est_duration = max(round(word_count / 2.6, 1), 1.5)
 
     active_filename = wav_filename if os.path.exists(wav_path) else mp3_filename
-    return {
+    res_obj = {
         "filename": active_filename,
-        "url": f"/outputs/{active_filename}",
-        "mp3_url": f"/outputs/{mp3_filename}",
+        "url": f"/outputs/cache/{active_filename}",
+        "mp3_url": f"/outputs/cache/{mp3_filename}",
         "duration": est_duration,
         "elapsed_seconds": elapsed,
         "voice": voice,
-        "char_count": len(text)
+        "model": active_model,
+        "mode": norm_mode,
+        "char_count": len(text),
+        "cached": False,
     }
+    _gemini_tts_mem_cache[cache_hash] = dict(res_obj)
+    return res_obj
 
 
 class CreateSinglePixRequest(BaseModel):
     text: str
-    voice: str = "su"
+    voice: str = "Kore"
     speed: float = 1.0
     bgm: Optional[str] = "none"
     bgm_volume: Optional[float] = 0.15
     email: Optional[str] = None
+    mode: Optional[str] = "single"
+    model: Optional[str] = None
+    style: Optional[str] = "Voz natural, clara e expressiva"
+    dialogue: Optional[List[Dict[str, Any]]] = None
+    speakers: Optional[List[Dict[str, Any]]] = None
+
+
+def _build_dialogue_fallback_text(dialogue: Optional[List[Dict[str, Any]]]) -> str:
+    """Concatena texto de um array de falas de diálogo quando req.text não vier preenchido."""
+    if not dialogue:
+        return ""
+    lines = []
+    for item in dialogue:
+        sp = str(item.get("speaker") or "Locutor").strip()
+        tx = str(item.get("text") or "").strip()
+        if tx:
+            lines.append(f"{sp}: {tx}")
+    return "\n".join(lines).strip()
+
+
+def _synthesize_single_order_if_needed(order: Dict[str, Any]):
+    """Executa ou reaproveita o áudio sintetizado para um pedido avulso pago."""
+    if not order.get("audio_result"):
+        order["audio_result"] = execute_synthesis(
+            text=order["text"],
+            voice=order["voice"],
+            speed=order["speed"],
+            bgm=order.get("bgm"),
+            bgm_volume=order.get("bgm_volume", 0.15),
+            mode=order.get("mode", "single"),
+            model=order.get("model"),
+            style=order.get("style", "Voz natural, clara e expressiva"),
+            dialogue=order.get("dialogue"),
+            speakers=order.get("speakers"),
+        )
+    return order["audio_result"]
 
 
 @app.post("/api/pix/create-single")
@@ -1006,7 +1289,9 @@ def create_single_audio_pix(req: CreateSinglePixRequest, authorization: Optional
     import json
     import urllib.request
 
-    clean_text = req.text.replace("\r\n", "\n").strip()
+    clean_text = (req.text or "").replace("\r\n", "\n").strip()
+    if not clean_text and req.dialogue:
+        clean_text = _build_dialogue_fallback_text(req.dialogue)
     if not clean_text:
         raise HTTPException(status_code=400, detail="O texto não pode estar vazio.")
     if len(clean_text) > 3000:
@@ -1070,6 +1355,11 @@ def create_single_audio_pix(req: CreateSinglePixRequest, authorization: Optional
         "speed": req.speed,
         "bgm": req.bgm,
         "bgm_volume": req.bgm_volume,
+        "mode": req.mode or "single",
+        "model": req.model,
+        "style": req.style or "Voz natural, clara e expressiva",
+        "dialogue": req.dialogue,
+        "speakers": req.speakers,
         "amount": amount_num,
         "char_count": char_count,
         "status": "pending",
@@ -1132,16 +1422,8 @@ def check_single_audio_pix_status(payment_id: str):
 
     if is_approved:
         order["status"] = "approved"
-        # Se ainda não sintetizou o áudio do pedido, sintetiza agora!
         if not order.get("audio_result"):
-            audio_res = execute_synthesis(
-                text=order["text"],
-                voice=order["voice"],
-                speed=order["speed"],
-                bgm=order.get("bgm"),
-                bgm_volume=order.get("bgm_volume", 0.15)
-            )
-            order["audio_result"] = audio_res
+            _synthesize_single_order_if_needed(order)
 
             # Atualiza no Supabase se existir
             if supabase_admin:
@@ -1171,15 +1453,8 @@ def simulate_single_audio_pix(payment_id: str):
     if not order:
         raise HTTPException(status_code=404, detail="Pedido avulso não encontrado.")
     order["status"] = "approved"
-    if not order.get("audio_result"):
-        order["audio_result"] = execute_synthesis(
-            text=order["text"],
-            voice=order["voice"],
-            speed=order["speed"],
-            bgm=order.get("bgm"),
-            bgm_volume=order.get("bgm_volume", 0.15)
-        )
-    return {"status": "approved", "audio": order["audio_result"]}
+    audio_res = _synthesize_single_order_if_needed(order)
+    return {"status": "approved", "audio": audio_res}
 
 
 @app.post("/api/recharge/simulate")
@@ -1225,36 +1500,28 @@ def simulate_recharge(req: SimulateRechargeRequest, authorization: Optional[str]
 @app.get("/api/voices")
 def get_voices():
     results = []
-    # 1. Standard voices
-    for key, info in tts_engine.VOICES.items():
-        sample_path = os.path.join(STATIC_DIR, "demos", f"{key}_sample.mp3")
-        sample_url = f"/static/demos/{key}_sample.mp3" if os.path.exists(sample_path) else ""
-        results.append(
-            {
-                "key": key,
-                "label": info["label"],
-                "gender": info["gender"],
-                "quality": info["quality"],
-                "type": "standard",
-                "is_downloaded": tts_engine.is_model_downloaded(key),
-                "sample_url": sample_url,
-            }
-        )
 
-    # 2. ElevenLabs VIP Ultra-HD Voices
-    if ELEVENLABS_API_KEY:
-        for el_key, el_info in ELEVENLABS_VOICES.items():
-            results.append({
-                "key": el_key,
-                "label": el_info["label"],
-                "gender": el_info["gender"],
-                "quality": el_info["quality"],
-                "type": "vip_elevenlabs",
-                "is_downloaded": True,
-                "sample_url": f"/demos/{el_key}_sample.mp3"
-            })
+    # 1. Catálogo oficial das 30 vozes Google Gemini TTS (Principal)
+    for gv in GEMINI_TTS_VOICES:
+        wav_sample = os.path.join(PUBLIC_VOICE_SAMPLES_DIR, f"{gv['key'].lower()}.wav")
+        if os.path.exists(wav_sample) and os.path.getsize(wav_sample) > 500:
+            sample_url = f"/voice-samples/{gv['key'].lower()}.wav"
+        else:
+            fb_key = gv.get("fallback_voice", "su")
+            sample_url = f"/demos/{fb_key}_sample.mp3"
+        results.append({
+            "key": gv["key"],
+            "label": gv["label"],
+            "gender": gv["gender"],
+            "timbre": gv["timbre"],
+            "default_style": gv["default_style"],
+            "quality": "Gemini TTS Studio (24kHz WAV)",
+            "type": "gemini_tts",
+            "is_downloaded": True,
+            "sample_url": sample_url,
+        })
 
-    # 3. Custom uploaded voices
+    # 2. Custom uploaded voices (Clones do usuário)
     custom_list = tts_engine.get_custom_voices()
     for cv in custom_list:
         is_el = bool(cv.get("eleven_voice_id"))
@@ -1263,6 +1530,8 @@ def get_voices():
                 "key": cv["id"],
                 "label": f"{cv['name']} [Clone Ultra-HD]" if is_el else f"{cv['name']} (Personalizada)",
                 "gender": cv["gender"],
+                "timbre": "Voz Clonada",
+                "default_style": "Voz clonada natural e clara",
                 "quality": "ElevenLabs Multilingual v2" if is_el else f"Clone ({cv.get('pitch_hz', 0)} Hz)",
                 "type": "custom",
                 "is_downloaded": True,
@@ -1271,6 +1540,25 @@ def get_voices():
                 "eleven_voice_id": cv.get("eleven_voice_id"),
             }
         )
+
+    # 3. Vozes locais / ElevenLabs legadas (mantidas para compatibilidade)
+    for key, info in tts_engine.VOICES.items():
+        sample_path = os.path.join(STATIC_DIR, "demos", f"{key}_sample.mp3")
+        sample_url = f"/static/demos/{key}_sample.mp3" if os.path.exists(sample_path) else ""
+        results.append(
+            {
+                "key": key,
+                "label": info["label"],
+                "gender": info["gender"],
+                "timbre": "Neural Local",
+                "default_style": "Voz natural, clara e expressiva",
+                "quality": info["quality"],
+                "type": "standard",
+                "is_downloaded": tts_engine.is_model_downloaded(key),
+                "sample_url": sample_url,
+            }
+        )
+
     return results
 
 
@@ -1398,32 +1686,62 @@ def mix_audio_with_bgm(voice_wav_path: str, bgm_file_path: str, volume: float = 
 
 class PreviewRequest(BaseModel):
     text: str
-    voice: str = "su"
+    voice: str = "Kore"
     speed: float = 1.0
+    mode: Optional[str] = "single"
+    model: Optional[str] = None
+    style: Optional[str] = "Voz natural, clara e expressiva"
+    dialogue: Optional[List[Dict[str, Any]]] = None
+    speakers: Optional[List[Dict[str, Any]]] = None
 
 
 @app.post("/api/preview")
 def generate_preview(req: PreviewRequest):
     """Gera uma prévia rápida e gratuita dos primeiros 120 caracteres do texto do visitante para encantar antes da compra."""
-    clean_text = req.text.replace("\r\n", "\n").strip()
+    clean_text = (req.text or "").replace("\r\n", "\n").strip()
+    if not clean_text and req.dialogue:
+        clean_text = _build_dialogue_fallback_text(req.dialogue)
     if not clean_text:
         raise HTTPException(status_code=400, detail="Digite algum texto para ouvir a prévia.")
 
-    # Degustação focada em até 120 caracteres para gerar o efeito Uau
-    preview_text = clean_text[:120].strip()
-    if len(clean_text) > 120:
-        last_space = preview_text.rfind(" ")
-        if last_space > 80:
-            preview_text = preview_text[:last_space] + "..."
-        else:
-            preview_text = preview_text + "..."
+    norm_mode = (req.mode or "single").strip().lower()
+    preview_dialogue = None
+
+    if norm_mode == "dialogue" and req.dialogue:
+        total_len = 0
+        preview_dialogue = []
+        for turn in req.dialogue:
+            t_txt = str(turn.get("text") or "").strip()
+            if not t_txt:
+                continue
+            remaining = 160 - total_len
+            if remaining <= 15:
+                break
+            snippet = t_txt[:remaining].strip()
+            preview_dialogue.append({**turn, "text": snippet})
+            total_len += len(snippet)
+        preview_text = _build_dialogue_fallback_text(preview_dialogue) or clean_text[:160]
+    else:
+        max_len = 160 if norm_mode == "dialogue" else 120
+        preview_text = clean_text[:max_len].strip()
+        if len(clean_text) > max_len:
+            last_space = preview_text.rfind(" ")
+            if last_space > 80:
+                preview_text = preview_text[:last_space] + "..."
+            else:
+                preview_text = preview_text + "..."
 
     audio_res = execute_synthesis(
         text=preview_text,
         voice=req.voice,
         speed=req.speed,
         bgm="none",
-        bgm_volume=0.0
+        bgm_volume=0.0,
+        mode=norm_mode,
+        model=req.model,
+        style=req.style or "Voz natural, clara e expressiva",
+        dialogue=preview_dialogue,
+        speakers=req.speakers,
     )
 
     return {
@@ -1439,7 +1757,9 @@ def synthesize(
     background_tasks: BackgroundTasks,
     authorization: Optional[str] = Header(None)
 ):
-    normalized_text = req.text.replace("\r\n", "\n").strip()
+    normalized_text = (req.text or "").replace("\r\n", "\n").strip()
+    if not normalized_text and req.dialogue:
+        normalized_text = _build_dialogue_fallback_text(req.dialogue)
     if not normalized_text:
         raise HTTPException(status_code=400, detail="Texto não pode estar vazio")
 
@@ -1468,111 +1788,27 @@ def synthesize(
             )
 
     try:
-        import time
-        start_time = time.time()
-        
-        eleven_voice_id = None
-        fb_voice = "dii"
-        fb_semi = 0.0
-
-        if req.voice.startswith("el_") and req.voice in ELEVENLABS_VOICES and ELEVENLABS_API_KEY:
-            el_voice = ELEVENLABS_VOICES[req.voice]
-            eleven_voice_id = el_voice["voice_id"]
-            fb_voice = el_voice.get("fallback_voice", "dii")
-            fb_semi = el_voice.get("fallback_semitones", 0.0)
-        elif req.voice in ["su", "custom_su"] and ELEVENLABS_API_KEY:
-            eleven_voice_id = "qE4bxNbWYcb8hs72HJEO"
-            fb_voice = "su"
-            fb_semi = 0.0
-        elif req.voice.startswith("custom_") and ELEVENLABS_API_KEY:
-            c_meta = tts_engine.load_custom_voices_metadata()
-            if req.voice in c_meta and c_meta[req.voice].get("eleven_voice_id"):
-                eleven_voice_id = c_meta[req.voice]["eleven_voice_id"]
-                fb_voice = c_meta[req.voice].get("base_voice", "dii")
-                fb_semi = c_meta[req.voice].get("semitones_shift", 0.0)
-
-        if eleven_voice_id and ELEVENLABS_API_KEY:
-            voice_id = eleven_voice_id
-            timestamp = int(time.time() * 1000)
-            mp3_filename = f"synth_{req.voice}_{timestamp}.mp3"
-            wav_filename = f"synth_{req.voice}_{timestamp}.wav"
-            mp3_path = os.path.join(OUTPUTS_DIR, mp3_filename)
-            wav_path = os.path.join(OUTPUTS_DIR, wav_filename)
-
-            try:
-                synthesize_elevenlabs(voice_id, req.text, mp3_path)
-                # Converte para WAV também para waveform visual
-                try:
-                    cmd = ["ffmpeg", "-y", "-i", mp3_path, "-f", "wav", wav_path]
-                    subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-                except Exception:
-                    pass
-            except Exception as el_err:
-                print(f"[ElevenLabs Quota/API Warning - Usando Motor Neural Local Garantido]: {el_err}")
-                fb_voice = el_voice.get("fallback_voice", "dii")
-                fb_semi = el_voice.get("fallback_semitones", 0.0)
-                fb_res = tts_engine.synthesize_text(
-                    text=req.text,
-                    voice_key=fb_voice,
-                    speed=req.speed,
-                    num_threads=req.threads,
-                )
-                os.replace(fb_res["file_path"], wav_path)
-                if abs(fb_semi) > 0.15:
-                    tts_engine.pitch_shift_ffmpeg(wav_path, fb_semi, fb_res.get("sample_rate", 22050))
-                convert_wav_to_mp3(wav_path, mp3_path)
-
-            # Aplica Trilha Sonora de Fundo (BGM) se selecionada
-            if req.bgm and req.bgm != "none" and req.bgm in BGM_TRACKS and os.path.exists(wav_path):
-                bgm_file = os.path.join(STATIC_DIR, "bgm", BGM_TRACKS[req.bgm]["file"])
-                if os.path.exists(bgm_file):
-                    if mix_audio_with_bgm(wav_path, bgm_file, req.bgm_volume or 0.15):
-                        try:
-                            cmd_mp3 = ["ffmpeg", "-y", "-i", wav_path, "-b:a", "192k", mp3_path]
-                            subprocess.run(cmd_mp3, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-                        except Exception:
-                            pass
-
-            elapsed = round(time.time() - start_time, 2)
-            est_duration = 2.0
-            if os.path.exists(wav_path):
-                try:
-                    import soundfile as sf
-                    est_duration = round(sf.info(wav_path).duration, 2)
-                except Exception:
-                    word_count = len(req.text.split())
-                    est_duration = max(round(word_count / 2.6, 1), 1.5)
-
-            result = {
-                "filename": wav_filename if os.path.exists(wav_path) else mp3_filename,
-                "duration_seconds": est_duration,
-                "elapsed_seconds": elapsed,
-            }
-        else:
-            result = tts_engine.synthesize_text(
-                text=req.text,
-                voice_key=req.voice,
-                speed=req.speed,
-                num_threads=req.threads,
-            )
-            wav_filename = result["filename"]
-            mp3_filename = wav_filename.replace(".wav", ".mp3")
-            wav_path = os.path.join(OUTPUTS_DIR, wav_filename)
-            mp3_path = os.path.join(OUTPUTS_DIR, mp3_filename)
-
-            # Aplica Trilha Sonora de Fundo (BGM) se selecionada antes de converter para MP3
-            if req.bgm and req.bgm != "none" and req.bgm in BGM_TRACKS and os.path.exists(wav_path):
-                bgm_file = os.path.join(STATIC_DIR, "bgm", BGM_TRACKS[req.bgm]["file"])
-                if os.path.exists(bgm_file):
-                    mix_audio_with_bgm(wav_path, bgm_file, req.bgm_volume or 0.15)
-
-            # Dispara conversão MP3 em background (não bloqueia a resposta para o usuário)
-            if os.path.exists(wav_path):
-                background_tasks.add_task(convert_wav_to_mp3, wav_path, mp3_path)
+        synth_res = execute_synthesis(
+            text=req.text,
+            voice=req.voice,
+            speed=req.speed,
+            bgm=req.bgm,
+            bgm_volume=req.bgm_volume or 0.15,
+            threads=req.threads,
+            mode=req.mode or "single",
+            model=req.model,
+            style=req.style or "Voz natural, clara e expressiva",
+            dialogue=req.dialogue,
+            speakers=req.speakers,
+        )
 
         remaining_credits = profile.get("credits", 1) if profile else 999
+        active_filename = synth_res["filename"]
+        active_url = synth_res["url"]
+        mp3_url = synth_res["mp3_url"]
+        duration_sec = float(synth_res.get("duration") or 2.0)
+        elapsed_sec = float(synth_res.get("elapsed_seconds") or 0.1)
 
-        # Atualiza créditos e salva histórico no Supabase
         if supabase_admin and user:
             try:
                 prof_cur = supabase_admin.table("profiles").select("credits").eq("id", user.id).execute()
@@ -1585,7 +1821,8 @@ def synthesize(
 
             if req.save_history:
                 try:
-                    size_kb = round(os.path.getsize(wav_path) / 1024, 1) if os.path.exists(wav_path) else 0
+                    cached_file = os.path.join(GEMINI_CACHE_DIR, active_filename)
+                    size_kb = round(os.path.getsize(cached_file) / 1024, 1) if os.path.exists(cached_file) else 0
                     title = req.text.strip().replace("\n", " ")[:60]
                     supabase_admin.table("audio_generations").insert({
                         "user_id": user.id,
@@ -1593,26 +1830,26 @@ def synthesize(
                         "text_prompt": req.text,
                         "voice_key": req.voice,
                         "speed": req.speed,
-                        "duration_seconds": round(result["duration_seconds"], 2),
-                        "audio_url_wav": f"/outputs/{wav_filename}",
-                        "audio_url_mp3": f"/outputs/{mp3_filename}",
+                        "duration_seconds": round(duration_sec, 2),
+                        "audio_url_wav": active_url,
+                        "audio_url_mp3": mp3_url,
                         "file_size_kb": size_kb
                     }).execute()
                 except Exception as ex:
                     print(f"[Supabase Generation Save Error] {ex}")
 
-        active_filename = wav_filename if os.path.exists(wav_path) else mp3_filename
-        active_url = f"/outputs/{active_filename}"
-
         return {
             "success": True,
             "filename": active_filename,
             "url": active_url,
-            "mp3_url": f"/outputs/{mp3_filename}",
-            "duration": round(result["duration_seconds"], 2),
-            "elapsed": round(result["elapsed_seconds"], 2),
-            "speed_factor": round(result["duration_seconds"] / max(result["elapsed_seconds"], 0.001), 1),
+            "mp3_url": mp3_url,
+            "duration": round(duration_sec, 2),
+            "elapsed": round(elapsed_sec, 2),
+            "speed_factor": round(duration_sec / max(elapsed_sec, 0.001), 1),
             "voice": req.voice,
+            "model": synth_res.get("model"),
+            "mode": synth_res.get("mode"),
+            "cached": synth_res.get("cached", False),
             "text": req.text,
             "credits": remaining_credits,
             "saved_history": bool(req.save_history),
@@ -1623,24 +1860,23 @@ def synthesize(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/outputs/{filename}")
-def get_output_file(filename: str):
-    file_path = os.path.join(OUTPUTS_DIR, filename)
+def _serve_audio_from_directory(directory: str, filename: str):
+    """Serve arquivos WAV/MP3 com conversão automática sob demanda e proteção de path."""
+    safe_name = os.path.basename(filename)
+    file_path = os.path.join(directory, safe_name)
 
-    # Se solicitou MP3 e o MP3 ainda não existe, converte do WAV equivalente
-    if filename.endswith(".mp3"):
-        wav_path = os.path.join(OUTPUTS_DIR, filename[:-4] + ".wav")
+    if safe_name.endswith(".mp3"):
+        wav_path = os.path.join(directory, safe_name[:-4] + ".wav")
         if not os.path.exists(file_path) and os.path.exists(wav_path):
             try:
                 convert_wav_to_mp3(wav_path, file_path)
             except Exception as e:
                 print(f"[MP3 conversion error] {e}")
         if os.path.exists(file_path):
-            return FileResponse(file_path, media_type="audio/mpeg", filename=filename)
+            return FileResponse(file_path, media_type="audio/mpeg", filename=safe_name)
 
-    # Se solicitou WAV e o WAV ainda não existe, converte do MP3 equivalente
-    if filename.endswith(".wav"):
-        mp3_path = os.path.join(OUTPUTS_DIR, filename[:-4] + ".mp3")
+    if safe_name.endswith(".wav"):
+        mp3_path = os.path.join(directory, safe_name[:-4] + ".mp3")
         if not os.path.exists(file_path) and os.path.exists(mp3_path):
             try:
                 cmd = ["ffmpeg", "-y", "-i", mp3_path, "-f", "wav", file_path]
@@ -1648,13 +1884,23 @@ def get_output_file(filename: str):
             except Exception as e:
                 print(f"[WAV conversion error] {e}")
         if os.path.exists(file_path):
-            return FileResponse(file_path, media_type="audio/wav", filename=filename)
+            return FileResponse(file_path, media_type="audio/wav", filename=safe_name)
 
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Arquivo de áudio não encontrado")
 
-    media_type = "audio/mpeg" if filename.endswith(".mp3") else "audio/wav"
-    return FileResponse(file_path, media_type=media_type, filename=filename)
+    media_type = "audio/mpeg" if safe_name.endswith(".mp3") else "audio/wav"
+    return FileResponse(file_path, media_type=media_type, filename=safe_name)
+
+
+@app.get("/outputs/cache/{filename}")
+def get_cached_output_file(filename: str):
+    return _serve_audio_from_directory(GEMINI_CACHE_DIR, filename)
+
+
+@app.get("/outputs/{filename}")
+def get_output_file(filename: str):
+    return _serve_audio_from_directory(OUTPUTS_DIR, filename)
 
 
 @app.get("/api/history")

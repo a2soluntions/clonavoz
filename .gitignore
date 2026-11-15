@@ -18,7 +18,12 @@ ENV/
 # Output audios & downloads
 outputs/*.wav
 outputs/*.mp3
+outputs/cache/
 !outputs/.gitkeep
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
 
 # Models (ONNX binaries - downloaded on VPS)
 models/
