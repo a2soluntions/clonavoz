@@ -44,7 +44,7 @@ async function main() {
   const onlyVoice = filterArg ? filterArg.split("=")[1]?.trim().toLowerCase() : null;
 
   fs.mkdirSync(SAMPLES_DIR, { recursive: true });
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: "v1beta" } });
 
   const voicesToGenerate = onlyVoice
     ? GEMINI_OFFICIAL_VOICES.filter((v) => v.name.toLowerCase() === onlyVoice)

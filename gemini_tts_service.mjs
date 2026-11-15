@@ -221,7 +221,7 @@ export async function synthesizeWithGemini({
     throw new Error("outputWavPath é obrigatório.");
   }
 
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: "v1beta" } });
   const normalizedMode = String(mode || "single").toLowerCase();
 
   let selectedModel = model ? String(model).trim() : null;
