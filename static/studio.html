@@ -3837,7 +3837,27 @@
         { regex: /\bfacil\b/gi, rep: 'fácil', orig: 'facil', to: 'fácil', reason: 'Sem acento paroxítono.' },
         { regex: /\bdificil\b/gi, rep: 'difícil', orig: 'dificil', to: 'difícil', reason: 'Sem acento paroxítono.' },
         { regex: /\brapido\b/gi, rep: 'rápido', orig: 'rapido', to: 'rápido', reason: 'Proparoxítona sem acento.' },
-        { regex: /\bincrivel\b/gi, rep: 'incrível', orig: 'incrivel', to: 'incrível', reason: 'Sem acento paroxítono.' }
+        { regex: /\bincrivel\b/gi, rep: 'incrível', orig: 'incrivel', to: 'incrível', reason: 'Sem acento paroxítono.' },
+        { regex: /\bentao\b/gi, rep: 'então', orig: 'entao', to: 'então', reason: 'Sem til nasal.' },
+        { regex: /\balguem\b/gi, rep: 'alguém', orig: 'alguem', to: 'alguém', reason: 'Sem acento agudo oxítono.' },
+        { regex: /\bninguem\b/gi, rep: 'ninguém', orig: 'ninguem', to: 'ninguém', reason: 'Sem acento agudo oxítono.' },
+        { regex: /\bparabens\b/gi, rep: 'parabéns', orig: 'parabens', to: 'parabéns', reason: 'Sem acento agudo oxítono.' },
+        { regex: /\batraves\b/gi, rep: 'através', orig: 'atraves', to: 'através', reason: 'Sem acento agudo oxítono.' },
+        { regex: /\balem\b/gi, rep: 'além', orig: 'alem', to: 'além', reason: 'Sem acento agudo oxítono.' },
+        { regex: /\bapos\b/gi, rep: 'após', orig: 'apos', to: 'após', reason: 'Sem acento agudo oxítono.' },
+        { regex: /\banalise\b/gi, rep: 'análise', orig: 'analise', to: 'análise', reason: 'Proparoxítona sem acento.' },
+        { regex: /\bbeneficio\b/gi, rep: 'benefício', orig: 'beneficio', to: 'benefício', reason: 'Sem acento paroxítono.' },
+        { regex: /\bprejuizo\b/gi, rep: 'prejuízo', orig: 'prejuizo', to: 'prejuízo', reason: 'Sem acento no hiato.' },
+        { regex: /\bnegocio\b/gi, rep: 'negócio', orig: 'negocio', to: 'negócio', reason: 'Sem acento paroxítono.' },
+        { regex: /\binicio\b/gi, rep: 'início', orig: 'inicio', to: 'início', reason: 'Sem acento paroxítono.' },
+        { regex: /\bservico\b/gi, rep: 'serviço', orig: 'servico', to: 'serviço', reason: 'Falta de cedilha.' },
+        { regex: /\bservicos\b/gi, rep: 'serviços', orig: 'servicos', to: 'serviços', reason: 'Falta de cedilha.' },
+        { regex: /\bpreco\b/gi, rep: 'preço', orig: 'preco', to: 'preço', reason: 'Falta de cedilha.' },
+        { regex: /\bprecos\b/gi, rep: 'preços', orig: 'precos', to: 'preços', reason: 'Falta de cedilha.' },
+        { regex: /\bespaco\b/gi, rep: 'espaço', orig: 'espaco', to: 'espaço', reason: 'Falta de cedilha.' },
+        { regex: /\bcomeco\b/gi, rep: 'começo', orig: 'comeco', to: 'começo', reason: 'Falta de cedilha.' },
+        { regex: /\bdiferenca\b/gi, rep: 'diferença', orig: 'diferenca', to: 'diferença', reason: 'Falta de cedilha.' },
+        { regex: /\bpresenca\b/gi, rep: 'presença', orig: 'presenca', to: 'presença', reason: 'Falta de cedilha.' }
       ];
 
       for (const r of accentRules) {
@@ -3846,6 +3866,61 @@
           working = working.replace(r.regex, r.rep);
         }
       }
+
+      // 3b. Erros comuns de ortografia / digitação em português
+      const spellingRules = [
+        { regex: /\b(nessicedade|nessesidade|nessecidade|necessedade|necesidade|nececidade)\b/gi, rep: 'necessidade', reason: 'Erro de ortografia em "necessidade".' },
+        { regex: /\b(nessicedades|nessesidades|nessecidades|necessedades|necesidades|nececidades)\b/gi, rep: 'necessidades', reason: 'Erro de ortografia em "necessidades".' },
+        { regex: /\b(conseguencia|conseguência|conçequencia|consequencia|consequensia)\b/gi, rep: 'consequência', reason: 'Erro de ortografia/acento em "consequência".' },
+        { regex: /\b(conseguencias|conseguências|conçequencias|consequencias)\b/gi, rep: 'consequências', reason: 'Erro de ortografia/acento em "consequências".' },
+        { regex: /\bindentific(ar|ou|a|o|ado|ada|ando|acao|ação)\b/gi, rep: (m, suf) => 'identific' + (suf.toLowerCase() === 'acao' ? 'ação' : suf), reason: 'Grafia correta é "identificar" (sem n).' },
+        { regex: /\bconcerteza\b/gi, rep: 'com certeza', reason: 'Escreve-se separado: "com certeza".' },
+        { regex: /\bderrepente\b/gi, rep: 'de repente', reason: 'Escreve-se separado: "de repente".' },
+        { regex: /\bexelente\b/gi, rep: 'excelente', reason: 'Grafia correta é "excelente" (com xc).' },
+        { regex: /\bexcecao\b/gi, rep: 'exceção', reason: 'Grafia correta é "exceção".' },
+        { regex: /\bpoblema\b/gi, rep: 'problema', reason: 'Erro de ortografia em "problema".' },
+        { regex: /\bprobrema\b/gi, rep: 'problema', reason: 'Erro de ortografia em "problema".' },
+        { regex: /\bobirgado\b/gi, rep: 'obrigado', reason: 'Erro de digitação em "obrigado".' },
+        { regex: /\bcertesa\b/gi, rep: 'certeza', reason: 'Grafia correta é "certeza" (com z).' },
+        { regex: /\bfaser\b/gi, rep: 'fazer', reason: 'Grafia correta é "fazer" (com z).' },
+        { regex: /\bpesquiza\b/gi, rep: 'pesquisa', reason: 'Grafia correta é "pesquisa" (com s).' },
+        { regex: /\bconhesimento\b/gi, rep: 'conhecimento', reason: 'Grafia correta é "conhecimento" (com c).' },
+        { regex: /\boportunida\b/gi, rep: 'oportunidade', reason: 'Palavra incompleta: "oportunidade".' },
+        { regex: /\bprevilegio\b/gi, rep: 'privilégio', reason: 'Grafia correta é "privilégio".' },
+        { regex: /\bintell?igencia\b/gi, rep: 'inteligência', reason: 'Grafia correta é "inteligência".' }
+      ];
+
+      for (const r of spellingRules) {
+        working = working.replace(r.regex, (match, ...args) => {
+          const replacement = typeof r.rep === 'function' ? r.rep(match, ...args) : r.rep;
+          if (match.toLowerCase() !== replacement.toLowerCase()) {
+            issues.push({ original: match, suggestion: replacement, reason: r.reason });
+          }
+          return replacement;
+        });
+      }
+
+      // 3c. Regras morfológicas automáticas (-ência, -ância, -ção/-ções)
+      working = working.replace(/\b([a-zA-ZÀ-ÿ]{3,})(encia|encias|ancia|ancias|acao|acoes|icao|icoes|ucao|ucoes)\b/gi, (match, stem, suffix) => {
+        const lowSuf = suffix.toLowerCase();
+        const map = {
+          encia: 'ência',
+          encias: 'ências',
+          ancia: 'ância',
+          ancias: 'âncias',
+          acao: 'ação',
+          acoes: 'ações',
+          icao: 'ição',
+          icoes: 'ições',
+          ucao: 'ução',
+          ucoes: 'uções'
+        };
+        const fixed = stem + (map[lowSuf] || suffix);
+        if (fixed !== match) {
+          issues.push({ original: match, suggestion: fixed, reason: 'Acentuação/cedilha ausente na terminação.' });
+        }
+        return fixed;
+      });
 
       // 4. Formata marcas e nomes
       working = working.replace(/\bchatgpt\b/gi, 'ChatGPT');
