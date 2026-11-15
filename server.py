@@ -1192,6 +1192,8 @@ def execute_synthesis(
                 if abs(fb_semi) > 0.15:
                     tts_engine.pitch_shift_ffmpeg(wav_path, fb_semi, fb_res.get("sample_rate", 22050))
         else:
+            if gemini_error_msg:
+                raise RuntimeError(f"Gemini TTS falhou: {gemini_error_msg}")
             gem_info = GEMINI_VOICE_MAP.get(voice.lower())
             local_voice_key = gem_info["fallback_voice"] if gem_info else voice
             if local_voice_key not in tts_engine.VOICES and not local_voice_key.startswith("custom_"):
