@@ -4,15 +4,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clonavoz AI • Plataforma de Síntese & Clonagem de Voz</title>
+  <title>Clonavoz AI • Estúdio de Locução Neural Gemini AI</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="alternate icon" href="/favicon.ico">
-  <meta name="description" content="Estúdio completo de síntese e clonagem neural de voz com IA. Converta texto em áudio realista em português brasileiro com vozes humanas e trilhas de fundo.">
+  <meta name="description" content="Estúdio de Locução Neural Gemini AI em português brasileiro com 30 vozes oficiais, Voice Design, Diálogo com 2 locutores e exportação em WAV e MP3.">
   <link rel="canonical" href="https://www.clonavoz.com.br/studio">
   
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.clonavoz.com.br/studio">
-  <meta property="og:title" content="Clonavoz Studio - Síntese e Clonagem de Voz Neural">
+  <meta property="og:title" content="Clonavoz Studio - Estúdio de Locução Neural Gemini AI">
   <meta property="og:description" content="Crie narrações com vozes neurais ultra-realistas em português brasileiro.">
   <meta property="og:image" content="https://www.clonavoz.com.br/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -157,11 +157,11 @@
             </span>
             <span class="text-[8px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.2 sm:py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">AI PRO</span>
           </div>
-          <p class="text-[11px] text-zinc-400 -mt-0.5 font-medium hidden sm:block">Estúdio de Síntese & Clonagem de Voz</p>
+          <p class="text-[11px] text-zinc-400 -mt-0.5 font-medium hidden sm:block">Estúdio de Locução Neural Gemini AI</p>
         </div>
       </div>
 
-      <!-- Action Area: Uso Direto Sem Cadastro + Ações do Estúdio -->
+      <!-- Action Area: Métricas do Dono, Dúvidas e Início -->
       <div class="flex items-center space-x-1.5 sm:space-x-2.5 lg:space-x-3 shrink-0">
         <!-- Admin Visitor Pill (visível apenas para o dono) -->
         <div id="admin-studio-views-badge" class="hidden items-center gap-1.5 bg-zinc-900/90 border border-brand-500/40 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-xs shrink-0 cursor-pointer hover:bg-zinc-800 transition" title="Métricas de visitantes da Landing Page" onclick="openStudioStatsModal()">
@@ -169,23 +169,6 @@
           <span class="text-zinc-300 hidden md:inline">Visitas:</span>
           <span id="admin-studio-views-count" class="font-extrabold text-white font-mono text-xs sm:text-sm">...</span>
         </div>
-
-        <!-- Selo Uso Pré-Pago Sem Cadastro -->
-        <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] text-emerald-400 font-bold">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Uso Pré-Pago Sem Cadastro</span>
-        </div>
-
-        <!-- Upload Voice Button -->
-        <button
-          type="button"
-          onclick="openUploadModal()"
-          class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white border border-white/10 hover:border-brand-500/40 text-xs font-semibold transition cursor-pointer"
-          title="Clonar uma voz a partir de amostra de áudio"
-        >
-          <i data-lucide="user-plus" class="w-3.5 h-3.5 text-brand-500"></i>
-          <span>+ Clonar Voz</span>
-        </button>
 
         <!-- Botão Dúvidas -->
         <button
@@ -211,158 +194,8 @@
     </div>
   </header>
 
-  <!-- Main Container (Ajustado com espaçamento padrão gap-3 e zero rolagem) -->
+  <!-- Main Container (Layout Clean: Editor na Esquerda + Seleção de Voz / Ritmo / Player / Histórico na Direita) -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-2.5 flex flex-col gap-3 min-h-0">
-
-    <!-- 1. Voice Selector Control Bar (30 Vozes Oficiais Gemini TTS + Busca + Filtro por Timbre) -->
-    <section class="panel-glass px-3.5 py-2.5 rounded-2xl border border-white/10 shadow-2xl shrink-0">
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
-        
-        <!-- Left: Label + Gênero + Timbre + Busca + Select -->
-        <div class="flex-1 grid grid-cols-1 sm:grid-cols-12 items-center gap-2">
-          <!-- Gênero (Todas / Feminino / Masculino) -->
-          <div class="sm:col-span-4 grid grid-cols-3 bg-zinc-950 p-1 rounded-xl border border-zinc-800 gap-1">
-            <button
-              id="filter-gender-all"
-              type="button"
-              onclick="setGenderFilter('Todas')"
-              class="px-2 py-1 rounded-lg text-[11px] font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/40 shadow-sm transition flex items-center justify-center cursor-pointer text-center"
-            >
-              Todas (30)
-            </button>
-            <button
-              id="filter-gender-fem"
-              type="button"
-              onclick="setGenderFilter('Feminina')"
-              class="px-2 py-1 rounded-lg text-[11px] font-semibold text-zinc-400 hover:text-zinc-200 transition flex items-center justify-center cursor-pointer text-center"
-            >
-              👩 Feminino
-            </button>
-            <button
-              id="filter-gender-masc"
-              type="button"
-              onclick="setGenderFilter('Masculina')"
-              class="px-2 py-1 rounded-lg text-[11px] font-semibold text-zinc-400 hover:text-zinc-200 transition flex items-center justify-center cursor-pointer text-center"
-            >
-              👨 Masculino
-            </button>
-          </div>
-
-          <!-- Filtro por Timbre -->
-          <div class="sm:col-span-3 relative">
-            <select
-              id="voice-timbre-filter"
-              onchange="onVoiceTimbreChange(this.value)"
-              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-brand-500 cursor-pointer appearance-none pr-7"
-              title="Filtrar vozes por timbre vocal"
-            >
-              <option value="Todos">🎭 Todos os Timbres</option>
-              <option value="Firme & Comercial">Firme & Comercial</option>
-              <option value="Suave & Acolhedor">Suave & Acolhedor</option>
-              <option value="Sereno & Claro">Sereno & Claro</option>
-              <option value="Grave & Narrativo">Grave & Narrativo</option>
-              <option value="Jovem & Dinâmico">Jovem & Dinâmico</option>
-              <option value="Expressivo & Quente">Expressivo & Quente</option>
-              <option value="Voz Clonada">Voz Clonada</option>
-            </select>
-            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-zinc-400">
-              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-brand-500"></i>
-            </div>
-          </div>
-
-          <!-- Campo de Busca de Voz -->
-          <div class="sm:col-span-2 relative">
-            <input
-              id="voice-search-input"
-              type="text"
-              oninput="onVoiceSearchInput(this.value)"
-              placeholder="Buscar voz..."
-              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-7 pr-2.5 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-brand-500"
-            />
-            <i data-lucide="search" class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2 pointer-events-none"></i>
-          </div>
-
-          <!-- Dropdown Principal com as 30 Vozes Oficiais Gemini TTS -->
-          <div class="sm:col-span-3 relative">
-            <select
-              id="voice-select"
-              onchange="onVoiceSelectChange(this.value)"
-              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 cursor-pointer appearance-none pr-8"
-            >
-              <option value="">Carregando vozes...</option>
-            </select>
-            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-400">
-              <i data-lucide="chevron-down" class="w-4 h-4 text-brand-500"></i>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right: Status Badges & Quick Action Buttons -->
-        <div class="flex items-center gap-2 flex-wrap shrink-0">
-          <button
-            onclick="openUploadModal()"
-            class="text-xs px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 hover:border-brand-500/50 transition flex items-center gap-1.5 font-bold cursor-pointer"
-            title="Fazer upload de áudio e clonar uma nova voz"
-          >
-            <i data-lucide="user-plus" class="w-3.5 h-3.5 text-brand-500"></i>
-            <span>+ Clonar Voz</span>
-          </button>
-          <span id="voice-status-badge" class="hidden"></span>
-          <button
-            id="voice-sample-btn"
-            onclick="playCurrentVoiceSample()"
-            class="text-xs px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-brand-400 border border-brand-500/30 transition hidden items-center gap-1.5 cursor-pointer font-bold shadow-sm"
-            title="Ouvir amostra gratuita do timbre desta voz"
-          >
-            <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
-            <span>Ouvir Amostra Grátis</span>
-          </button>
-          <button
-            id="voice-delete-btn"
-            onclick="deleteCurrentCustomVoice()"
-            class="text-xs px-2 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/40 text-red-400 border border-red-500/20 transition hidden items-center gap-1 cursor-pointer"
-            title="Excluir voz clonada"
-          >
-            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-          </button>
-          <button
-            id="voice-download-btn"
-            onclick="downloadCurrentModel()"
-            class="text-xs px-2.5 py-1.5 rounded-lg bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/30 transition hidden items-center gap-1.5 cursor-pointer font-bold"
-          >
-            <i data-lucide="download" class="w-3.5 h-3.5"></i> Baixar Modelo
-          </button>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- Top Hook Banner: Uso Direto Pré-Pago Sem Cadastro -->
-    <div id="studio-visitor-hook-banner" class="mb-2.5 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-zinc-900 to-zinc-900 border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0">
-      <div class="flex items-center gap-2.5">
-        <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black shrink-0 border border-emerald-500/40">
-          <i data-lucide="zap" class="w-4 h-4"></i>
-        </span>
-        <div>
-          <p class="text-xs font-bold text-white flex items-center gap-1.5">
-            Estúdio Pré-Pago Sem Cadastro <span class="text-[10px] text-emerald-400 font-extrabold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">PIX por Áudio</span>
-          </p>
-          <p class="text-[11px] text-zinc-300">
-            Digite seu texto, ouça a <span class="text-emerald-400 font-semibold">Prévia Grátis</span> e veja o valor em tempo real. Achou viável? Pague no PIX e baixe na hora!
-          </p>
-        </div>
-      </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <button
-          type="button"
-          onclick="generateVoice()"
-          class="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-md flex items-center justify-center gap-1 active:scale-95"
-        >
-          <i data-lucide="zap" class="w-3.5 h-3.5 fill-current"></i>
-          <span>Liberar no PIX</span>
-        </button>
-      </div>
-    </div>
 
     <!-- 2. Studio Workspace Grid (Zero Rolagem na Tela: Editor na Esquerda (7 colunas) + Menu Lateral na Direita (5 colunas)) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:items-stretch flex-1 min-h-0">
@@ -406,22 +239,33 @@
               </button>
             </div>
 
-            <!-- Campo Estilo Vocal (Modo Single & Expressivo) -->
-            <div id="voice-style-container" class="flex flex-col sm:flex-row sm:items-center gap-1.5">
-              <div class="relative flex-1">
-                <input
-                  id="voice-style-input"
-                  type="text"
-                  value="Voz natural, clara e expressiva"
-                  placeholder="Estilo vocal (ex: Voz firme, emocionante, calmo, didático...)"
-                  class="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-7 pr-2.5 py-1 text-[11px] text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-brand-500"
-                />
-                <i data-lucide="sliders-horizontal" class="w-3 h-3 text-brand-400 absolute left-2.5 top-2 pointer-events-none"></i>
+            <!-- Campo Estilo Vocal & Tags Naturais Gemini TTS (Modo Single & Expressivo) -->
+            <div id="voice-style-container" class="space-y-1.5">
+              <div class="flex flex-col sm:flex-row sm:items-center gap-1.5">
+                <div class="relative flex-1">
+                  <input
+                    id="voice-style-input"
+                    type="text"
+                    value="Voz natural, clara e expressiva"
+                    placeholder="Direção vocal (ex: Voz firme, emocionante, calmo, sussurrando, didático...)"
+                    class="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-7 pr-2.5 py-1 text-[11px] text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-brand-500"
+                  />
+                  <i data-lucide="sliders-horizontal" class="w-3 h-3 text-brand-400 absolute left-2.5 top-2 pointer-events-none"></i>
+                </div>
+                <div class="flex items-center gap-1 flex-wrap shrink-0">
+                  <button type="button" onclick="setVoiceStylePreset('Voz firme, persuasiva e enérgica para vendas')" class="text-[10px] px-2 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer">VSL</button>
+                  <button type="button" onclick="setVoiceStylePreset('Voz grave, misteriosa e pausada estilo documentário')" class="text-[10px] px-2 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer">Doc/Dark</button>
+                  <button type="button" onclick="setVoiceStylePreset('Voz narrativa envolvente com pausas cinematográficas')" class="text-[10px] px-2 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer">Storytelling</button>
+                  <button type="button" onclick="setVoiceStylePreset('Voz calma, acolhedora e relaxante')" class="text-[10px] px-2 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer">Suave</button>
+                  <button type="button" onclick="setVoiceStylePreset('Voz suave, próxima e sussurrada com emoção')" class="text-[10px] px-2 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer">Sussurro</button>
+                </div>
               </div>
-              <div class="flex items-center gap-1 flex-wrap shrink-0">
-                <button type="button" onclick="setVoiceStylePreset('Voz firme, persuasiva e enérgica para vendas')" class="text-[10px] px-2 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer">VSL</button>
-                <button type="button" onclick="setVoiceStylePreset('Voz grave, misteriosa e pausada estilo documentário')" class="text-[10px] px-2 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer">Doc/Dark</button>
-                <button type="button" onclick="setVoiceStylePreset('Voz calma, acolhedora e relaxante')" class="text-[10px] px-2 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer">Suave</button>
+              <div class="flex items-center gap-1 flex-wrap text-[10px]">
+                <span class="text-zinc-500 font-semibold mr-0.5">Expressões Gemini TTS:</span>
+                <button type="button" onclick="insertAtCursor(' <breath> ')" class="px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer" title="Inserir respiração natural">&lt;breath&gt;</button>
+                <button type="button" onclick="insertAtCursor(' <laugh> ')" class="px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer" title="Inserir risada leve">&lt;laugh&gt;</button>
+                <button type="button" onclick="insertAtCursor(' <gasp> ')" class="px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer" title="Inserir suspiro de surpresa">&lt;gasp&gt;</button>
+                <button type="button" onclick="insertAtCursor(' |mhm| ')" class="px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer" title="Inserir confirmação vocal natural">|mhm|</button>
               </div>
             </div>
 
@@ -525,17 +369,16 @@
             </div>
           </div>
 
-          <!-- Barra de Valor em Tempo Real (Pré-Pago por Uso no PIX - Sem Cadastro) -->
-          <div id="single-audio-pricing-card" class="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 via-zinc-900 to-zinc-900 border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shrink-0 transition">
+          <!-- Barra Informativa de Valor em Tempo Real (Pagamento apenas no botão laranja abaixo) -->
+          <div id="single-audio-pricing-card" class="p-2.5 sm:p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shrink-0 transition">
             <div class="flex items-start gap-2">
-              <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black shrink-0 mt-0.5">
-                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+              <span class="w-6 h-6 rounded-lg bg-brand-500/15 text-brand-400 flex items-center justify-center font-black shrink-0 mt-0.5 border border-brand-500/25">
+                <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
               </span>
               <div>
                 <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="text-white font-bold">Valor deste Áudio no PIX:</span>
-                  <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded border border-emerald-500/30">Sem Cadastro</span>
-                  <button type="button" onclick="openStudioFaqModal()" class="text-[10px] text-zinc-400 hover:text-emerald-400 transition underline underline-offset-2 ml-1 cursor-pointer">Como funciona?</button>
+                  <span class="text-white font-bold">Valor Estimado deste Áudio no PIX:</span>
+                  <button type="button" onclick="openStudioFaqModal()" class="text-[10px] text-zinc-400 hover:text-brand-400 transition underline underline-offset-2 ml-1 cursor-pointer">Como funciona?</button>
                 </div>
                 <p id="single-audio-tier-hint" class="text-zinc-400 text-[10px] sm:text-[11px] mt-0.5">
                   Até 300c: <strong class="text-zinc-200">R$ 2,49</strong> • 301-700c: <strong class="text-zinc-200">R$ 3,90</strong> • 701-1.500c: <strong class="text-zinc-200">R$ 5,90</strong> • 1.501-3.000c: <strong class="text-zinc-200">R$ 9,90</strong>
@@ -544,21 +387,11 @@
             </div>
             <div class="flex items-center justify-between sm:justify-end gap-2 shrink-0">
               <div class="text-left sm:text-right">
-                <span id="single-audio-price-badge" class="font-mono text-xs sm:text-sm font-black text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/30 inline-block">
+                <span id="single-audio-price-badge" class="font-mono text-xs sm:text-sm font-black text-brand-400 bg-brand-500/10 px-2.5 py-1 rounded-lg border border-brand-500/30 inline-block">
                   R$ 2,49
                 </span>
                 <span id="single-audio-range-label" class="text-[9px] text-zinc-500 block mt-0.5">Faixa: até 300 carac.</span>
               </div>
-              <button
-                type="button"
-                id="btn-single-pix-action"
-                onclick="generateVoice()"
-                class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center gap-1 shadow-sm active:scale-95 shrink-0"
-                title="Pagar este áudio via PIX e liberar MP3 e WAV na hora (sem cadastro)"
-              >
-                <i data-lucide="zap" class="w-3 h-3 fill-current"></i>
-                <span>Liberar no PIX Sem Cadastro</span>
-              </button>
             </div>
           </div>
 
@@ -580,7 +413,7 @@
             <span id="save-history-hint" class="text-[10px] text-brand-400 font-medium hidden sm:inline">Salvo localmente neste dispositivo</span>
           </div>
 
-          <!-- Master Action Buttons (Prévia Grátis & Pagar no PIX e Gerar) -->
+          <!-- Master Action Buttons (Prévia Grátis & Único Botão Laranja de PIX) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 shrink-0">
             <!-- Botão 1: Degustação Gratuita Imediata da Voz -->
             <button
@@ -594,7 +427,7 @@
               <span id="btn-preview-text">Ouvir Prévia Grátis</span>
             </button>
 
-            <!-- Botão 2: Pagar no PIX e Gerar Áudio Completo -->
+            <!-- Botão 2 (Único PIX): Pagar no PIX e Gerar Áudio Completo -->
             <button
               id="btn-generate"
               onclick="generateVoice()"
@@ -607,10 +440,108 @@
         </div>
       </section>
 
-      <!-- Right: Menu Lateral Integrado (Preferências + Player & Download + Histórico com Espaçamento Padrão) -->
+      <!-- Right: Menu Lateral Integrado (Seleção de Vozes + Ritmo + Player & Download + Histórico) -->
       <section class="lg:col-span-5 flex flex-col gap-3 h-full min-h-0">
-        
-        <!-- Card 1: Ritmo da Locução & Trilha Sonora BGM -->
+
+        <!-- Card 0: Seleção de Vozes Gemini TTS (Posicionada acima do Ritmo da Locução) -->
+        <div class="panel-glass p-3 rounded-2xl border border-white/10 shadow-xl space-y-2 shrink-0">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="mic" class="w-4 h-4 text-brand-500"></i> Seleção de Voz (30 Vozes Gemini)
+            </h3>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span id="voice-status-badge" class="hidden"></span>
+              <button
+                id="voice-sample-btn"
+                type="button"
+                onclick="playCurrentVoiceSample()"
+                class="text-[10px] px-2 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-brand-400 border border-brand-500/30 transition hidden items-center gap-1 cursor-pointer font-bold shadow-sm"
+                title="Ouvir amostra gratuita do timbre desta voz"
+              >
+                <i data-lucide="volume-2" class="w-3 h-3"></i>
+                <span>Ouvir Amostra</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Filtro de Gênero (Todas / Feminino / Masculino) -->
+          <div class="grid grid-cols-3 bg-zinc-950 p-1 rounded-xl border border-zinc-800 gap-1">
+            <button
+              id="filter-gender-all"
+              type="button"
+              onclick="setGenderFilter('Todas')"
+              class="px-2 py-1 rounded-lg text-[11px] font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/40 shadow-sm transition flex items-center justify-center cursor-pointer text-center"
+            >
+              Todas (30)
+            </button>
+            <button
+              id="filter-gender-fem"
+              type="button"
+              onclick="setGenderFilter('Feminina')"
+              class="px-2 py-1 rounded-lg text-[11px] font-semibold text-zinc-400 hover:text-zinc-200 transition flex items-center justify-center cursor-pointer text-center"
+            >
+              👩 Feminino
+            </button>
+            <button
+              id="filter-gender-masc"
+              type="button"
+              onclick="setGenderFilter('Masculina')"
+              class="px-2 py-1 rounded-lg text-[11px] font-semibold text-zinc-400 hover:text-zinc-200 transition flex items-center justify-center cursor-pointer text-center"
+            >
+              👨 Masculino
+            </button>
+          </div>
+
+          <!-- Filtro por Timbre + Busca -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            <div class="relative">
+              <select
+                id="voice-timbre-filter"
+                onchange="onVoiceTimbreChange(this.value)"
+                class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-brand-500 cursor-pointer appearance-none pr-7"
+                title="Filtrar vozes por timbre vocal"
+              >
+                <option value="Todos">🎭 Todos os Timbres</option>
+                <option value="Firme & Comercial">Firme & Comercial</option>
+                <option value="Suave & Acolhedor">Suave & Acolhedor</option>
+                <option value="Sereno & Claro">Sereno & Claro</option>
+                <option value="Grave & Narrativo">Grave & Narrativo</option>
+                <option value="Jovem & Dinâmico">Jovem & Dinâmico</option>
+                <option value="Expressivo & Quente">Expressivo & Quente</option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-zinc-400">
+                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-brand-500"></i>
+              </div>
+            </div>
+
+            <div class="relative">
+              <input
+                id="voice-search-input"
+                type="text"
+                oninput="onVoiceSearchInput(this.value)"
+                placeholder="Buscar voz..."
+                class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-7 pr-2.5 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-brand-500"
+              />
+              <i data-lucide="search" class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2 pointer-events-none"></i>
+            </div>
+          </div>
+
+          <!-- Dropdown Principal com as 30 Vozes Oficiais Gemini TTS -->
+          <div class="relative">
+            <select
+              id="voice-select"
+              onchange="onVoiceSelectChange(this.value)"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 cursor-pointer appearance-none pr-8"
+            >
+              <option value="">Carregando vozes...</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-400">
+              <i data-lucide="chevron-down" class="w-4 h-4 text-brand-500"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 1: Ritmo da Locução -->
         <div class="panel-glass p-3 rounded-2xl border border-white/10 shadow-xl space-y-2 shrink-0">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
@@ -828,8 +759,8 @@
           </div>
         </div>
 
-        <!-- Card 3: Histórico de Áudios (Tamanho Fixo e Scroll Interno Suave - Nunca Estica a Tela) -->
-        <div class="panel-glass p-3 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[340px] min-h-[340px] max-h-[340px] shrink-0 overflow-hidden">
+        <!-- Card 3: Histórico de Áudios (Altura balanceada com Seleção de Vozes acima) -->
+        <div class="panel-glass p-3 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[210px] min-h-[180px] flex-1 overflow-hidden">
           <div class="flex items-center justify-between shrink-0 mb-2 pb-1.5 border-b border-zinc-800/60">
             <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
               <i data-lucide="clock" class="w-4 h-4 text-brand-500"></i> Histórico Recente
@@ -2597,13 +2528,14 @@
       { key: "Sulafat", label: "Sulafat", gender: "Feminina", timbre: "Expressivo & Quente", default_style: "Voz calorosa, envolvente e humana", quality: "Gemini TTS Studio (24kHz WAV)", type: "gemini_tts", is_downloaded: true, sample_url: "/demos/sarah_sample.mp3" }
     ];
 
-    // Load Voices
+    // Load Voices (Somente catálogo oficial das 30 vozes Google Gemini TTS)
     async function loadVoices() {
       try {
         const res = await fetch(`${API_BASE}/api/voices`);
         if (!res.ok) throw new Error('API indisponível');
         const loaded = await res.json();
-        voices = Array.isArray(loaded) && loaded.length > 0 ? loaded : DEFAULT_VOICES;
+        const geminiOnly = Array.isArray(loaded) ? loaded.filter(v => v.type === 'gemini_tts') : [];
+        voices = geminiOnly.length > 0 ? geminiOnly : DEFAULT_VOICES;
       } catch (err) {
         console.warn('[Vozes] Usando catálogo oficial pré-instalado:', err);
         voices = DEFAULT_VOICES;
@@ -2877,42 +2809,66 @@
       const deleteBtn = document.getElementById('voice-delete-btn');
 
       // Amostra gratuita disponível para todas as vozes com sample_url
-      if (v.sample_url) {
-        sampleBtn.classList.remove('hidden');
-        sampleBtn.classList.add('flex');
-      } else {
-        sampleBtn.classList.add('hidden');
-        sampleBtn.classList.remove('flex');
+      if (sampleBtn) {
+        if (v.sample_url) {
+          sampleBtn.classList.remove('hidden');
+          sampleBtn.classList.add('flex');
+        } else {
+          sampleBtn.classList.add('hidden');
+          sampleBtn.classList.remove('flex');
+        }
       }
 
       if (v.type === 'gemini_tts' || v.type === 'vip_elevenlabs') {
-        statusBadge.innerText = v.type === 'gemini_tts' ? `✨ ${v.timbre || 'Gemini TTS'}` : '';
-        statusBadge.className = v.type === 'gemini_tts' ? 'text-[11px] px-2.5 py-1 rounded-lg bg-brand-500/15 text-brand-300 border border-brand-500/30 font-bold' : 'hidden';
-        dlBtn.classList.add('hidden');
-        dlBtn.classList.remove('flex');
-        deleteBtn.classList.add('hidden');
-        deleteBtn.classList.remove('flex');
-      } else if (v.type === 'custom') {
-        statusBadge.innerText = '🎙️ Voz Clonada';
-        statusBadge.className = 'text-xs px-2.5 py-1 rounded-lg badge-fire font-bold';
-        dlBtn.classList.add('hidden');
-        dlBtn.classList.remove('flex');
-        deleteBtn.classList.remove('hidden');
-        deleteBtn.classList.add('flex');
-      } else {
-        deleteBtn.classList.add('hidden');
-        deleteBtn.classList.remove('flex');
-
-        if (v.is_downloaded) {
-          statusBadge.innerText = '';
-          statusBadge.classList.add('hidden');
+        if (statusBadge) {
+          statusBadge.innerText = v.type === 'gemini_tts' ? `✨ ${v.timbre || 'Gemini TTS'}` : '';
+          statusBadge.className = v.type === 'gemini_tts' ? 'text-[10px] px-2 py-0.5 rounded-lg bg-brand-500/15 text-brand-300 border border-brand-500/30 font-bold' : 'hidden';
+        }
+        if (dlBtn) {
           dlBtn.classList.add('hidden');
           dlBtn.classList.remove('flex');
+        }
+        if (deleteBtn) {
+          deleteBtn.classList.add('hidden');
+          deleteBtn.classList.remove('flex');
+        }
+      } else if (v.type === 'custom') {
+        if (statusBadge) {
+          statusBadge.innerText = '🎙️ Voz';
+          statusBadge.className = 'text-xs px-2.5 py-1 rounded-lg badge-fire font-bold';
+        }
+        if (dlBtn) {
+          dlBtn.classList.add('hidden');
+          dlBtn.classList.remove('flex');
+        }
+        if (deleteBtn) {
+          deleteBtn.classList.remove('hidden');
+          deleteBtn.classList.add('flex');
+        }
+      } else {
+        if (deleteBtn) {
+          deleteBtn.classList.add('hidden');
+          deleteBtn.classList.remove('flex');
+        }
+
+        if (v.is_downloaded) {
+          if (statusBadge) {
+            statusBadge.innerText = '';
+            statusBadge.classList.add('hidden');
+          }
+          if (dlBtn) {
+            dlBtn.classList.add('hidden');
+            dlBtn.classList.remove('flex');
+          }
         } else {
-          statusBadge.innerText = '⚠️ Baixar Modelo';
-          statusBadge.className = 'text-xs px-2.5 py-1 rounded-lg bg-brand-500/20 text-brand-300 border border-brand-500/30 font-bold';
-          dlBtn.classList.remove('hidden');
-          dlBtn.classList.add('flex');
+          if (statusBadge) {
+            statusBadge.innerText = '⚠️ Baixar Modelo';
+            statusBadge.className = 'text-xs px-2.5 py-1 rounded-lg bg-brand-500/20 text-brand-300 border border-brand-500/30 font-bold';
+          }
+          if (dlBtn) {
+            dlBtn.classList.remove('hidden');
+            dlBtn.classList.add('flex');
+          }
         }
       }
       lucide.createIcons();
@@ -5052,16 +5008,16 @@
         <!-- Opção Principal: Pagar no PIX sem cadastro -->
         <button
           onclick="closePreviewConversionModal(); initiateSingleAudioPayment();"
-          class="w-full py-3.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-between shadow-lg group active:scale-95"
+          class="w-full py-3.5 px-4 rounded-xl btn-fire text-white text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-between shadow-lg group active:scale-95"
         >
           <div class="flex items-center gap-2.5">
             <i data-lucide="zap" class="w-4 h-4 fill-current shrink-0"></i>
             <div class="text-left">
               <span class="block text-xs font-black">Pagar no PIX e Baixar na Hora</span>
-              <span id="preview-modal-price-sub" class="block text-[10px] text-zinc-900 font-semibold">Sem cadastro • Apenas R$ 2,49 no PIX</span>
+              <span id="preview-modal-price-sub" class="block text-[10px] text-white/90 font-semibold">Sem cadastro • Apenas R$ 2,49 no PIX</span>
             </div>
           </div>
-          <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition text-black"></i>
+          <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition text-white"></i>
         </button>
       </div>
 
@@ -5199,7 +5155,7 @@
             <span>Como funciona a geração direta no PIX sem cadastro?</span>
           </h4>
           <p class="text-zinc-300 leading-relaxed">
-            Você escolhe a voz (ou clona uma amostra), digita ou cola seu texto no editor e pode ouvir a <strong>Prévia Grátis</strong> na hora. Enquanto você digita, o sistema mostra o valor exato do áudio em tempo real. Achou viável? Clique em <strong>"Pagar no PIX e Gerar"</strong>, pague o QR Code e baixe imediatamente sem precisar criar conta, senha ou assinar planos.
+            Você escolhe entre as <strong>30 vozes oficiais Gemini TTS</strong> (com modos Locutor Único, Voice Design Expressivo e Diálogo com 2 Locutores), digita ou cola seu texto com tags naturais e pode ouvir a <strong>Prévia Grátis</strong> na hora. Achou o valor viável? Clique no botão laranja <strong>"Pagar no PIX e Gerar"</strong>, pague o QR Code e baixe imediatamente sem precisar criar conta ou assinar planos.
           </p>
         </div>
 
@@ -5214,8 +5170,8 @@
             <ul class="list-disc list-inside space-y-1 text-zinc-400 pl-1">
               <li><strong class="text-white">Até 300 caracteres:</strong> R$ 2,49 | <strong class="text-white">301 a 700:</strong> R$ 3,90</li>
               <li><strong class="text-white">701 a 1.500 caracteres:</strong> R$ 5,90 | <strong class="text-white">1.501 a 3.000:</strong> R$ 9,90</li>
-              <li><strong class="text-white">Download Duplo WAV + MP3:</strong> Ambos os formatos (MP3 leve e WAV Master 44.1kHz) são liberados após o PIX.</li>
-              <li><strong class="text-white">Histórico no Navegador:</strong> Seus áudios pagos ficam acessíveis no card Histórico Recente deste navegador.</li>
+              <li><strong class="text-white">Download Duplo WAV + MP3:</strong> Ambos os formatos (WAV 24kHz nativo do Gemini TTS e MP3 leve) são liberados após o PIX.</li>
+              <li><strong class="text-white">Player Completo:</strong> Controle de velocidade de reprodução (0.75x a 1.5x) e histórico salvo neste navegador.</li>
             </ul>
           </div>
         </div>

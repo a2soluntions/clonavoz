@@ -1521,44 +1521,6 @@ def get_voices():
             "sample_url": sample_url,
         })
 
-    # 2. Custom uploaded voices (Clones do usuário)
-    custom_list = tts_engine.get_custom_voices()
-    for cv in custom_list:
-        is_el = bool(cv.get("eleven_voice_id"))
-        results.append(
-            {
-                "key": cv["id"],
-                "label": f"{cv['name']} [Clone Ultra-HD]" if is_el else f"{cv['name']} (Personalizada)",
-                "gender": cv["gender"],
-                "timbre": "Voz Clonada",
-                "default_style": "Voz clonada natural e clara",
-                "quality": "ElevenLabs Multilingual v2" if is_el else f"Clone ({cv.get('pitch_hz', 0)} Hz)",
-                "type": "custom",
-                "is_downloaded": True,
-                "sample_url": cv.get("sample_url", ""),
-                "duration": cv.get("duration", 0),
-                "eleven_voice_id": cv.get("eleven_voice_id"),
-            }
-        )
-
-    # 3. Vozes locais / ElevenLabs legadas (mantidas para compatibilidade)
-    for key, info in tts_engine.VOICES.items():
-        sample_path = os.path.join(STATIC_DIR, "demos", f"{key}_sample.mp3")
-        sample_url = f"/static/demos/{key}_sample.mp3" if os.path.exists(sample_path) else ""
-        results.append(
-            {
-                "key": key,
-                "label": info["label"],
-                "gender": info["gender"],
-                "timbre": "Neural Local",
-                "default_style": "Voz natural, clara e expressiva",
-                "quality": info["quality"],
-                "type": "standard",
-                "is_downloaded": tts_engine.is_model_downloaded(key),
-                "sample_url": sample_url,
-            }
-        )
-
     return results
 
 
