@@ -3869,8 +3869,8 @@
 
       // 3b. Erros comuns de ortografia / digitação em português
       const spellingRules = [
-        { regex: /\b(nessicedade|nessesidade|nessecidade|necessedade|necesidade|nececidade)\b/gi, rep: 'necessidade', reason: 'Erro de ortografia em "necessidade".' },
-        { regex: /\b(nessicedades|nessesidades|nessecidades|necessedades|necesidades|nececidades)\b/gi, rep: 'necessidades', reason: 'Erro de ortografia em "necessidades".' },
+        { regex: /\b(nessicedade|nessesidade|nessecidade|necessedade|necesidade|nececidade|nessicidade|nesicidade|necicidade)\b/gi, rep: 'necessidade', reason: 'Erro de ortografia em "necessidade".' },
+        { regex: /\b(nessicedades|nessesidades|nessecidades|necessedades|necesidades|nececidades|nessicidades|nesicidades)\b/gi, rep: 'necessidades', reason: 'Erro de ortografia em "necessidades".' },
         { regex: /\b(conseguencia|conseguência|conçequencia|consequencia|consequensia)\b/gi, rep: 'consequência', reason: 'Erro de ortografia/acento em "consequência".' },
         { regex: /\b(conseguencias|conseguências|conçequencias|consequencias)\b/gi, rep: 'consequências', reason: 'Erro de ortografia/acento em "consequências".' },
         { regex: /\bindentific(ar|ou|a|o|ado|ada|ando|acao|ação)\b/gi, rep: (m, suf) => 'identific' + (suf.toLowerCase() === 'acao' ? 'ação' : suf), reason: 'Grafia correta é "identificar" (sem n).' },
@@ -3887,6 +3887,15 @@
         { regex: /\bconhesimento\b/gi, rep: 'conhecimento', reason: 'Grafia correta é "conhecimento" (com c).' },
         { regex: /\boportunida\b/gi, rep: 'oportunidade', reason: 'Palavra incompleta: "oportunidade".' },
         { regex: /\bprevilegio\b/gi, rep: 'privilégio', reason: 'Grafia correta é "privilégio".' },
+        { regex: /\bacao\b/gi, rep: 'ação', reason: 'Falta cedilha e til em "ação".' },
+        { regex: /\bacoes\b/gi, rep: 'ações', reason: 'Falta cedilha e til em "ações".' },
+        { regex: /\bnacao\b/gi, rep: 'nação', reason: 'Falta cedilha e til em "nação".' },
+        { regex: /\blicao\b/gi, rep: 'lição', reason: 'Falta cedilha e til em "lição".' },
+        { regex: /\bnocao\b/gi, rep: 'noção', reason: 'Falta cedilha e til em "noção".' },
+        { regex: /\bopcao\b/gi, rep: 'opção', reason: 'Falta cedilha e til em "opção".' },
+        { regex: /\bopcoes\b/gi, rep: 'opções', reason: 'Falta cedilha e til em "opções".' },
+        { regex: /\brazao\b/gi, rep: 'razão', reason: 'Falta til em "razão".' },
+        { regex: /\bcoracao\b/gi, rep: 'coração', reason: 'Falta cedilha e til em "coração".' },
         { regex: /\bintell?igencia\b/gi, rep: 'inteligência', reason: 'Grafia correta é "inteligência".' }
       ];
 
@@ -3920,6 +3929,73 @@
           issues.push({ original: match, suggestion: fixed, reason: 'Acentuação/cedilha ausente na terminação.' });
         }
         return fixed;
+      });
+
+      // 3d. Detector inteligente de erros de digitação (transposição de letras / fonética PT-BR)
+      const ptCommonWords = [
+        'imagine','imaginar','necessidade','necessidades','consequência','consequências','importante','resultado','resultados',
+        'empresa','empresas','produto','produtos','serviço','serviços','cliente','clientes','dinheiro','trabalho','sucesso',
+        'história','momento','verdade','problema','problemas','solução','soluções','qualidade','oportunidade','experiência',
+        'conhecimento','atenção','informação','informações','melhor','agora','sempre','porque','quando','também','pessoas',
+        'mundo','tempo','amanhã','ontem','fazer','saber','querer','poder','dever','precisar','conseguir','descobrir',
+        'entender','aprender','começar','transformar','garantir','escolher','ouvir','gravar','gerar','pagar','baixar',
+        'vídeo','vídeos','áudio','áudios','locução','narração','roteiro','profissional','natural','rápido','fácil',
+        'difícil','incrível','perfeito','excelente','gratuito','grátis','próximo','obrigado','certeza','diferença',
+        'presença','silêncio','comércio','negócio','benefício','prejuízo','privilégio','análise','público','conteúdo',
+        'câmera','número','números','ônibus','vários','várias','vocês','então','alguém','ninguém','através','parabéns',
+        'estúdio','qualquer','mensagem','mensagens','simples','rápida','seguro','completa','completo','brasil','brasileiro'
+      ];
+      const ptValidSet = new Set(ptCommonWords.map(w => w.toLowerCase()));
+      const ptPhonetic = (s) => s.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/ss|sc|sç|xc|ç/g, 's')
+        .replace(/c(?=[ei])/g, 's')
+        .replace(/c(?=[aou])/g, 'k')
+        .replace(/qu/g, 'k')
+        .replace(/ch/g, 'x')
+        .replace(/z/g, 's')
+        .replace(/(.)\1+/g, '$1');
+      const damerauDist = (a, b) => {
+        const m = a.length, n = b.length;
+        if (Math.abs(m - n) > 2) return 99;
+        const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+        for (let i = 0; i <= m; i++) dp[i][0] = i;
+        for (let j = 0; j <= n; j++) dp[0][j] = j;
+        for (let i = 1; i <= m; i++) {
+          for (let j = 1; j <= n; j++) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+            if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+              dp[i][j] = Math.min(dp[i][j], dp[i - 2][j - 2] + cost);
+            }
+          }
+        }
+        return dp[m][n];
+      };
+      working = working.replace(/\b([a-zA-ZÀ-ÿ]{5,})\b/g, (match) => {
+        const low = match.toLowerCase();
+        if (ptValidSet.has(low)) return match;
+        const lowNoAcc = low.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const pWord = ptPhonetic(low);
+        let best = null;
+        let bestScore = 99;
+        for (const cand of ptCommonWords) {
+          const candNoAcc = cand.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          const d = damerauDist(lowNoAcc, candNoAcc);
+          const samePhonetic = ptPhonetic(cand) === pWord && d <= 2;
+          if (d === 1 || samePhonetic) {
+            const score = samePhonetic ? d - 0.5 : d;
+            if (score < bestScore) {
+              bestScore = score;
+              best = cand;
+            }
+          }
+        }
+        if (best && best.toLowerCase() !== low) {
+          issues.push({ original: match, suggestion: best, reason: `Possível erro de digitação em "${match}".` });
+          return best;
+        }
+        return match;
       });
 
       // 4. Formata marcas e nomes
