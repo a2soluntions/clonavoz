@@ -260,13 +260,6 @@
                   <button type="button" onclick="setVoiceStylePreset('Voz suave, próxima e sussurrada com emoção')" class="text-[10px] px-2 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer">Sussurro</button>
                 </div>
               </div>
-              <div class="flex items-center gap-1 flex-wrap text-[10px]">
-                <span class="text-zinc-500 font-semibold mr-0.5">Expressões Gemini TTS:</span>
-                <button type="button" onclick="insertAtCursor(' <breath> ')" class="px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer" title="Inserir respiração natural">&lt;breath&gt;</button>
-                <button type="button" onclick="insertAtCursor(' <laugh> ')" class="px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer" title="Inserir risada leve">&lt;laugh&gt;</button>
-                <button type="button" onclick="insertAtCursor(' <gasp> ')" class="px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer" title="Inserir suspiro de surpresa">&lt;gasp&gt;</button>
-                <button type="button" onclick="insertAtCursor(' |mhm| ')" class="px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer" title="Inserir confirmação vocal natural">|mhm|</button>
-              </div>
             </div>
 
             <!-- Painel de Configuração de Diálogo com 2 Locutores (visível no modo Diálogo) -->
@@ -293,12 +286,12 @@
               </div>
               <div class="flex items-center justify-between gap-1.5 flex-wrap">
                 <div class="flex items-center gap-1 flex-wrap">
-                  <button type="button" onclick="appendDialogueTurn(1)" class="text-[10px] px-2 py-0.5 rounded bg-brand-500/20 hover:bg-brand-500/30 text-brand-300 border border-brand-500/30 font-bold cursor-pointer">+ Fala 1</button>
-                  <button type="button" onclick="appendDialogueTurn(2)" class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold cursor-pointer">+ Fala 2</button>
-                  <button type="button" onclick="insertAtCursor(' <breath> ')" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer">&lt;breath&gt;</button>
-                  <button type="button" onclick="insertAtCursor(' <laugh> ')" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer">&lt;laugh&gt;</button>
-                  <button type="button" onclick="insertAtCursor(' <gasp> ')" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer">&lt;gasp&gt;</button>
-                  <button type="button" onclick="insertAtCursor(' |mhm| ')" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono cursor-pointer">|mhm|</button>
+                  <button type="button" onclick="appendDialogueTurn(1)" class="text-[10px] px-2 py-0.5 rounded bg-brand-500/20 hover:bg-brand-500/30 text-brand-300 border border-brand-500/30 font-bold cursor-pointer" title="Adicionar fala para o Locutor 1">+ Fala 1</button>
+                  <button type="button" onclick="appendDialogueTurn(2)" class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold cursor-pointer" title="Adicionar fala para o Locutor 2">+ Fala 2</button>
+                  <button type="button" onclick="insertAtCursor(' <breath> ')" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer" title="Insere uma pausa com respiração natural na fala">Respiração</button>
+                  <button type="button" onclick="insertAtCursor(' <laugh> ')" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer" title="Insere uma risada leve e natural no diálogo">Risada</button>
+                  <button type="button" onclick="insertAtCursor(' <gasp> ')" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer" title="Insere um suspiro de surpresa ou emoção">Suspiro</button>
+                  <button type="button" onclick="insertAtCursor(' |mhm| ')" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 cursor-pointer" title="Insere uma confirmação vocal natural (&quot;aham&quot;)">&quot;Aham&quot;</button>
                 </div>
                 <button type="button" onclick="loadDialogueSample()" class="text-[10px] px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-white font-semibold cursor-pointer">Inserir Exemplo</button>
               </div>
@@ -393,24 +386,6 @@
                 <span id="single-audio-range-label" class="text-[9px] text-zinc-500 block mt-0.5">Faixa: até 300 carac.</span>
               </div>
             </div>
-          </div>
-
-          <!-- Opção Salvar no Histórico Local deste Navegador / Apenas Baixar -->
-          <div class="flex items-center justify-between text-xs pt-1 px-0.5 shrink-0">
-            <label class="flex items-center gap-2 cursor-pointer select-none group" title="Marque para manter uma cópia no histórico recente deste navegador ou desmarque para apenas escutar e baixar na hora">
-              <input
-                type="checkbox"
-                id="toggle-save-history"
-                checked
-                onchange="onToggleSaveHistoryChange(this.checked)"
-                class="w-4 h-4 rounded bg-zinc-900 border-zinc-700 text-brand-500 focus:ring-brand-500 accent-brand-500 cursor-pointer"
-              />
-              <span class="text-zinc-300 text-[11px] sm:text-xs font-semibold group-hover:text-white transition flex items-center gap-1.5">
-                <i data-lucide="hard-drive-download" class="w-3.5 h-3.5 text-brand-400"></i>
-                <span>Salvar áudio no histórico deste navegador</span>
-              </span>
-            </label>
-            <span id="save-history-hint" class="text-[10px] text-brand-400 font-medium hidden sm:inline">Salvo localmente neste dispositivo</span>
           </div>
 
           <!-- Master Action Buttons (Prévia Grátis & Único Botão Laranja de PIX) -->
@@ -756,23 +731,6 @@
               </button>
             </div>
 
-          </div>
-        </div>
-
-        <!-- Card 3: Histórico de Áudios (Altura balanceada com Seleção de Vozes acima) -->
-        <div class="panel-glass p-3 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[210px] min-h-[180px] flex-1 overflow-hidden">
-          <div class="flex items-center justify-between shrink-0 mb-2 pb-1.5 border-b border-zinc-800/60">
-            <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
-              <i data-lucide="clock" class="w-4 h-4 text-brand-500"></i> Histórico Recente
-            </h3>
-            <button onclick="loadHistory()" class="text-xs text-zinc-400 hover:text-white transition cursor-pointer p-1 rounded-md hover:bg-zinc-800" title="Recarregar histórico">
-              <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
-            </button>
-          </div>
-          
-          <!-- Lista com scroll interno estritamente contido (Tamanho fixo, nunca cresce) -->
-          <div id="history-list" class="space-y-1.5 flex-1 overflow-y-auto pr-1 min-h-0 custom-scrollbar">
-            <p class="text-xs text-zinc-500 py-3 text-center">Nenhum áudio gerado ainda.</p>
           </div>
         </div>
 
@@ -4687,11 +4645,12 @@
       }
     }
 
-    // History
+    // History (desativado na UI: download direto garantido após o PIX)
     async function loadHistory() {
       try {
-        const items = getLocalHistoryItems();
         const list = document.getElementById('history-list');
+        if (!list) return;
+        const items = getLocalHistoryItems();
 
         if (!items || items.length === 0) {
           list.innerHTML = '<p class="text-xs text-zinc-500 py-3 text-center">Nenhum áudio gerado neste navegador ainda.</p>';
@@ -5171,7 +5130,7 @@
               <li><strong class="text-white">Até 300 caracteres:</strong> R$ 2,49 | <strong class="text-white">301 a 700:</strong> R$ 3,90</li>
               <li><strong class="text-white">701 a 1.500 caracteres:</strong> R$ 5,90 | <strong class="text-white">1.501 a 3.000:</strong> R$ 9,90</li>
               <li><strong class="text-white">Download Duplo WAV + MP3:</strong> Ambos os formatos (WAV 24kHz nativo do Gemini TTS e MP3 leve) são liberados após o PIX.</li>
-              <li><strong class="text-white">Player Completo:</strong> Controle de velocidade de reprodução (0.75x a 1.5x) e histórico salvo neste navegador.</li>
+              <li><strong class="text-white">Player Completo:</strong> Controle de velocidade de reprodução (0.75x a 1.5x) e entrega imediata com download direto em .WAV e .MP3.</li>
             </ul>
           </div>
         </div>
