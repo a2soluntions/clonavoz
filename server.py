@@ -1137,7 +1137,11 @@ def execute_synthesis(
 
     # 2. Motor Principal Oficial: Google Gemini TTS via @google/genai (Interactions API)
     active_gemini_key = GEMINI_API_KEY or os.getenv("GEMINI_API_KEY", "").strip()
-    if active_gemini_key and not is_explicit_legacy_vip and not is_explicit_custom:
+    gemini_error_msg = ""
+    if not active_gemini_key:
+        gemini_error_msg = "GEMINI_API_KEY não configurada no servidor (.env / container)."
+        print(f"[Gemini TTS Warning]: {gemini_error_msg}")
+    elif not is_explicit_legacy_vip and not is_explicit_custom:
         try:
             sdk_res = synthesize_with_gemini_sdk(
                 text=text,
@@ -1154,6 +1158,7 @@ def execute_synthesis(
                 active_model = sdk_res.get("model", active_model)
                 apply_speed_ffmpeg(wav_path, speed)
         except Exception as gem_err:
+            gemini_error_msg = str(gem_err)
             print(f"[Gemini TTS SDK Warning - Usando Fallback]: {gem_err}")
 
     # 3. Fallback legado (ElevenLabs / Motor Local VITS) se Gemini não estiver ativo ou for voz custom/clonada
@@ -1190,7 +1195,9 @@ def execute_synthesis(
             gem_info = GEMINI_VOICE_MAP.get(voice.lower())
             local_voice_key = gem_info["fallback_voice"] if gem_info else voice
             if local_voice_key not in tts_engine.VOICES and not local_voice_key.startswith("custom_"):
-                local_voice_key = "su"
+                local_voice_key = next(iter(tts_engine.VOICES.keys()), None)
+            if not local_voice_key:
+                raise RuntimeError(gemini_error_msg or "Motor Gemini TTS indisponível e nenhuma voz local de fallback carregada.")
             result = tts_engine.synthesize_text(
                 text=text,
                 voice_key=local_voice_key,
