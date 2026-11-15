@@ -1767,18 +1767,24 @@ def generate_preview(req: PreviewRequest, request: Request):
             else:
                 preview_text = preview_text + "..."
 
-    audio_res = execute_synthesis(
-        text=preview_text,
-        voice=req.voice,
-        speed=req.speed,
-        bgm="none",
-        bgm_volume=0.0,
-        mode=norm_mode,
-        model=req.model,
-        style=req.style or "Voz natural, clara e expressiva",
-        dialogue=preview_dialogue,
-        speakers=req.speakers,
-    )
+    try:
+        audio_res = execute_synthesis(
+            text=preview_text,
+            voice=req.voice,
+            speed=req.speed,
+            bgm="none",
+            bgm_volume=0.0,
+            mode=norm_mode,
+            model=req.model,
+            style=req.style or "Voz natural, clara e expressiva",
+            dialogue=preview_dialogue,
+            speakers=req.speakers,
+        )
+    except HTTPException:
+        raise
+    except Exception as synth_err:
+        print(f"[Preview Error] {type(synth_err).__name__}: {synth_err}")
+        raise HTTPException(status_code=500, detail=f"Falha ao gerar prévia de áudio: {synth_err}")
 
     new_attempts = _increment_preview_attempts(client_ip, req.client_id)
 
